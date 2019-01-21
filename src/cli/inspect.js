@@ -33,5 +33,5 @@ exports.handler = async argv => {
 
   await container.run(argv["couch-output"]);
   const set = new DatabaseSet(argv.data, argv.dbs, container.address);
-  const databases = await set.databases();
+  await set.databases();
 };
