@@ -1,16 +1,19 @@
 const fs = require("fs-extra");
 const path = require("path");
 
-module.exports = exports = function DesignDoc(directory) {
+module.exports = exports = function DesignDoc(directory, rev) {
   this.directory = path.join(process.cwd(), directory);
   this.id = this.directory.slice(this.directory.lastIndexOf("/") + 1);
+  this.oldRev = rev;
 
-  this.asJSON = async () => {
+  this.representation = async () => {
     await this._load();
-    return {
+    let doc = {
       _id: `_design/${this.id}`,
       views: this.views
     };
+    if (this.oldRev) doc["_rev"] = this.oldRev;
+    return doc;
   };
 
   this._load = async () => {

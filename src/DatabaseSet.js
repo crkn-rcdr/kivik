@@ -24,17 +24,11 @@ module.exports = exports = function DatabaseSet(directory, subset, address) {
     return directories;
   };
 
-  this.databases = async () => {
-    if (this._databases) return this._databases;
-    this._databases = [];
-
+  this.process = async (mode = "inspect") => {
     const directories = await findDirectories();
     for (dir of directories) {
       const database = new Database(dir, this.couchAddress);
-      await database.process();
-      this._databases.push(database);
+      await database.process(mode);
     }
-
-    return this._databases;
   };
 };

@@ -6,15 +6,22 @@ module.exports = exports = function Database(directory, address) {
   this.directory = directory;
   this.dbName = this.directory.slice(this.directory.lastIndexOf("/") + 1);
 
-  this.process = async () => {
+  this.process = async (mode = "inspect") => {
     let nano = require("nano")(address);
-    await nano.db.create(this.dbName);
+    try {
+      await nano.db.create(this.dbName);
+    } catch (e) {
+      if (!(e.error === "file_exists")) {
+        console.log(`Could not create or find database ${this.dbName}`);
+        return;
+      }
+    }
     this.db = nano.use(this.dbName);
 
-    await this.insertFixtures();
+    if (mode === "inspect") await this.insertFixtures();
     await this.insertDesignDocs();
 
-    console.log(`Database ${this.dbName} loaded.`);
+    console.log(`Database ${this.dbName} processed.`);
   };
 
   this.insertFixtures = async () => {
@@ -30,15 +37,30 @@ module.exports = exports = function Database(directory, address) {
   };
 
   this.insertDesignDocs = async () => {
+    let designDir = path.join(this.directory, "design");
+    let designSubdirectories;
     try {
-      let designDir = path.join(this.directory, "design");
-      for (dir of await fs.readdir(designDir)) {
-        let ddoc = new DesignDoc(path.join(designDir, dir));
-        let json = await ddoc.asJSON();
-        await this.db.insert(json);
-      }
+      designSubdirectories = await fs.readdir(designDir);
     } catch (e) {
-      console.log(e);
+      console.log(`No design directory found in ${this.directory}`);
+      return;
+    }
+
+    for (dir of designSubdirectories) {
+      let docId = `_design/${dir}`;
+      let rev;
+      try {
+        rev = (await this.db.get(docId))["_rev"];
+      } catch (e) {
+        if (!e.statusCode === 404) return;
+      }
+      let ddoc = new DesignDoc(path.join(designDir, dir), rev);
+      try {
+        let json = await ddoc.representation();
+        await this.db.insert(json);
+      } catch (e) {
+        console.log(`Could not insert design doc ${docId}: ${e.error}`);
+      }
     }
   };
 };
