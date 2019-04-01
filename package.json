@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "CouchDB design doc utility",
   "main": "src/cli.js",
-  "repository": "https://github.com/SaschaAdler/kivik",
+  "repository": "https://github.com/crkn-rcdr/kivik",
   "author": "Sascha Adler <sadler@crkn.ca>",
   "license": "MIT",
   "dependencies": {
@@ -17,5 +17,12 @@
   },
   "engines": {
     "node": ">=8.0.0"
+  },
+  "devDependencies": {
+    "mocha": "^6.0.2",
+    "should": "^13.2.3"
+  },
+  "scripts": {
+    "test": "mocha --recursive test/*.js"
   }
 }

@@ -1,41 +1,41 @@
 const fs = require("fs-extra");
 const path = require("path");
 
-module.exports = exports = function DesignDoc(directory, rev) {
-  this.directory = path.join(process.cwd(), directory);
-  this.id = this.directory.slice(this.directory.lastIndexOf("/") + 1);
-  this.oldRev = rev;
+const designTypes = {
+  views: { mapReduce: true },
+  updates: {}
+};
 
-  this.representation = async () => {
-    await this._load();
-    let doc = {
-      _id: `_design/${this.id}`,
-      views: this.views
-    };
-    if (this.oldRev) doc["_rev"] = this.oldRev;
-    return doc;
-  };
+module.exports = exports = function DesignDoc(directory, currentRev) {
+  const fullDir = path.join(process.cwd(), directory);
+  const id = fullDir.slice(fullDir.lastIndexOf("/") + 1);
 
-  this._load = async () => {
-    try {
-      await this._importViews();
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
-  this._importViews = async () => {
-    this.views = {};
-    let viewsDir = path.join(this.directory, "views");
-    for (viewFile of await fs.readdir(viewsDir)) {
-      let viewObj = require(path.join(viewsDir, viewFile));
-      let viewName = viewFile.slice(0, viewFile.lastIndexOf(".js"));
-      this.views[viewName] = {
-        map: viewObj.map.toString()
-      };
-      if (viewObj.reduce) {
-        this.views[viewName].reduce = viewObj.reduce.toString();
+  const _importDir = async (type, mapReduce) => {
+    let dir = path.join(fullDir, type);
+    let obj = {};
+    for (file of await fs.readdir(dir)) {
+      let name = file.slice(0, file.lastIndexOf(".js"));
+      let fileContents = require(path.join(dir, file));
+      if (mapReduce) {
+        // expect an object with a required map function and an optional reduce function
+        obj[name] = { map: fileContents.map.toString() };
+        if (fileContents.reduce) {
+          obj[name].reduce = fileContents.reduce.toString();
+        }
+      } else {
+        // expect a function
+        obj[name] = fileContents.toString();
       }
     }
+    return obj;
+  };
+
+  this.representation = async () => {
+    let doc = { _id: `_design/${id}` };
+    if (currentRev) doc["_rev"] = currentRev;
+    for (type of Object.keys(designTypes)) {
+      doc[type] = await _importDir(type, designTypes[type].mapReduce);
+    }
+    return doc;
   };
 };

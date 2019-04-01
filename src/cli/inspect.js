@@ -31,7 +31,12 @@ exports.handler = async argv => {
     hostPort: argv.port
   });
 
-  await container.run(argv["couch-output"]);
-  const set = new DatabaseSet(argv.data, argv.dbs, container.address);
-  await set.process("inspect");
+  try {
+    await container.run(argv["couch-output"]);
+    const set = new DatabaseSet(argv.data, argv.dbs, container.hostURL());
+    await set.process("inspect");
+  } catch (e) {
+    console.log(e);
+    await container.kill();
+  }
 };
