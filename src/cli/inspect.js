@@ -26,10 +26,7 @@ exports.builder = {
   }
 };
 exports.handler = async argv => {
-  const container = new Container({
-    couchImage: argv.image,
-    hostPort: argv.port
-  });
+  const container = new Container(argv.image, argv.port);
 
   try {
     await container.run(argv["couch-output"]);

@@ -1,4 +1,4 @@
-const should = require("should");
+require("chai").should();
 const DesignDoc = require("../src/DesignDoc");
 const directory = "example/couch/testdb/design/test";
 

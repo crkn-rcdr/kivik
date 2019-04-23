@@ -19,8 +19,9 @@
     "node": ">=8.0.0"
   },
   "devDependencies": {
-    "mocha": "^6.0.2",
-    "should": "^13.2.3"
+    "chai": "^4.2.0",
+    "chai-http": "^4.2.1",
+    "mocha": "^6.0.2"
   },
   "scripts": {
     "test": "mocha --recursive test/*.js"

@@ -3,10 +3,10 @@ const util = require("util");
 
 const TIMEOUT_START = 10;
 
-module.exports = exports = function Container({
-  couchImage: couchImage,
-  hostPort: hostPort
-}) {
+module.exports = exports = function Container(
+  couchImage = "couchdb:1.7",
+  hostPort = 5984
+) {
   let dockerOptions = {
     Image: couchImage,
     ExposedPorts: { "5984/tcp": {} },
