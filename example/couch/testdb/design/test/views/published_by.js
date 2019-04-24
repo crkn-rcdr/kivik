@@ -1,4 +1,4 @@
-module.exports = exports = {
+module.exports = {
   map: function(doc) {
     if (Array.isArray(doc.published)) {
       if (doc.published.length == 2) {

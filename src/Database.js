@@ -2,7 +2,7 @@ const fs = require("fs-extra");
 const path = require("path");
 const DesignDoc = require("./DesignDoc");
 
-module.exports = exports = function Database(directory, mode) {
+module.exports = function Database(directory, mode) {
   const dbName = directory.slice(directory.lastIndexOf("/") + 1);
 
   this.load = async () => {

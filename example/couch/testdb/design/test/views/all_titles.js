@@ -1,4 +1,4 @@
-module.exports = exports = {
+module.exports = {
   map: function(doc) {
     if (doc.title) {
       emit(doc.title, null);

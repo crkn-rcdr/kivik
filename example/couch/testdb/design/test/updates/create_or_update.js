@@ -1,4 +1,4 @@
-module.exports = exports = function(doc, req) {
+module.exports = function(doc, req) {
   var created = false;
   if (!doc) {
     if ("id" in req && req["id"]) {

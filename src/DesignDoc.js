@@ -6,7 +6,7 @@ const designTypes = {
   updates: {}
 };
 
-module.exports = exports = function DesignDoc(directory) {
+module.exports = function DesignDoc(directory) {
   const fullDir = path.join(process.cwd(), directory);
   this.id = `_design/${fullDir.slice(fullDir.lastIndexOf("/") + 1)}`;
 

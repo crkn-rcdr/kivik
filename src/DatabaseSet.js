@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
 const Database = require("./Database");
 
-module.exports = exports = function DatabaseSet(directory, subset, mode) {
+module.exports = function DatabaseSet(directory, subset, mode) {
   const findDirectories = async () => {
     const directories = [];
     const contents = subset || (await fs.readdir(directory));

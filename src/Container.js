@@ -3,7 +3,7 @@ const util = require("util");
 
 const TIMEOUT_START = 10;
 
-module.exports = exports = function Container(
+module.exports = function Container(
   couchImage = "couchdb:1.7",
   hostPort = 5984
 ) {
