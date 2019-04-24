@@ -26,12 +26,13 @@ exports.builder = {
   }
 };
 exports.handler = async argv => {
-  const container = new Container(argv.image, argv.port);
+  const set = new DatabaseSet(argv.data, argv.dbs, "inspect");
+  await set.load();
 
+  const container = new Container(argv.image, argv.port);
   try {
     await container.run(argv["couch-output"]);
-    const set = new DatabaseSet(argv.data, argv.dbs, container.hostURL());
-    await set.process("inspect");
+    await set.process(container.hostURL());
   } catch (e) {
     console.log(e);
     await container.kill();

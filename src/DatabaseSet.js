@@ -1,16 +1,12 @@
 const fs = require("fs-extra");
 const Database = require("./Database");
 
-module.exports = exports = function DatabaseSet(directory, subset, address) {
-  this.directory = directory;
-  this.subset = subset;
-  this.couchAddress = address;
-
+module.exports = exports = function DatabaseSet(directory, subset, mode) {
   const findDirectories = async () => {
     const directories = [];
-    const contents = this.subset || (await fs.readdir(this.directory));
+    const contents = subset || (await fs.readdir(directory));
     for (c of contents) {
-      const dir = [this.directory, c].join("/");
+      const dir = [directory, c].join("/");
       try {
         if ((await fs.stat(dir)).isDirectory()) {
           directories.push(dir);
@@ -24,11 +20,19 @@ module.exports = exports = function DatabaseSet(directory, subset, address) {
     return directories;
   };
 
-  this.process = async (mode = "inspect") => {
-    const directories = await findDirectories();
-    for (dir of directories) {
-      const database = new Database(dir, this.couchAddress);
-      await database.process(mode);
-    }
+  this.load = async () => {
+    this.databases = await Promise.all(
+      (await findDirectories()).map(async dir => {
+        let database = new Database(dir, mode);
+        await database.load();
+        return database;
+      })
+    );
+  };
+
+  this.process = async address => {
+    this.databases.forEach(async database => {
+      await database.process(address);
+    });
   };
 };

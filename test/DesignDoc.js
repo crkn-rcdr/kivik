@@ -7,10 +7,12 @@ describe("DesignDoc", () => {
   let doc;
 
   before(async () => {
-    doc = await ddoc.representation();
+    await ddoc.load();
+    doc = ddoc.doc;
   });
 
   it("should generate a design doc from a directory", async () => {
+    ddoc.id.should.equal("_design/test");
     doc._id.should.equal("_design/test");
   });
 

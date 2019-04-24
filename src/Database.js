@@ -2,65 +2,73 @@ const fs = require("fs-extra");
 const path = require("path");
 const DesignDoc = require("./DesignDoc");
 
-module.exports = exports = function Database(directory, address) {
-  this.directory = directory;
-  this.dbName = this.directory.slice(this.directory.lastIndexOf("/") + 1);
+module.exports = exports = function Database(directory, mode) {
+  const dbName = directory.slice(directory.lastIndexOf("/") + 1);
 
-  this.process = async (mode = "inspect") => {
-    let nano = require("nano")(address);
+  this.load = async () => {
+    let fixturesDir = path.join(directory, "fixtures");
+    let fixtureContents = [];
     try {
-      await nano.db.create(this.dbName);
-    } catch (e) {
-      if (!(e.error === "file_exists")) {
-        console.log(`Could not create or find database ${this.dbName}`);
-        return;
-      }
-    }
-    this.db = nano.use(this.dbName);
-
-    if (mode === "inspect") await this.insertFixtures();
-    await this.insertDesignDocs();
-
-    console.log(`Database ${this.dbName} processed.`);
-  };
-
-  this.insertFixtures = async () => {
-    try {
-      let fixturesDir = path.join(this.directory, "fixtures");
-      for (file of await fs.readdir(fixturesDir)) {
-        if (file.endsWith(".json")) {
-          let json = await fs.readJSON(path.join(fixturesDir, file));
-          await this.db.insert(json);
-        }
-      }
+      fixtureContents = await fs.readdir(fixturesDir);
     } catch (ignore) {}
-  };
+    this.fixtures = await Promise.all(
+      fixtureContents
+        .filter(file => file.endsWith(".json"))
+        .map(async file => await fs.readJSON(path.join(fixturesDir, file)))
+    );
 
-  this.insertDesignDocs = async () => {
-    let designDir = path.join(this.directory, "design");
-    let designSubdirectories;
+    let designDir = path.join(directory, "design");
+    let designSubdirectories = [];
     try {
       designSubdirectories = await fs.readdir(designDir);
     } catch (e) {
-      console.log(`No design directory found in ${this.directory}`);
+      console.log(`No design directory found in ${directory}`);
       return;
     }
+    this.designDocs = await Promise.all(
+      designSubdirectories.map(async dir => {
+        let ddoc = new DesignDoc(path.join(designDir, dir));
+        await ddoc.load();
+        return ddoc;
+      })
+    );
+  };
 
-    for (dir of designSubdirectories) {
-      let docId = `_design/${dir}`;
+  this.process = async address => {
+    let nano = require("nano")(address);
+    try {
+      await nano.db.create(dbName);
+    } catch (e) {
+      if (!(e.error === "file_exists")) {
+        console.log(`Could not create or find database ${dbName}`);
+        return;
+      }
+    }
+    const db = nano.use(dbName);
+
+    if (mode === "inspect") {
+      this.fixtures.forEach(async fixture => {
+        try {
+          await db.insert(fixture);
+        } catch (ignore) {}
+      });
+    }
+
+    this.designDocs.forEach(async ddoc => {
       let rev;
       try {
-        rev = (await this.db.get(docId))["_rev"];
+        rev = (await db.get(ddoc.id))["_rev"];
       } catch (e) {
         if (!e.statusCode === 404) return;
       }
-      let ddoc = new DesignDoc(path.join(designDir, dir), rev);
+
       try {
-        let json = await ddoc.representation();
-        await this.db.insert(json);
+        await db.insert(ddoc.docWithRev(rev));
       } catch (e) {
-        console.log(`Could not insert design doc ${docId}: ${e.error}`);
+        console.log(`Could not insert design doc ${ddoc.id}: ${e.error}`);
       }
-    }
+    });
+
+    console.log(`Database ${dbName} processed.`);
   };
 };

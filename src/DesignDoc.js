@@ -6,9 +6,9 @@ const designTypes = {
   updates: {}
 };
 
-module.exports = exports = function DesignDoc(directory, currentRev) {
+module.exports = exports = function DesignDoc(directory) {
   const fullDir = path.join(process.cwd(), directory);
-  const id = fullDir.slice(fullDir.lastIndexOf("/") + 1);
+  this.id = `_design/${fullDir.slice(fullDir.lastIndexOf("/") + 1)}`;
 
   const _importDir = async (type, mapReduce) => {
     let dir = path.join(fullDir, type);
@@ -30,12 +30,16 @@ module.exports = exports = function DesignDoc(directory, currentRev) {
     return obj;
   };
 
-  this.representation = async () => {
-    let doc = { _id: `_design/${id}` };
-    if (currentRev) doc["_rev"] = currentRev;
+  this.load = async () => {
+    this.doc = { _id: this.id };
     for (type of Object.keys(designTypes)) {
-      doc[type] = await _importDir(type, designTypes[type].mapReduce);
+      this.doc[type] = await _importDir(type, designTypes[type].mapReduce);
     }
-    return doc;
+  };
+
+  this.docWithRev = rev => {
+    let doc = {};
+    if (rev) doc["_rev"] = rev;
+    return Object.assign(doc, this.doc);
   };
 };

@@ -16,6 +16,7 @@ exports.builder = {
   }
 };
 exports.handler = async argv => {
-  const set = new DatabaseSet(argv.data, argv.dbs, argv.server);
-  await set.process("deploy");
+  const set = new DatabaseSet(argv.data, argv.dbs, "deploy");
+  await set.load();
+  await set.process(argv.server);
 };
