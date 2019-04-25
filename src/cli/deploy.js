@@ -1,7 +1,7 @@
 const DatabaseSet = require("../DatabaseSet");
 
 module.exports = {
-  command: ["deploy [dbs..]"],
+  command: ["deploy [directory]"],
   describe: "Deploys design documents to a remote database",
   builder: {
     server: {
@@ -9,14 +9,13 @@ module.exports = {
       type: "string",
       describe: "Server to deploy documents to"
     },
-    data: {
-      default: "./couch",
-      type: "string",
-      describe: "Base directory for CouchDB data"
+    db: {
+      type: "array",
+      describe: "Database directory to deploy"
     }
   },
   handler: async argv => {
-    const set = new DatabaseSet(argv.data, argv.dbs, "deploy");
+    const set = new DatabaseSet(argv.data, argv.db, "deploy");
     await set.load();
     await set.process(argv.server);
   }

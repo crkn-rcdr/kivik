@@ -2,7 +2,7 @@ const Container = require("../Container");
 const DatabaseSet = require("../DatabaseSet");
 
 module.exports = {
-  command: ["inspect [dbs..]", "$0"],
+  command: ["inspect [directory]", "$0"],
   describe: "Spins up a CouchDB container for inspection",
   builder: {
     image: {
@@ -20,14 +20,13 @@ module.exports = {
       type: "boolean",
       describe: "Show CouchDB output"
     },
-    data: {
-      default: "./couch",
-      type: "string",
-      describe: "Base directory for CouchDB data"
+    db: {
+      type: "array",
+      describe: "Database directory to inspect"
     }
   },
   handler: async argv => {
-    const set = new DatabaseSet(argv.data, argv.dbs, "inspect");
+    const set = new DatabaseSet(argv.directory, argv.db, "inspect");
     await set.load();
 
     const container = new Container(argv.image, argv.port);
