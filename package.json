@@ -1,7 +1,7 @@
 {
   "name": "kivik",
   "version": "1.0.0",
-  "description": "CouchDB design doc utility",
+  "description": "Command-line utility for deploying CouchDB design documents",
   "main": "src/cli.js",
   "repository": "https://github.com/crkn-rcdr/kivik",
   "author": "Sascha Adler <sadler@crkn.ca>",
