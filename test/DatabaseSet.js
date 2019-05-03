@@ -1,6 +1,6 @@
 require("chai").should();
 const DatabaseSet = require("../src/DatabaseSet");
-const directory = "example/couch";
+const directory = "example";
 
 describe("DatabaseSet", () => {
   const dset = new DatabaseSet(directory);
