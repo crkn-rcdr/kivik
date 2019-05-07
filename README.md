@@ -14,7 +14,7 @@ $ kivik deploy . --server http://user:password@couchserver:5984/
 
 `kivik inspect` (the default) will spin up a CouchDB Docker container, populate it with the fixtures and design documents specified in the target directory. Options:
 
-- `image`: CouchDB image to run. The default is `couchdb:1.7`. You will need to pull the image to your machine before running kivik.
+- `image`: CouchDB image to run. The default is `couchdb:1.7`. You will need to pull the image to your machine before running `kivik`.
 - `port`: The localhost port on which the CouchDB image will be accessible. The default is 5984.
 - `couch-output`: Boolean determining whether the CouchDB image's standard output is streamed to your terminal. Default: false.
 - `db`: Specify a particular database to inspect. You can use this option multiple times.
@@ -26,6 +26,4 @@ $ kivik deploy . --server http://user:password@couchserver:5984/
 
 ## Expected directory structure
 
-See the `example` directory in this repo. Running kivik on the example directory will populate the `testdb` database with four fixture documents (if running in `inspect` mode) and one design document, `_design/test`, with two view maps and an update function. Design document functions are loaded from individual files, and can be expressed as actual JavaScript functions. Currently, only update and view functions are supported.
-
-Subsequent versions of kivik will support the remaining types of design document functions, and will provide some functionality for making testing these functions easier.
+See the `example` directory in this repo. Running `kivik` on the example directory will create and populate two databases, with fixtures and design documents loaded from `fixtures` and `design` content found in the their respective directory structures. `kivik` supports view functions (maps and reduces), show functions, list functions, update functions, and filter functions. The functions are loaded as JavaScript and so syntax errors will be thrown; future versions of `kivik` may allow for more robust design document function testing.
