@@ -1,7 +1,8 @@
+const path = require("path");
 require("chai").should();
 const DesignDoc = require("../src/DesignDoc");
-const directory = "example/testdb/design/test";
-const emptyDirectory = "example/testdb/design/empty";
+const directory = path.resolve("example/testdb/design/test");
+const emptyDirectory = path.resolve("example/testdb/design/empty");
 
 describe("DesignDoc", () => {
   describe("With functions", () => {
@@ -55,6 +56,14 @@ describe("DesignDoc", () => {
 
     it("should load empty design document directories", async () => {
       emptyDDoc.doc._id.should.equal("_design/empty");
+    });
+
+    it("should not create function objects", async () => {
+      emptyDDoc.doc.should.not.have.property("filters");
+      emptyDDoc.doc.should.not.have.property("updates");
+      emptyDDoc.doc.should.not.have.property("shows");
+      emptyDDoc.doc.should.not.have.property("views");
+      emptyDDoc.doc.should.not.have.property("lists");
     });
   });
 });

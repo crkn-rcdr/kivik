@@ -1,6 +1,6 @@
 require("chai").should();
 const DatabaseSet = require("../src/DatabaseSet");
-const directory = "example";
+const directory = require("path").resolve("example");
 
 describe("DatabaseSet", () => {
   const dset = new DatabaseSet(directory);
@@ -11,6 +11,6 @@ describe("DatabaseSet", () => {
 
   it("loads databases from a directory", async () => {
     dset.should.have.property("databases");
-    dset.databases.should.have.length(1);
+    dset.databases.should.have.length(2);
   });
 });

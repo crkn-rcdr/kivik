@@ -1,3 +1,4 @@
+const path = require("path");
 const Container = require("../Container");
 const DatabaseSet = require("../DatabaseSet");
 
@@ -26,7 +27,11 @@ module.exports = {
     }
   },
   handler: async argv => {
-    const set = new DatabaseSet(argv.directory, argv.db, "inspect");
+    const set = new DatabaseSet(
+      path.resolve(argv.directory),
+      argv.db,
+      "inspect"
+    );
     await set.load();
 
     const container = new Container(argv.image, argv.port);

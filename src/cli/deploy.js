@@ -1,3 +1,4 @@
+const path = require("path");
 const DatabaseSet = require("../DatabaseSet");
 
 module.exports = {
@@ -15,7 +16,11 @@ module.exports = {
     }
   },
   handler: async argv => {
-    const set = new DatabaseSet(argv.data, argv.db, "deploy");
+    const set = new DatabaseSet(
+      path.resolve(argv.directory),
+      argv.db,
+      "deploy"
+    );
     await set.load();
     await set.process(argv.server);
   }

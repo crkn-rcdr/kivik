@@ -1,8 +1,8 @@
 require("chai").should();
 const Database = require("../src/Database");
-const directory = "example/testdb";
+const directory = require("path").resolve("example/testdb");
 
-describe("DatabaseSet", () => {
+describe("Database", () => {
   const db = new Database(directory);
 
   before(async () => {
@@ -17,5 +17,6 @@ describe("DatabaseSet", () => {
   it("loads design docs", async () => {
     db.should.have.property("designDocs");
     db.designDocs.should.have.length(2);
+    db.designDocs[1].doc.should.have.property("views");
   });
 });
