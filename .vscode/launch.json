@@ -9,7 +9,7 @@
       "request": "launch",
       "name": "Inspect example directory",
       "program": "${workspaceFolder}/src/cli.js",
-      "args": ["inspect", "example"]
+      "args": ["inspect", "${workspaceFolder}/example"]
     },
     {
       "type": "node",
