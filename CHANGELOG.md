@@ -25,4 +25,5 @@ Changes to `kivik` will be documented here.
 - Multiple design document support
 - View (map/reduce) and update function support within design documents
 
+[1.1.0]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.1.0
 [1.0.0]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.0.0
