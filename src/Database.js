@@ -36,38 +36,61 @@ module.exports = function Database(directory, mode) {
 
   this.process = async address => {
     let nano = require("nano")(address);
+    let dbExists = true;
     try {
-      await nano.db.create(dbName);
+      await nano.db.get(dbName);
     } catch (e) {
-      if (!(e.error === "file_exists")) {
-        console.log(`Could not create or find database ${dbName}`);
+      if (!(e.error === "no_db_file")) {
+        if (mode !== "inspect") {
+          console.log(
+            `Database ${dbName} does not exist. Will attempt to create it.`
+          );
+        }
+        dbExists = false;
+      } else {
+        console.log(
+          `Could not determine the status of database ${dbName}: ${e.error}`
+        );
         return;
       }
     }
+
+    if (!dbExists) {
+      try {
+        await nano.db.create(dbName);
+      } catch (e) {
+        console.log(`Could not create database ${dbName}: ${e.error}`);
+      }
+    }
+
     const db = nano.use(dbName);
 
     if (mode === "inspect") {
-      this.fixtures.forEach(async fixture => {
-        try {
-          await db.insert(fixture);
-        } catch (ignore) {}
-      });
+      try {
+        await Promise.all(this.fixtures.map(fixture => db.insert(fixture)));
+      } catch (ignore) {}
     }
 
-    this.designDocs.forEach(async ddoc => {
-      let rev;
-      try {
-        rev = (await db.get(ddoc.id))["_rev"];
-      } catch (e) {
-        if (!e.statusCode === 404) return;
-      }
+    await Promise.all(
+      this.designDocs.map(async ddoc => {
+        let rev;
+        try {
+          rev = (await db.get(ddoc.id))["_rev"];
+        } catch (e) {
+          if (!e.statusCode === 404) {
+            console.log(
+              `Could not determine status of design doc ${ddoc.id}: ${e.error}`
+            );
+          }
+        }
 
-      try {
-        await db.insert(ddoc.docWithRev(rev));
-      } catch (e) {
-        console.log(`Could not insert design doc ${ddoc.id}: ${e.error}`);
-      }
-    });
+        try {
+          await db.insert(ddoc.docWithRev(rev));
+        } catch (e) {
+          console.log(`Could not insert design doc ${ddoc.id}: ${e.error}`);
+        }
+      })
+    );
 
     console.log(`Database ${dbName} processed.`);
   };

@@ -31,8 +31,8 @@ module.exports = function DatabaseSet(directory, subset, mode) {
   };
 
   this.process = async address => {
-    this.databases.forEach(async database => {
-      await database.process(address);
-    });
+    await Promise.all(
+      this.databases.map(database => database.process(address))
+    );
   };
 };
