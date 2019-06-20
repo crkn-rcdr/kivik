@@ -16,12 +16,15 @@ module.exports = {
     }
   },
   handler: async argv => {
-    const set = new DatabaseSet(
-      path.resolve(argv.directory),
+    const databaseSet = new DatabaseSet(
+      path.resolve(argv.directory || "."),
       argv.db,
       "deploy"
     );
-    await set.load();
-    await set.process(argv.server);
+
+    await databaseSet.load();
+    await databaseSet.process(argv.server);
+
+    return databaseSet;
   }
 };
