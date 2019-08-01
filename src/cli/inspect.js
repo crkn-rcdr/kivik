@@ -27,20 +27,22 @@ module.exports = {
     }
   },
   handler: async argv => {
-    const set = new DatabaseSet(
-      path.resolve(argv.directory),
+    const databaseSet = new DatabaseSet(
+      path.resolve(argv.directory || "."),
       argv.db,
       "inspect"
     );
-    await set.load();
+    await databaseSet.load();
 
     const container = new Container(argv.image, argv.port);
     try {
       await container.run(argv["couch-output"]);
-      await set.process(container.hostURL());
+      await databaseSet.process(container.hostURL());
     } catch (e) {
       console.log(e);
       await container.kill();
     }
+
+    return [databaseSet, container];
   }
 };
