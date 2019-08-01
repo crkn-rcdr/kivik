@@ -2,6 +2,13 @@
 
 Changes to `kivik` will be documented here.
 
+## [1.1.1] - 2019-08-01
+
+### Fixed
+
+- Inspect, deploy mode tested properly
+- Multiple database promises handled correctly
+
 ## [1.1.0] - 2019-05-07
 
 ### Added
@@ -25,5 +32,6 @@ Changes to `kivik` will be documented here.
 - Multiple design document support
 - View (map/reduce) and update function support within design documents
 
+[1.1.1]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.1.1
 [1.1.0]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.1.0
 [1.0.0]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.0.0
