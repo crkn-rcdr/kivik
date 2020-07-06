@@ -15,7 +15,7 @@ module.exports = {
       if ((await fs.stat(schemaFile)).isDirectory()) {
         schemaFile += "/schema.json";
       }
-      schema = JSON.parse(await fs.readFile(schemaFile));
+      schema = await fs.readJSON(schemaFile);
     } catch (e) {
       console.error("Could not open or parse the JSON schema");
       console.error(e.message);
@@ -34,7 +34,7 @@ module.exports = {
 
     if (!fetched) {
       try {
-        document = JSON.parse(await fs.readFile(argv.document));
+        document = await fs.readJSON(argv.document);
         fetched = true;
       } catch (e) {
         errors.push("Could not load document locally: " + e.message);
