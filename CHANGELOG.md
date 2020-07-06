@@ -4,6 +4,8 @@ Changes to `kivik` will be documented here.
 
 ## [1.2.1] - 2020-07-06
 
+### Fixed
+
 - Bumps package.json version number
 - Dependency upgrade
 
