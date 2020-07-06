@@ -2,6 +2,18 @@
 
 Changes to `kivik` will be documented here.
 
+## [1.2.0] - 2020-07-06
+
+### Added
+
+- `kivik validate` mode: validate a JSON document against a JSON schema
+- Databases will validate their fixtures against a schema.json file in their root directory
+- By default, inspect mode will not insert invalid fixtures into the inspection database; use the `--insert-invalid-fixtures` flag to change this behaviour.
+
+### Fixed
+
+- Inspect mode will no longer fail if there's no design directory
+
 ## [1.1.2] - 2020-06-24
 
 ### Fixed
@@ -38,6 +50,7 @@ Changes to `kivik` will be documented here.
 - Multiple design document support
 - View (map/reduce) and update function support within design documents
 
+[1.2.0]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.2.0
 [1.1.2]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.1.2
 [1.1.1]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.1.1
 [1.1.0]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.1.0

@@ -8,6 +8,7 @@
 $ kivik inspect path/to/dir
 $ kivik path/to/dir # same as above
 $ kivik deploy . --server http://user:password@couchserver:5984/
+$ kivik validate path/to/json/document.json path/to/json/schema.json
 ```
 
 ## Modes
@@ -18,6 +19,7 @@ $ kivik deploy . --server http://user:password@couchserver:5984/
 - `port`: The localhost port on which the CouchDB image will be accessible. The default is 5984.
 - `couch-output`: Boolean determining whether the CouchDB image's standard output is streamed to your terminal. Default: false.
 - `db`: Specify a particular database to inspect. You can use this option multiple times.
+- `insert-invalid-fixtures`: Insert fixtures that do not validate against the database's `schema.json`
 
 `kivik validate <document> <schema>` validates a JSON document against a JSON schema. Documents can be found locally or remotely, and the schema can be specified as either a file or a directory containing a `schema.json` file.
 
@@ -28,4 +30,4 @@ $ kivik deploy . --server http://user:password@couchserver:5984/
 
 ## Expected directory structure
 
-See the `example` directory in this repo. Running `kivik` on the example directory will create and populate two databases, with fixtures and design documents loaded from `fixtures` and `design` content found in the their respective directory structures. `kivik` supports view functions (maps and reduces), show functions, list functions, update functions, and filter functions. The functions are loaded as JavaScript and so syntax errors will be thrown; future versions of `kivik` may allow for more robust design document function testing.
+See the `example` directory in this repo. Running `kivik` on the example directory will create and populate two databases, with fixtures and design documents loaded from `fixtures` and `design` content found in the their respective directory structures. Adding a `schema.json` file to a database directory will cause the fixtures to be validated against it. `kivik` supports view functions (maps and reduces), show functions, list functions, update functions, and filter functions. The functions are loaded as JavaScript and so syntax errors will be thrown; future versions of `kivik` may allow for more robust design document function testing.
