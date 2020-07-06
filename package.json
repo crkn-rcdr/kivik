@@ -7,9 +7,11 @@
   "author": "Sascha Adler <sadler@crkn.ca>",
   "license": "MIT",
   "dependencies": {
+    "ajv": "^6.12.2",
     "dockerode": "^3.2.0",
     "fs-extra": "^9.0.1",
     "nano": "^8.2.2",
+    "node-fetch": "^2.6.0",
     "yargs": "^15.3.1"
   },
   "bin": {
@@ -21,7 +23,9 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
-    "mocha": "^8.0.1"
+    "mocha": "^8.0.1",
+    "sinon": "^9.0.2",
+    "sinon-chai": "^3.5.0"
   },
   "scripts": {
     "test": "mocha --recursive test/"

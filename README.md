@@ -19,6 +19,8 @@ $ kivik deploy . --server http://user:password@couchserver:5984/
 - `couch-output`: Boolean determining whether the CouchDB image's standard output is streamed to your terminal. Default: false.
 - `db`: Specify a particular database to inspect. You can use this option multiple times.
 
+`kivik validate <document> <schema>` validates a JSON document against a JSON schema. Documents can be found locally or remotely, and the schema can be specified as either a file or a directory containing a `schema.json` file.
+
 `kivik deploy` will deploy the design documents to the specified server. Options:
 
 - `server`: Base URL of the server. The default is `http://localhost:5984/`. You can specify HTTP authentication in the URL; see the example above.
