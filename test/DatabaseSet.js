@@ -11,6 +11,6 @@ describe("DatabaseSet", () => {
 
   it("loads databases from a directory", async () => {
     dset.should.have.property("databases");
-    dset.databases.should.have.length(3);
+    dset.databases.should.have.length(2);
   });
 });

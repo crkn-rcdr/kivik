@@ -1,7 +1,12 @@
 const fs = require("fs-extra");
 const Database = require("./Database");
 
-module.exports = function DatabaseSet(directory, subset, mode) {
+module.exports = function DatabaseSet(
+  directory,
+  subset,
+  mode,
+  insertInvalidFixtures
+) {
   const findDirectories = async () => {
     const directories = [];
     const contents = subset || (await fs.readdir(directory));
@@ -22,17 +27,17 @@ module.exports = function DatabaseSet(directory, subset, mode) {
 
   this.load = async () => {
     this.databases = await Promise.all(
-      (await findDirectories()).map(async dir => {
-        let database = new Database(dir, mode);
+      (await findDirectories()).map(async (dir) => {
+        let database = new Database(dir, mode, insertInvalidFixtures);
         await database.load();
         return database;
       })
     );
   };
 
-  this.process = async address => {
+  this.process = async (address) => {
     await Promise.all(
-      this.databases.map(database => database.process(address))
+      this.databases.map((database) => database.process(address))
     );
   };
 };

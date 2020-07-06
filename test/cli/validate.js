@@ -41,8 +41,8 @@ describe("Validate mode handler", function () {
 
   it("should invalidate an invalid document", async () => {
     await handler({
-      document: "example/badfixture/fixtures/no-good.json",
-      schema: "example/badfixture",
+      document: "example/testdb/fixtures/badfixture.json",
+      schema: "example/testdb",
     });
     exitStub.should.have.been.calledWith(1);
   });

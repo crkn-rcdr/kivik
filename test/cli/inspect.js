@@ -4,10 +4,10 @@ chai.should();
 
 const handler = require("../../src/cli/inspect").handler;
 
-describe("Inspect mode handler", function() {
+describe("Inspect mode handler", function () {
   this.timeout(0);
 
-  describe("with defaults", function() {
+  describe("with defaults", function () {
     let databaseSet, container;
 
     before(async () => {
@@ -16,7 +16,8 @@ describe("Inspect mode handler", function() {
         port: 22222,
         "couch-output": false,
         db: ["testdb"],
-        directory: "example"
+        directory: "example",
+        "insert-invalid-fixtures": false,
       });
     });
 
@@ -32,6 +33,16 @@ describe("Inspect mode handler", function() {
         .set("Accept", "application/json");
       response.status.should.equal(200);
       response.should.be.json;
+    });
+
+    it("should load only the valid fixtures", async () => {
+      let response = await chai
+        .request("http://localhost:22222")
+        .get("/testdb/_all_docs")
+        .set("Accept", "application/json");
+      response.status.should.equal(200);
+      response.body.rows.length.should.equal(6);
+      response.body.rows[2].id.should.equal("great-expectations");
     });
 
     after(async () => {

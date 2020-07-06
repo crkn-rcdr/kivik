@@ -1,11 +1,21 @@
 const fs = require("fs-extra");
 const path = require("path");
+const validate = require("./validate");
 const DesignDoc = require("./DesignDoc");
 
-module.exports = function Database(directory, mode) {
+module.exports = function Database(directory, mode, insertInvalidFixtures) {
   const dbName = directory.slice(directory.lastIndexOf("/") + 1);
 
   this.load = async () => {
+    let schemaFile = path.join(directory, "schema.json");
+    try {
+      this.schema = await fs.readJSON(schemaFile);
+    } catch (e) {
+      if (e.code !== "ENOENT") {
+        console.error(e.message);
+      }
+    }
+
     let fixturesDir = path.join(directory, "fixtures");
     let fixtureContents = [];
     try {
@@ -13,8 +23,22 @@ module.exports = function Database(directory, mode) {
     } catch (ignore) {}
     this.fixtures = await Promise.all(
       fixtureContents
-        .filter(file => file.endsWith(".json"))
-        .map(async file => await fs.readJSON(path.join(fixturesDir, file)))
+        .filter((file) => file.endsWith(".json"))
+        .map(async (file) => {
+          let fixture = {
+            document: await fs.readJSON(path.join(fixturesDir, file)),
+          };
+          if (this.schema) {
+            let response = validate(fixture.document, this.schema);
+            fixture.valid = response.success;
+            if (!fixture.valid) {
+              console.log(
+                `Fixture ${file} does not validate against the schema.`
+              );
+            }
+          }
+          return fixture;
+        })
     );
 
     let designDir = path.join(directory, "design");
@@ -23,10 +47,9 @@ module.exports = function Database(directory, mode) {
       designSubdirectories = await fs.readdir(designDir);
     } catch (e) {
       console.log(`No design directory found in ${directory}`);
-      return;
     }
     this.designDocs = await Promise.all(
-      designSubdirectories.map(async dir => {
+      designSubdirectories.map(async (dir) => {
         let ddoc = new DesignDoc(path.join(designDir, dir));
         await ddoc.load();
         return ddoc;
@@ -34,7 +57,7 @@ module.exports = function Database(directory, mode) {
     );
   };
 
-  this.process = async address => {
+  this.process = async (address) => {
     let nano = require("nano")(address);
     let dbExists = true;
     try {
@@ -67,12 +90,17 @@ module.exports = function Database(directory, mode) {
 
     if (mode === "inspect") {
       try {
-        await Promise.all(this.fixtures.map(fixture => db.insert(fixture)));
+        await Promise.all(
+          this.fixtures.map((fixture) => {
+            if (insertInvalidFixtures || fixture.valid)
+              db.insert(fixture.document);
+          })
+        );
       } catch (ignore) {}
     }
 
     await Promise.all(
-      this.designDocs.map(async ddoc => {
+      this.designDocs.map(async (ddoc) => {
         let rev;
         try {
           rev = (await db.get(ddoc.id))["_rev"];

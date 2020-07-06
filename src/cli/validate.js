@@ -4,7 +4,7 @@ const fetch = require("node-fetch");
 const validate = require("../validate");
 
 module.exports = {
-  command: ["validate <document> [schema]", "$0"],
+  command: ["validate <document> [schema]"],
   describe:
     "Validates a JSON document against a JSON schema. The JSON document can either be a file or a URL. The specified schema can either be a file or a directory containing a 'schema.json' file; by default this is the current directory.",
   handler: async (argv) => {
