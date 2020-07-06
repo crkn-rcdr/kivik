@@ -1,4 +1,4 @@
-const fs = require("fs");
+const fs = require("fs-extra");
 const fetch = require("node-fetch");
 
 const validate = require("../validate");
@@ -12,10 +12,10 @@ module.exports = {
     let schema;
 
     try {
-      if (fs.statSync(schemaFile).isDirectory()) {
+      if ((await fs.stat(schemaFile)).isDirectory()) {
         schemaFile += "/schema.json";
       }
-      schema = JSON.parse(fs.readFileSync(schemaFile));
+      schema = JSON.parse(await fs.readFile(schemaFile));
     } catch (e) {
       console.error("Could not open or parse the JSON schema");
       console.error(e.message);
@@ -34,7 +34,7 @@ module.exports = {
 
     if (!fetched) {
       try {
-        document = JSON.parse(fs.readFileSync(argv.document));
+        document = JSON.parse(await fs.readFile(argv.document));
         fetched = true;
       } catch (e) {
         errors.push("Could not load document locally: " + e.message);
