@@ -13,6 +13,8 @@ describe("Validate mode handler", function () {
 
   before(() => {
     exitStub = sinon.stub(process, "exit");
+    consoleLogStub = sinon.stub(console, "log");
+    consoleErrorStub = sinon.stub(console, "error");
   });
 
   it("should validate a file against a directory", async () => {
@@ -49,5 +51,7 @@ describe("Validate mode handler", function () {
 
   after(() => {
     exitStub.restore();
+    consoleLogStub.restore();
+    consoleErrorStub.restore();
   });
 });

@@ -3,7 +3,7 @@ const DatabaseSet = require("../src/DatabaseSet");
 const directory = require("path").resolve("example");
 
 describe("DatabaseSet", () => {
-  const dset = new DatabaseSet(directory);
+  const dset = new DatabaseSet(directory, { quiet: true });
 
   before(async () => {
     await dset.load();

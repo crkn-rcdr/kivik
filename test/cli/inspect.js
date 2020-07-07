@@ -18,6 +18,7 @@ describe("Inspect mode handler", function () {
         db: ["testdb"],
         directory: "example",
         "insert-invalid-fixtures": false,
+        quiet: true,
       });
     });
 

@@ -3,7 +3,7 @@ const Database = require("../src/Database");
 const directory = require("path").resolve("example/testdb");
 
 describe("Database", () => {
-  const db = new Database(directory);
+  const db = new Database(directory, { quiet: true });
 
   before(async () => {
     await db.load();

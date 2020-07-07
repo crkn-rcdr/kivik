@@ -12,13 +12,18 @@ describe("Deploy mode handler", function () {
     let databaseSet, container;
 
     before(async () => {
-      container = new Container({ image: "couchdb:1.7", port: 22222 });
+      container = new Container({
+        image: "couchdb:1.7",
+        port: 22222,
+        quiet: true,
+      });
       await container.run();
 
       databaseSet = await handler({
         server: "http://localhost:22222/",
         directory: "example",
         db: ["testdb"],
+        quiet: true,
       });
     });
 
