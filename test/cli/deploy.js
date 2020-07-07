@@ -5,20 +5,20 @@ chai.should();
 const Container = require("../../src/Container");
 const handler = require("../../src/cli/deploy").handler;
 
-describe("Deploy mode handler", function() {
+describe("Deploy mode handler", function () {
   this.timeout(0);
 
-  describe("with defaults", function() {
+  describe("with defaults", function () {
     let databaseSet, container;
 
     before(async () => {
-      container = new Container("couchdb:1.7", 22222);
+      container = new Container({ image: "couchdb:1.7", port: 22222 });
       await container.run();
 
       databaseSet = await handler({
         server: "http://localhost:22222/",
         directory: "example",
-        db: ["testdb"]
+        db: ["testdb"],
       });
     });
 

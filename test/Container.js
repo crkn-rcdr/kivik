@@ -3,9 +3,9 @@ chai.use(require("chai-http"));
 chai.should();
 const Container = require("../src/Container");
 
-describe("Container", function() {
+describe("Container", function () {
   this.timeout(0);
-  const container = new Container("couchdb:1.7", 22222);
+  const container = new Container({ image: "couchdb:1.7", port: 22222 });
 
   before(async () => {
     await container.run();

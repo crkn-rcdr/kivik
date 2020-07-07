@@ -3,22 +3,25 @@ const util = require("util");
 
 const TIMEOUT_START = 10;
 
-module.exports = function Container(
-  couchImage = "couchdb:1.7",
-  hostPort = 5984
-) {
+module.exports = function Container(options) {
+  options = Object.assign(
+    {},
+    { image: "couchdb:1.7", port: 5984 },
+    options || {}
+  );
+
   let dockerOptions = {
-    Image: couchImage,
+    Image: options.image,
     ExposedPorts: { "5984/tcp": {} },
     HostConfig: {
       PortBindings: {
-        "5984/tcp": [{ HostPort: hostPort.toString() }]
-      }
+        "5984/tcp": [{ HostPort: options.port.toString() }],
+      },
     },
-    Tty: true
+    Tty: true,
   };
 
-  let address = `http://localhost:${hostPort}/`;
+  let address = `http://localhost:${options.port}/`;
 
   // Ensures that the couch container is accepting requests
   let _ensureReady = async () => {

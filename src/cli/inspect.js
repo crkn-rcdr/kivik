@@ -33,15 +33,14 @@ module.exports = {
     },
   },
   handler: async (argv) => {
-    const databaseSet = new DatabaseSet(
-      path.resolve(argv.directory || "."),
-      argv.db,
-      "inspect",
-      argv["insert-invalid-fixtures"]
-    );
+    const databaseSet = new DatabaseSet(path.resolve(argv.directory || "."), {
+      subset: argv.db,
+      mode: "inspect",
+      insertInvalidFixtures: argv["insert-invalid-fixtures"],
+    });
     await databaseSet.load();
 
-    const container = new Container(argv.image, argv.port);
+    const container = new Container({ image: argv.image, port: argv.port });
     try {
       await container.run(argv["couch-output"]);
       await databaseSet.process(container.hostURL());

@@ -8,23 +8,22 @@ module.exports = {
     server: {
       default: "http://localhost:5984/",
       type: "string",
-      describe: "Server to deploy documents to"
+      describe: "Server to deploy documents to",
     },
     db: {
       type: "array",
-      describe: "Database directory to deploy"
-    }
+      describe: "Database directory to deploy",
+    },
   },
-  handler: async argv => {
-    const databaseSet = new DatabaseSet(
-      path.resolve(argv.directory || "."),
-      argv.db,
-      "deploy"
-    );
+  handler: async (argv) => {
+    const databaseSet = new DatabaseSet(path.resolve(argv.directory || "."), {
+      subset: argv.db,
+      mode: "deploy",
+    });
 
     await databaseSet.load();
     await databaseSet.process(argv.server);
 
     return databaseSet;
-  }
+  },
 };

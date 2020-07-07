@@ -1,15 +1,21 @@
 const fs = require("fs-extra");
 const Database = require("./Database");
 
-module.exports = function DatabaseSet(
-  directory,
-  subset,
-  mode,
-  insertInvalidFixtures
-) {
+// available options include:
+// subset: a list of subdirectories of the directory to include
+// mode: "deploy" or "inspect"
+// insertInvalidFixtures: boolean
+module.exports = function DatabaseSet(directory, options) {
+  options = Object.assign(
+    {},
+    { subset: [], mode: "inspect", insertInvalidFixtures: false },
+    options || {}
+  );
+
   const findDirectories = async () => {
     const directories = [];
-    const contents = subset || (await fs.readdir(directory));
+    const contents =
+      options.subset.length > 0 ? options.subset : await fs.readdir(directory);
     for (c of contents) {
       const dir = [directory, c].join("/");
       try {
@@ -28,7 +34,7 @@ module.exports = function DatabaseSet(
   this.load = async () => {
     this.databases = await Promise.all(
       (await findDirectories()).map(async (dir) => {
-        let database = new Database(dir, mode, insertInvalidFixtures);
+        let database = new Database(dir, options);
         await database.load();
         return database;
       })

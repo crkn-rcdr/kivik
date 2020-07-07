@@ -3,7 +3,16 @@ const path = require("path");
 const validate = require("./validate");
 const DesignDoc = require("./DesignDoc");
 
-module.exports = function Database(directory, mode, insertInvalidFixtures) {
+// options can include:
+// mode: "deploy" or "inspect"
+// insertInvalidFixtures: boolean
+module.exports = function Database(directory, options) {
+  options = Object.assign(
+    {},
+    { mode: "inspect", insertInvalidFixtures: false },
+    options || {}
+  );
+
   const dbName = directory.slice(directory.lastIndexOf("/") + 1);
 
   this.load = async () => {
@@ -64,7 +73,7 @@ module.exports = function Database(directory, mode, insertInvalidFixtures) {
       await nano.db.get(dbName);
     } catch (e) {
       if (!(e.error === "no_db_file")) {
-        if (mode !== "inspect") {
+        if (options.mode !== "inspect") {
           console.log(
             `Database ${dbName} does not exist. Will attempt to create it.`
           );
@@ -88,11 +97,11 @@ module.exports = function Database(directory, mode, insertInvalidFixtures) {
 
     const db = nano.use(dbName);
 
-    if (mode === "inspect") {
+    if (options.mode === "inspect") {
       try {
         await Promise.all(
           this.fixtures.map((fixture) => {
-            if (insertInvalidFixtures || fixture.valid)
+            if (options.insertInvalidFixtures || fixture.valid)
               db.insert(fixture.document);
           })
         );
