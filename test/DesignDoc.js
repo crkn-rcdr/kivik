@@ -26,6 +26,11 @@ describe("DesignDoc", () => {
       doc.views.all_titles.reduce.should.equal("_count");
     });
 
+    it("should not load files not ending in .js", async () => {
+      doc.should.have.property("views");
+      doc.views.should.not.have.property("not_a_js_file");
+    });
+
     it("should load updates from the updates directory", async () => {
       doc.should.have.property("updates");
       doc.updates.should.have.property("create_or_update");

@@ -2,6 +2,12 @@
 
 Changes to `kivik` will be documented here.
 
+## Current
+
+### Fixed
+
+- Files not ending in `.js` are no longer added into design docs
+
 ## [1.2.1] - 2020-07-06
 
 ### Fixed
