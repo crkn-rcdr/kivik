@@ -29,6 +29,7 @@ describe("DesignDoc", () => {
     it("should not load files not ending in .js", async () => {
       doc.should.have.property("views");
       doc.views.should.not.have.property("not_a_js_file");
+      Object.keys(doc.views).length.should.equal(2);
     });
 
     it("should load updates from the updates directory", async () => {
