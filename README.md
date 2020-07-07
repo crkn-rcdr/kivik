@@ -20,6 +20,7 @@ $ kivik validate path/to/json/document.json path/to/json/schema.json
 - `couch-output`: Boolean determining whether the CouchDB image's standard output is streamed to your terminal. Default: false.
 - `db`: Specify a particular database to inspect. You can use this option multiple times.
 - `insert-invalid-fixtures`: Insert fixtures that do not validate against the database's `schema.json`
+- `quiet`: Suppress console.log output.
 
 `kivik validate <document> <schema>` validates a JSON document against a JSON schema. Documents can be found locally or remotely, and the schema can be specified as either a file or a directory containing a `schema.json` file.
 
@@ -27,6 +28,7 @@ $ kivik validate path/to/json/document.json path/to/json/schema.json
 
 - `server`: Base URL of the server. The default is `http://localhost:5984/`. You can specify HTTP authentication in the URL; see the example above.
 - `db`: Specify a particular database to deploy. You can use this option multiple times.
+- `quiet`: Suppress console.log output.
 
 ## Expected directory structure
 

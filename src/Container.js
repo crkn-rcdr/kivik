@@ -6,7 +6,7 @@ const TIMEOUT_START = 10;
 module.exports = function Container(options) {
   options = Object.assign(
     {},
-    { image: "couchdb:1.7", port: 5984 },
+    { image: "couchdb:1.7", port: 5984, quiet: false },
     options || {}
   );
 
@@ -57,12 +57,14 @@ module.exports = function Container(options) {
       this.kill = async () => {
         await container.stop();
         await container.remove();
-        console.log(`Container ${name} stopped and removed.`);
+        if (!options.quiet)
+          console.log(`Container ${name} stopped and removed.`);
       };
 
       await container.start();
       const name = (await container.inspect()).Name.substring(1);
-      console.log(`Container ${name} started. View at ${address}_utils`);
+      if (!options.quiet)
+        console.log(`Container ${name} started. View at ${address}_utils`);
 
       process.on("SIGINT", this.kill);
 
@@ -77,8 +79,7 @@ module.exports = function Container(options) {
 
       await _ensureReady();
     } catch (error) {
-      console.log("Could not run CouchDB container:");
-      console.log(error);
+      console.error(`Could not run CouchDB container: ${error.message}`);
       process.exit(1);
     }
   };

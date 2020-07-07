@@ -14,11 +14,17 @@ module.exports = {
       type: "array",
       describe: "Database directory to deploy",
     },
+    quiet: {
+      default: false,
+      type: "boolean",
+      describe: "Suppress console output",
+    },
   },
   handler: async (argv) => {
     const databaseSet = new DatabaseSet(path.resolve(argv.directory || "."), {
       subset: argv.db,
       mode: "deploy",
+      quiet: argv.quiet,
     });
 
     await databaseSet.load();

@@ -5,7 +5,8 @@ const DesignDoc = require("./DesignDoc");
 
 // options can include:
 // mode: "deploy" or "inspect"
-// insertInvalidFixtures: boolean
+// insertInvalidFixtures: insert fixtures in inspect mode even if they do not validate
+// quiet: suppress console.log
 module.exports = function Database(directory, options) {
   options = Object.assign(
     {},
@@ -41,9 +42,10 @@ module.exports = function Database(directory, options) {
             let response = validate(fixture.document, this.schema);
             fixture.valid = response.success;
             if (!fixture.valid) {
-              console.log(
-                `Fixture ${file} does not validate against the schema.`
-              );
+              if (!options.quiet)
+                console.log(
+                  `Fixture ${file} does not validate against the schema.`
+                );
             }
           }
           return fixture;
@@ -55,7 +57,8 @@ module.exports = function Database(directory, options) {
     try {
       designSubdirectories = await fs.readdir(designDir);
     } catch (e) {
-      console.log(`No design directory found in ${directory}`);
+      if (!options.quiet)
+        console.log(`No design directory found in ${directory}`);
     }
     this.designDocs = await Promise.all(
       designSubdirectories.map(async (dir) => {
@@ -74,13 +77,14 @@ module.exports = function Database(directory, options) {
     } catch (e) {
       if (!(e.error === "no_db_file")) {
         if (options.mode !== "inspect") {
-          console.log(
-            `Database ${dbName} does not exist. Will attempt to create it.`
-          );
+          if (!options.quiet)
+            console.log(
+              `Database ${dbName} does not exist. Will attempt to create it.`
+            );
         }
         dbExists = false;
       } else {
-        console.log(
+        console.error(
           `Could not determine the status of database ${dbName}: ${e.error}`
         );
         return;
@@ -91,7 +95,7 @@ module.exports = function Database(directory, options) {
       try {
         await nano.db.create(dbName);
       } catch (e) {
-        console.log(`Could not create database ${dbName}: ${e.error}`);
+        console.error(`Could not create database ${dbName}: ${e.error}`);
       }
     }
 
@@ -115,7 +119,7 @@ module.exports = function Database(directory, options) {
           rev = (await db.get(ddoc.id))["_rev"];
         } catch (e) {
           if (!e.statusCode === 404) {
-            console.log(
+            console.error(
               `Could not determine status of design doc ${ddoc.id}: ${e.error}`
             );
           }
@@ -124,11 +128,11 @@ module.exports = function Database(directory, options) {
         try {
           await db.insert(ddoc.docWithRev(rev));
         } catch (e) {
-          console.log(`Could not insert design doc ${ddoc.id}: ${e.error}`);
+          console.error(`Could not insert design doc ${ddoc.id}: ${e.error}`);
         }
       })
     );
 
-    console.log(`Database ${dbName} processed.`);
+    if (!options.quiet) console.log(`Database ${dbName} processed.`);
   };
 };

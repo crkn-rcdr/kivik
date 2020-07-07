@@ -31,21 +31,31 @@ module.exports = {
       describe:
         "Insert fixtures into the inspection database even if they do not validate against the schema",
     },
+    quiet: {
+      default: false,
+      type: "boolean",
+      describe: "Suppress console output",
+    },
   },
   handler: async (argv) => {
     const databaseSet = new DatabaseSet(path.resolve(argv.directory || "."), {
       subset: argv.db,
       mode: "inspect",
       insertInvalidFixtures: argv["insert-invalid-fixtures"],
+      quiet: argv.quiet,
     });
     await databaseSet.load();
 
-    const container = new Container({ image: argv.image, port: argv.port });
+    const container = new Container({
+      image: argv.image,
+      port: argv.port,
+      quiet: argv.quiet,
+    });
     try {
       await container.run(argv["couch-output"]);
       await databaseSet.process(container.hostURL());
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(`Error running a kivik instance: ${e.message}`);
       await container.kill();
     }
 

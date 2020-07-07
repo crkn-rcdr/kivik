@@ -4,6 +4,10 @@ Changes to `kivik` will be documented here.
 
 ## Current
 
+### Added
+
+- Quiet mode, suppressing log output (error output is still produced). Use `--quiet`
+
 ### Fixed
 
 - Files not ending in `.js` are no longer added into design docs

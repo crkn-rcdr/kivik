@@ -5,12 +5,14 @@ const Database = require("./Database");
 // subset: a list of subdirectories of the directory to include
 // mode: "deploy" or "inspect"
 // insertInvalidFixtures: boolean
+// quiet: suppress console.log
 module.exports = function DatabaseSet(directory, options) {
   options = Object.assign(
     {},
-    { subset: [], mode: "inspect", insertInvalidFixtures: false },
+    { mode: "inspect", insertInvalidFixtures: false, quiet: false },
     options || {}
   );
+  if (!options.subset) options.subset = [];
 
   const findDirectories = async () => {
     const directories = [];
@@ -22,10 +24,11 @@ module.exports = function DatabaseSet(directory, options) {
         if ((await fs.stat(dir)).isDirectory()) {
           directories.push(dir);
         } else {
-          console.log(`${dir} is not a directory, ignoring.`);
+          if (!options.quiet)
+            console.log(`${dir} is not a directory, ignoring.`);
         }
       } catch (ignore) {
-        console.log(`${dir} does not exist, ignoring.`);
+        if (!options.quiet) console.log(`${dir} does not exist, ignoring.`);
       }
     }
     return directories;
