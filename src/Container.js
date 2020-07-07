@@ -6,7 +6,7 @@ const TIMEOUT_START = 10;
 module.exports = function Container(options) {
   options = Object.assign(
     {},
-    { image: "couchdb:1.7", port: 5984, quiet: false },
+    { image: "couchdb:1.7", port: 5984, quiet: false, showOutput: false },
     options || {}
   );
 
@@ -50,7 +50,7 @@ module.exports = function Container(options) {
 
   let docker = new Docker();
 
-  this.run = async (output = false) => {
+  this.run = async () => {
     try {
       const container = await docker.createContainer(dockerOptions);
 
@@ -71,7 +71,7 @@ module.exports = function Container(options) {
       container.attach(
         { stream: true, stdout: true, stderr: true },
         (err, stream) => {
-          if (output) {
+          if (options.showOutput) {
             stream.pipe(process.stdout);
           }
         }

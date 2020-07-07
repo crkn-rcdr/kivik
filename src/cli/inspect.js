@@ -50,9 +50,10 @@ module.exports = {
       image: argv.image,
       port: argv.port,
       quiet: argv.quiet,
+      showOutput: argv["couch-output"],
     });
     try {
-      await container.run(argv["couch-output"]);
+      await container.run();
       await databaseSet.process(container.hostURL());
     } catch (error) {
       console.error(`Error running a kivik instance: ${e.message}`);
