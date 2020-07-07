@@ -2,7 +2,7 @@
   "name": "kivik",
   "version": "1.2.1",
   "description": "Command-line utility for deploying CouchDB design documents",
-  "main": "src/cli.js",
+  "main": "src/main.js",
   "repository": "https://github.com/crkn-rcdr/kivik",
   "author": "Sascha Adler <sadler@crkn.ca>",
   "license": "MIT",

@@ -8,10 +8,10 @@ describe("Inspect mode handler", function () {
   this.timeout(0);
 
   describe("with defaults", function () {
-    let databaseSet, container;
+    let instance;
 
     before(async () => {
-      [databaseSet, container] = await handler({
+      instance = await handler({
         image: "couchdb:1.7",
         port: 22222,
         "couch-output": false,
@@ -23,8 +23,8 @@ describe("Inspect mode handler", function () {
     });
 
     it("should load databases", async () => {
-      databaseSet.should.have.property("databases");
-      databaseSet.databases.should.have.length(1);
+      instance.databaseSet.should.have.property("databases");
+      instance.databaseSet.databases.should.have.length(1);
     });
 
     it("should be accessible via http", async () => {
@@ -47,7 +47,7 @@ describe("Inspect mode handler", function () {
     });
 
     after(async () => {
-      await container.kill();
+      await instance.kill();
     });
   });
 });

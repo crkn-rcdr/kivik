@@ -1,6 +1,4 @@
-const path = require("path");
-const Container = require("../Container");
-const DatabaseSet = require("../DatabaseSet");
+const Instance = require("../Instance");
 
 module.exports = {
   command: ["inspect [directory]", "$0"],
@@ -22,6 +20,7 @@ module.exports = {
       describe: "Show CouchDB output",
     },
     db: {
+      default: [],
       type: "array",
       describe: "Database directory to inspect",
     },
@@ -38,28 +37,15 @@ module.exports = {
     },
   },
   handler: async (argv) => {
-    const databaseSet = new DatabaseSet(path.resolve(argv.directory || "."), {
-      subset: argv.db,
-      mode: "inspect",
+    const instance = new Instance(argv.directory, {
+      image: argv.image,
+      port: argv.port,
+      couchOutput: argv["couch-output"],
+      dbSubset: argv.db,
       insertInvalidFixtures: argv["insert-invalid-fixtures"],
       quiet: argv.quiet,
     });
-    await databaseSet.load();
-
-    const container = new Container({
-      image: argv.image,
-      port: argv.port,
-      quiet: argv.quiet,
-      showOutput: argv["couch-output"],
-    });
-    try {
-      await container.run();
-      await databaseSet.process(container.hostURL());
-    } catch (error) {
-      console.error(`Error running a kivik instance: ${e.message}`);
-      await container.kill();
-    }
-
-    return [databaseSet, container];
+    await instance.run();
+    return instance;
   },
 };
