@@ -2,10 +2,11 @@
 
 Changes to `kivik` will be documented here.
 
-## Current
+## [1.3.0] - 2020-07-08
 
 ### Added
 
+- Inspect mode is made available programmatically. `require("kivik")` and you can set it up.
 - Quiet mode, suppressing log output (error output is still produced). Use `--quiet`
 
 ### Fixed
@@ -67,6 +68,8 @@ Changes to `kivik` will be documented here.
 - Multiple design document support
 - View (map/reduce) and update function support within design documents
 
+[1.3.0]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.3.0
+[1.2.1]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.2.1
 [1.2.0]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.2.0
 [1.1.2]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.1.2
 [1.1.1]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.1.1

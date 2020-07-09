@@ -33,3 +33,20 @@ $ kivik validate path/to/json/document.json path/to/json/schema.json
 ## Expected directory structure
 
 See the `example` directory in this repo. Running `kivik` on the example directory will create and populate two databases, with fixtures and design documents loaded from `fixtures` and `design` content found in the their respective directory structures. Adding a `schema.json` file to a database directory will cause the fixtures to be validated against it. `kivik` supports view functions (maps and reduces), show functions, list functions, update functions, and filter functions. The functions are loaded as JavaScript and so syntax errors will be thrown; future versions of `kivik` may allow for more robust design document function testing.
+
+## Programmatic use
+
+You can initialize and run a kivik inspection database programmatically.
+
+```
+const Kivik = require("kivik");
+
+const instance = new Kivik("path/to/directory", {
+  // options
+});
+instance.run().then(() => {
+  // do some stuff
+
+  instance.kill();
+});
+```
