@@ -27,7 +27,7 @@ describe("Database", () => {
 
   it("loads design docs", async () => {
     db.should.have.property("designDocs");
-    db.designDocs.should.have.length(2);
-    db.designDocs[1].doc.should.have.property("views");
+    db.designDocs.should.have.length(1);
+    db.designDocs[0].doc.should.have.property("views");
   });
 });

@@ -42,8 +42,8 @@ describe("Inspect mode handler", function () {
         .get("/testdb/_all_docs")
         .set("Accept", "application/json");
       response.status.should.equal(200);
-      response.body.rows.length.should.equal(6);
-      response.body.rows[2].id.should.equal("great-expectations");
+      response.body.rows.length.should.equal(5);
+      response.body.rows[1].id.should.equal("great-expectations");
     });
 
     after(async () => {
