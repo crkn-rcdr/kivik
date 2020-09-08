@@ -3,13 +3,19 @@ const Database = require("./Database");
 
 // available options include:
 // subset: a list of subdirectories of the directory to include
-// mode: "deploy" or "inspect"
-// insertInvalidFixtures: boolean
+// fixtures: deploy fixtures to databases
+// invalidFixtures: deploy fixtures to databases that do not validate
+// createDatabases: create databases when they do not exist
 // quiet: suppress console.log
 module.exports = function DatabaseSet(directory, options) {
   options = Object.assign(
     {},
-    { mode: "inspect", insertInvalidFixtures: false, quiet: false },
+    {
+      fixtures: false,
+      invalidFixtures: false,
+      createDatabases: true,
+      quiet: false,
+    },
     options || {}
   );
   if (!options.subset) options.subset = [];
@@ -44,9 +50,9 @@ module.exports = function DatabaseSet(directory, options) {
     );
   };
 
-  this.process = async (address) => {
+  this.deploy = async (address) => {
     await Promise.all(
-      this.databases.map((database) => database.process(address))
+      this.databases.map((database) => database.deploy(address))
     );
   };
 };

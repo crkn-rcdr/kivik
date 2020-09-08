@@ -4,13 +4,19 @@ const validate = require("./validate");
 const DesignDoc = require("./DesignDoc");
 
 // options can include:
-// mode: "deploy" or "inspect"
-// insertInvalidFixtures: insert fixtures in inspect mode even if they do not validate
+// fixtures: deploy fixtures to databases
+// invalidFixtures: deploy fixtures to databases that do not validate
+// createDatabases: create databases when they do not exist
 // quiet: suppress console.log
 module.exports = function Database(directory, options) {
   options = Object.assign(
     {},
-    { mode: "inspect", insertInvalidFixtures: false },
+    {
+      fixtures: false,
+      invalidFixtures: false,
+      createDatabases: true,
+      quiet: false,
+    },
     options || {}
   );
 
@@ -69,19 +75,13 @@ module.exports = function Database(directory, options) {
     );
   };
 
-  this.process = async (address) => {
+  this.deploy = async (address) => {
     let nano = require("nano")(address);
     let dbExists = true;
     try {
       await nano.db.get(dbName);
     } catch (e) {
       if (!(e.error === "no_db_file")) {
-        if (options.mode !== "inspect") {
-          if (!options.quiet)
-            console.log(
-              `Database ${dbName} does not exist. Will attempt to create it.`
-            );
-        }
         dbExists = false;
       } else {
         console.error(
@@ -92,20 +92,30 @@ module.exports = function Database(directory, options) {
     }
 
     if (!dbExists) {
-      try {
-        await nano.db.create(dbName);
-      } catch (e) {
-        console.error(`Could not create database ${dbName}: ${e.error}`);
+      if (options.createDatabases) {
+        if (!options.quiet) {
+          console.log(
+            `Database ${dbName} does not exist. Will attempt to create it.`
+          );
+        }
+        try {
+          await nano.db.create(dbName);
+        } catch (e) {
+          console.error(`Could not create database ${dbName}: ${e.error}`);
+        }
+      } else {
+        console.error(`Database ${dbName} does not exist.`);
+        return;
       }
     }
 
     const db = nano.use(dbName);
 
-    if (options.mode === "inspect") {
+    if (options.fixtures) {
       try {
         await Promise.all(
           this.fixtures.map((fixture) => {
-            if (options.insertInvalidFixtures || fixture.valid)
+            if (options.invalidFixtures || fixture.valid)
               db.insert(fixture.document);
           })
         );
@@ -133,6 +143,6 @@ module.exports = function Database(directory, options) {
       })
     );
 
-    if (!options.quiet) console.log(`Database ${dbName} processed.`);
+    if (!options.quiet) console.log(`Database ${dbName} deployed.`);
   };
 };

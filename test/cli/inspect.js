@@ -17,7 +17,7 @@ describe("Inspect mode handler", function () {
         "couch-output": false,
         db: ["testdb"],
         directory: "example",
-        "insert-invalid-fixtures": false,
+        "invalid-fixtures": false,
         quiet: true,
       });
     });
@@ -42,8 +42,13 @@ describe("Inspect mode handler", function () {
         .get("/testdb/_all_docs")
         .set("Accept", "application/json");
       response.status.should.equal(200);
-      response.body.rows.length.should.equal(5);
-      response.body.rows[1].id.should.equal("great-expectations");
+
+      let filteredRows = response.body.rows.filter((row) => {
+        return !row.id.startsWith("_design");
+      });
+
+      filteredRows.length.should.equal(4);
+      filteredRows[0].id.should.equal("great-expectations");
     });
 
     after(async () => {

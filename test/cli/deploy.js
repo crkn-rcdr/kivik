@@ -23,6 +23,7 @@ describe("Deploy mode handler", function () {
         server: "http://localhost:22222/",
         directory: "example",
         db: ["testdb"],
+        "create-databases": true,
         quiet: true,
       });
     });

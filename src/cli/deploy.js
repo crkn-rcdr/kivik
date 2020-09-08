@@ -14,6 +14,16 @@ module.exports = {
       type: "array",
       describe: "Database directory to deploy",
     },
+    fixtures: {
+      type: "boolean",
+      default: false,
+      describe: "Deploy fixtures to database",
+    },
+    "create-databases": {
+      type: "boolean",
+      default: false,
+      describe: "Create databases when they do not exist on the Couch server",
+    },
     quiet: {
       default: false,
       type: "boolean",
@@ -23,12 +33,14 @@ module.exports = {
   handler: async (argv) => {
     const databaseSet = new DatabaseSet(path.resolve(argv.directory || "."), {
       subset: argv.db,
-      mode: "deploy",
+      fixtures: argv.fixtures,
+      invalidFixtures: false,
+      createDatabases: argv["create-databases"],
       quiet: argv.quiet,
     });
 
     await databaseSet.load();
-    await databaseSet.process(argv.server);
+    await databaseSet.deploy(argv.server);
 
     return databaseSet;
   },

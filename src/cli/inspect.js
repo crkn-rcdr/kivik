@@ -24,7 +24,7 @@ module.exports = {
       type: "array",
       describe: "Database directory to inspect",
     },
-    "insert-invalid-fixtures": {
+    "invalid-fixtures": {
       default: false,
       type: "boolean",
       describe:
@@ -42,7 +42,7 @@ module.exports = {
       port: argv.port,
       couchOutput: argv["couch-output"],
       dbSubset: argv.db,
-      insertInvalidFixtures: argv["insert-invalid-fixtures"],
+      insertInvalidFixtures: argv["invalid-fixtures"],
       quiet: argv.quiet,
     });
     await instance.run();
