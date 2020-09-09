@@ -38,6 +38,8 @@ See the `example` directory in this repo. Running `kivik` on the example directo
 
 ## Programmatic use
 
+### Inspection
+
 You can initialize and run a kivik inspection database programmatically.
 
 ```
@@ -52,3 +54,7 @@ instance.run().then(() => {
   instance.kill();
 });
 ```
+
+### TestDeployer
+
+Documentation on how to use TestDeployer is forthcoming.

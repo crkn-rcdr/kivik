@@ -55,4 +55,15 @@ module.exports = function DatabaseSet(directory, options) {
       this.databases.map((database) => database.deploy(address))
     );
   };
+
+  this.reset = async (address) => {
+    if (options.test) {
+      let nano = require("nano")(address);
+      await Promise.all(
+        this.databases.map((database) => nano.db.destroy(database.dbName))
+      );
+    } else {
+      console.error("Attempting to reset a deployment while not in test mode.");
+    }
+  };
 };

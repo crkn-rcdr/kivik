@@ -9,7 +9,7 @@ describe("Deploy mode handler", function () {
   this.timeout(0);
 
   describe("with defaults", function () {
-    let databaseSet, container;
+    let deployer, container;
 
     before(async () => {
       container = new Container({
@@ -19,7 +19,7 @@ describe("Deploy mode handler", function () {
       });
       await container.run();
 
-      databaseSet = await handler({
+      deployer = await handler({
         server: "http://localhost:22222/",
         directory: "example",
         db: ["testdb"],
@@ -29,8 +29,8 @@ describe("Deploy mode handler", function () {
     });
 
     it("should load databases", async () => {
-      databaseSet.should.have.property("databases");
-      databaseSet.databases.should.have.length(1);
+      deployer.databaseSet.should.have.property("databases");
+      deployer.databaseSet.databases.should.have.length(1);
     });
 
     it("should be accessible via http", async () => {

@@ -1,5 +1,5 @@
 const path = require("path");
-const DatabaseSet = require("../DatabaseSet");
+const Deployer = require("../Deployer");
 
 module.exports = {
   command: ["deploy [directory]"],
@@ -31,17 +31,21 @@ module.exports = {
     },
   },
   handler: async (argv) => {
-    const databaseSet = new DatabaseSet(path.resolve(argv.directory || "."), {
-      subset: argv.db,
-      fixtures: argv.fixtures,
-      invalidFixtures: false,
-      createDatabases: argv["create-databases"],
-      quiet: argv.quiet,
-    });
+    const deployer = new Deployer(
+      path.resolve(argv.directory) || ".",
+      argv.server,
+      {
+        dbSubset: argv.db,
+        fixtures: argv.fixtures,
+        invalidFixtures: false,
+        createDatabases: argv["create-databases"],
+        quiet: argv.quiet,
+      }
+    );
 
-    await databaseSet.load();
-    await databaseSet.deploy(argv.server);
+    await deployer.load();
+    await deployer.deploy();
 
-    return databaseSet;
+    return deployer;
   },
 };

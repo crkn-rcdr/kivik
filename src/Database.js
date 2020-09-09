@@ -20,7 +20,7 @@ module.exports = function Database(directory, options) {
     options || {}
   );
 
-  const dbName = directory.slice(directory.lastIndexOf("/") + 1);
+  this.dbName = directory.slice(directory.lastIndexOf("/") + 1);
 
   this.load = async () => {
     let schemaFile = path.join(directory, "schema.json");
@@ -79,13 +79,13 @@ module.exports = function Database(directory, options) {
     let nano = require("nano")(address);
     let dbExists = true;
     try {
-      await nano.db.get(dbName);
+      await nano.db.get(this.dbName);
     } catch (e) {
       if (!(e.error === "no_db_file")) {
         dbExists = false;
       } else {
         console.error(
-          `Could not determine the status of database ${dbName}: ${e.error}`
+          `Could not determine the status of database ${this.dbName}: ${e.error}`
         );
         return;
       }
@@ -95,21 +95,21 @@ module.exports = function Database(directory, options) {
       if (options.createDatabases) {
         if (!options.quiet) {
           console.log(
-            `Database ${dbName} does not exist. Will attempt to create it.`
+            `Database ${this.dbName} does not exist. Will attempt to create it.`
           );
         }
         try {
-          await nano.db.create(dbName);
+          await nano.db.create(this.dbName);
         } catch (e) {
-          console.error(`Could not create database ${dbName}: ${e.error}`);
+          console.error(`Could not create database ${this.dbName}: ${e.error}`);
         }
       } else {
-        console.error(`Database ${dbName} does not exist.`);
+        console.error(`Database ${this.dbName} does not exist.`);
         return;
       }
     }
 
-    const db = nano.use(dbName);
+    const db = nano.use(this.dbName);
 
     if (options.fixtures) {
       try {
@@ -143,6 +143,6 @@ module.exports = function Database(directory, options) {
       })
     );
 
-    if (!options.quiet) console.log(`Database ${dbName} deployed.`);
+    if (!options.quiet) console.log(`Database ${this.dbName} deployed.`);
   };
 };
