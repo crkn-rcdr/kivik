@@ -1,10 +1,12 @@
-const ajv = new require("ajv")();
+const Ajv = require("ajv").default;
 
 module.exports = function validate(document, schema) {
-  let valid = ajv.validate(schema, document);
+  const ajv = new Ajv();
+  const validate = ajv.compile(schema);
+  const valid = validate(document);
   if (valid) {
     return { success: true };
   } else {
-    return { success: false, errors: ajv.errors };
+    return { success: false, errors: validate.errors };
   }
 };
