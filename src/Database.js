@@ -75,17 +75,16 @@ module.exports = function Database(directory, options) {
     );
   };
 
-  this.deploy = async (address) => {
-    let nano = require("nano")(address);
+  this.deploy = async (agent) => {
     let dbExists = true;
     try {
-      await nano.db.get(this.dbName);
+      await agent.db.get(this.dbName);
     } catch (e) {
-      if (!(e.error === "no_db_file")) {
+      if (!(e.message === "no_db_file")) {
         dbExists = false;
       } else {
         console.error(
-          `Could not determine the status of database ${this.dbName}: ${e.error}`
+          `Could not determine the status of database ${this.dbName}: ${e.message}`
         );
         return;
       }
@@ -99,9 +98,11 @@ module.exports = function Database(directory, options) {
           );
         }
         try {
-          await nano.db.create(this.dbName);
+          await agent.db.create(this.dbName);
         } catch (e) {
-          console.error(`Could not create database ${this.dbName}: ${e.error}`);
+          console.error(
+            `Could not create database ${this.dbName}: ${e.message}`
+          );
         }
       } else {
         console.error(`Database ${this.dbName} does not exist.`);
@@ -109,7 +110,7 @@ module.exports = function Database(directory, options) {
       }
     }
 
-    const db = nano.use(this.dbName);
+    const db = agent.use(this.dbName);
 
     if (options.fixtures) {
       try {
@@ -130,7 +131,7 @@ module.exports = function Database(directory, options) {
         } catch (e) {
           if (!e.statusCode === 404) {
             console.error(
-              `Could not determine status of design doc ${ddoc.id}: ${e.error}`
+              `Could not determine status of design doc ${ddoc.id}: ${e.message}`
             );
           }
         }
@@ -138,7 +139,7 @@ module.exports = function Database(directory, options) {
         try {
           await db.insert(ddoc.docWithRev(rev));
         } catch (e) {
-          console.error(`Could not insert design doc ${ddoc.id}: ${e.error}`);
+          console.error(`Could not insert design doc ${ddoc.id}: ${e.message}`);
         }
       })
     );

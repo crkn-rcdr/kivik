@@ -6,7 +6,7 @@ module.exports = function KivikInstance(directory, options) {
   options = Object.assign(
     {},
     {
-      image: "couchdb:1.7",
+      image: "couchdb:3.1",
       port: 5984,
       couchOutput: false,
       dbSubset: [],
@@ -22,6 +22,7 @@ module.exports = function KivikInstance(directory, options) {
     showOutput: options.couchOutput,
     quiet: options.quiet,
   });
+
   this.databaseSet = new DatabaseSet(path.resolve(directory || "."), {
     subset: options.dbSubset,
     fixtures: true,
@@ -33,7 +34,7 @@ module.exports = function KivikInstance(directory, options) {
   this.run = async () => {
     try {
       await Promise.all([this.databaseSet.load(), this.container.run()]);
-      await this.databaseSet.deploy(this.container.hostURL());
+      await this.databaseSet.deploy(this.container.agent);
     } catch (error) {
       console.error(`Error running a kivik instance: ${e.message}`);
       await container.kill();

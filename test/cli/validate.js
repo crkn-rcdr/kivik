@@ -9,7 +9,7 @@ const githubJsonUrl =
   "https://raw.githubusercontent.com/crkn-rcdr/kivik/master/example/testdb/fixtures/pickwick.json";
 
 describe("Validate mode handler", function () {
-  let exitStub;
+  let exitStub, consoleLogStub, consoleErrorStub;
 
   before(() => {
     exitStub = sinon.stub(process, "exit");

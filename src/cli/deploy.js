@@ -1,4 +1,5 @@
 const path = require("path");
+const Nano = require("nano");
 const Deployer = require("../Deployer");
 
 module.exports = {
@@ -9,6 +10,16 @@ module.exports = {
       default: "http://localhost:5984/",
       type: "string",
       describe: "Server to deploy documents to",
+    },
+    "admin-user": {
+      default: "admin",
+      type: "string",
+      describe: "Admin user's name",
+    },
+    "admin-password": {
+      default: "password",
+      type: "string",
+      describe: "Admin user's password",
     },
     db: {
       type: "array",
@@ -31,17 +42,23 @@ module.exports = {
     },
   },
   handler: async (argv) => {
-    const deployer = new Deployer(
-      path.resolve(argv.directory) || ".",
-      argv.server,
-      {
-        dbSubset: argv.db,
-        fixtures: argv.fixtures,
-        invalidFixtures: false,
-        createDatabases: argv["create-databases"],
-        quiet: argv.quiet,
-      }
-    );
+    const agent = Nano({
+      url: argv.server,
+      requestDefaults: {
+        auth: {
+          username: argv["admin-user"],
+          password: argv["admin-password"],
+        },
+      },
+    });
+
+    const deployer = new Deployer(path.resolve(argv.directory) || ".", agent, {
+      dbSubset: argv.db,
+      fixtures: argv.fixtures,
+      invalidFixtures: false,
+      createDatabases: argv["create-databases"],
+      quiet: argv.quiet,
+    });
 
     await deployer.load();
     await deployer.deploy();

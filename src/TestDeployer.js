@@ -1,9 +1,9 @@
 const Deployer = require("./Deployer");
 
-module.exports = function KivikTestDeployer(directory, server, dbSubset) {
+module.exports = function KivikTestDeployer(directory, agent, dbSubset) {
   Object.assign(
     this,
-    new Deployer(directory, server, {
+    new Deployer(directory, agent, {
       dbSubset: dbSubset || [],
       fixtures: true,
       createDatabases: true,

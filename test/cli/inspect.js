@@ -1,23 +1,28 @@
 const chai = require("chai");
-chai.use(require("chai-http"));
+const sinon = require("sinon");
+chai.use(require("sinon-chai"));
 chai.should();
 
 const handler = require("../../src/cli/inspect").handler;
+
+const port = 22222;
 
 describe("Inspect mode handler", function () {
   this.timeout(0);
 
   describe("with defaults", function () {
-    let instance;
+    let exitStub, instance;
 
     before(async () => {
+      exitStub = sinon.stub(process, "exit");
+
       instance = await handler({
-        image: "couchdb:1.7",
-        port: 22222,
+        directory: "example",
+        image: "couchdb:3.1",
+        port,
         "couch-output": false,
         db: ["testdb"],
-        directory: "example",
-        "invalid-fixtures": false,
+        "insert-invalid-fixtures": false,
         quiet: true,
       });
     });
@@ -28,31 +33,24 @@ describe("Inspect mode handler", function () {
     });
 
     it("should be accessible via http", async () => {
-      let response = await chai
-        .request("http://localhost:22222/")
-        .get("/testdb")
-        .set("Accept", "application/json");
-      response.status.should.equal(200);
-      response.should.be.json;
+      const db = await instance.container.agent.db.get("testdb");
+      db.should.haveOwnProperty("db_name", "testdb");
     });
 
     it("should load only the valid fixtures", async () => {
-      let response = await chai
-        .request("http://localhost:22222")
-        .get("/testdb/_all_docs")
-        .set("Accept", "application/json");
-      response.status.should.equal(200);
+      const response = await instance.container.agent.use("testdb").list();
 
-      let filteredRows = response.body.rows.filter((row) => {
-        return !row.id.startsWith("_design");
+      const docs = response.rows.filter((doc) => {
+        return !doc.id.startsWith("_design");
       });
 
-      filteredRows.length.should.equal(4);
-      filteredRows[0].id.should.equal("great-expectations");
+      docs.length.should.equal(4);
+      docs[0].id.should.equal("great-expectations");
     });
 
     after(async () => {
       await instance.kill();
+      exitStub.restore();
     });
   });
 });

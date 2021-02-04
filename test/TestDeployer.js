@@ -1,27 +1,22 @@
 const chai = require("chai");
-chai.use(require("chai-http"));
+chai.use(require("chai-as-promised"));
 chai.should();
 
 const Container = require("../src/Container");
 const TestDeployer = require("../src/TestDeployer");
 
-const server = "http://localhost:22222/";
+const port = 22222;
 
 describe("TestDeployer", function () {
   this.timeout(0);
+  const container = new Container({ quiet: true, port });
+  const testdb = container.agent.use("testdb");
 
   describe("with defaults", function () {
-    let testDeployer, container;
+    const testDeployer = new TestDeployer("example", container.agent);
 
     before(async () => {
-      container = new Container({
-        image: "couchdb:1.7",
-        port: 22222,
-        quiet: true,
-      });
       await container.run();
-
-      testDeployer = new TestDeployer("example", server);
       await testDeployer.load();
     });
 
@@ -35,26 +30,28 @@ describe("TestDeployer", function () {
     });
 
     it("should load fixtures", async () => {
-      let response = await chai
-        .request(server)
-        .get("/testdb/great-expectations");
-      response.status.should.equal(200);
+      const ge = await testdb.get("great-expectations");
+      ge.should.haveOwnProperty("title");
+      ge.title.should.equal("Great Expectations");
     });
 
     it("should allow for new documents to be added", async () => {
-      let testdb = require("nano")(server).use("testdb");
       await testdb.insert({
         _id: "not-a-real-book",
         title: "this isn't a real book",
         published: [2020],
       });
-      let response = await chai.request(server).get("/testdb/not-a-real-book");
-      response.status.should.equal(200);
+
+      const newbook = await testdb.get("not-a-real-book");
+      newbook.should.haveOwnProperty("title");
+      newbook.title.should.equal("this isn't a real book");
     });
 
     it("should reset to a clean slate after each test", async () => {
-      let response = await chai.request(server).get("/testdb/not-a-real-book");
-      response.status.should.equal(404);
+      testdb
+        .get("not-a-real-book")
+        .should.eventually.throw()
+        .with.property("statusCode", 404);
     });
 
     afterEach(async () => {
@@ -67,17 +64,12 @@ describe("TestDeployer", function () {
   });
 
   describe("with a database subset", function () {
-    let testDeployer, container;
+    const testDeployer = new TestDeployer("example", container.agent, [
+      "seconddb",
+    ]);
 
     before(async () => {
-      container = new Container({
-        image: "couchdb:1.7",
-        port: 22222,
-        quiet: true,
-      });
       await container.run();
-
-      testDeployer = new TestDeployer("example", server, ["seconddb"]);
       await testDeployer.load();
     });
 
@@ -86,10 +78,10 @@ describe("TestDeployer", function () {
     });
 
     it("shouldn't load from databases not included in the subset", async () => {
-      let response = await chai
-        .request(server)
-        .get("/testdb/great-expectations");
-      response.status.should.equal(404);
+      testdb
+        .get("great-expectations")
+        .should.eventually.throw()
+        .with.property("statusCode", 404);
     });
 
     afterEach(async () => {

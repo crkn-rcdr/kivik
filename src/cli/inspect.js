@@ -5,7 +5,7 @@ module.exports = {
   describe: "Spins up a CouchDB container for inspection",
   builder: {
     image: {
-      default: "couchdb:1.7",
+      default: "couchdb:3.1",
       type: "string",
       describe: "The base image for the container",
     },

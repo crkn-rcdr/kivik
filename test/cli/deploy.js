@@ -1,26 +1,32 @@
 const chai = require("chai");
-chai.use(require("chai-http"));
+chai.use(require("chai-as-promised"));
 chai.should();
 
 const Container = require("../../src/Container");
 const handler = require("../../src/cli/deploy").handler;
 
+const port = 22222;
+const adminUser = "kivikadmin";
+const adminPassword = "kivikpassword";
+
 describe("Deploy mode handler", function () {
   this.timeout(0);
 
   describe("with defaults", function () {
-    let deployer, container;
+    const container = new Container({
+      port,
+      quiet: true,
+    });
+
+    let deployer;
 
     before(async () => {
-      container = new Container({
-        image: "couchdb:1.7",
-        port: 22222,
-        quiet: true,
-      });
       await container.run();
 
       deployer = await handler({
-        server: "http://localhost:22222/",
+        server: `http://localhost:${port}/`,
+        "admin-user": adminUser,
+        "admin-password": adminPassword,
         directory: "example",
         db: ["testdb"],
         "create-databases": true,
@@ -34,19 +40,16 @@ describe("Deploy mode handler", function () {
     });
 
     it("should be accessible via http", async () => {
-      let response = await chai
-        .request("http://localhost:22222/")
-        .get("/testdb")
-        .set("Accept", "application/json");
-      response.status.should.equal(200);
-      response.should.be.json;
+      const db = await container.agent.db.get("testdb");
+      db.should.haveOwnProperty("db_name", "testdb");
     });
 
     it("should not load fixtures", async () => {
-      let response = await chai
-        .request("http://localhost:22222/")
-        .get("/testdb/great-expectations");
-      response.status.should.equal(404);
+      container.agent
+        .use("testdb")
+        .get("great-expectations")
+        .should.eventually.throw()
+        .with.property("statusCode", 404);
     });
 
     after(async () => {

@@ -1,7 +1,7 @@
 const path = require("path");
 const DatabaseSet = require("./DatabaseSet");
 
-module.exports = function KivikDeployer(directory, server, options) {
+module.exports = function KivikDeployer(directory, agent, options) {
   options = Object.assign(
     {},
     {
@@ -28,10 +28,10 @@ module.exports = function KivikDeployer(directory, server, options) {
   };
 
   this.deploy = async () => {
-    await this.databaseSet.deploy(server);
+    await this.databaseSet.deploy(agent);
   };
 
   this.reset = async () => {
-    await this.databaseSet.reset(server);
+    await this.databaseSet.reset(agent);
   };
 };
