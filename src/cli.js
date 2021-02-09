@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
-require("yargs")
-  .commandDir("cli")
-  .help().argv;
+const deploy = require("./cli/deploy");
+const inspect = require("./cli/inspect");
+const validate = require("./cli/validate");
+
+require("yargs").command([deploy, inspect, validate]).help().argv;
