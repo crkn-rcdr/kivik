@@ -1,0 +1,26 @@
+{
+  "include": "*",
+  "exclude": [],
+  "designFiles": ["*.js", "!*.test.js"],
+  "createDatabases": true,
+  "fixtures": false,
+  "deploy": {
+    "test": {
+      "url": "http://localhost:22222/",
+      "user": "kivikadmin",
+      "password": "kivikpassword"
+    },
+    "fixtures": {
+      "url": "http://localhost:22222/",
+      "user": "kivikadmin",
+      "password": "kivikpassword",
+      "fixtures": true
+    },
+    "nodatabases": {
+      "url": "http://localhost:22222/",
+      "user": "kivikadmin",
+      "password": "kivikpassword",
+      "createDatabases": false
+    }
+  }
+}
