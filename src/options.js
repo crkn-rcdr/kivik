@@ -46,6 +46,11 @@ const options = {
     describe: "CouchDB user's password.",
     implies: "user",
   },
+  port: {
+    type: "number",
+    describe:
+      "Local port at which the Docker container will be reachable. If left unset, or if the port is unavailable, a random available port will be selected.",
+  },
   url: {
     alias: "to",
     type: "string",

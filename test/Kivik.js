@@ -1,3 +1,4 @@
+const getPort = require("get-port");
 const chai = require("chai");
 chai.use(require("chai-as-promised"));
 chai.should();
@@ -10,10 +11,10 @@ const Kivik = require("../src/Kivik");
 describe("Kivik", function () {
   this.timeout(0);
 
-  const container = new Container();
-  let nano, testdb;
+  let container, nano, testdb;
 
   before(async () => {
+    container = new Container(await getPort());
     nano = await container.start();
     testdb = nano.use("testdb");
   });

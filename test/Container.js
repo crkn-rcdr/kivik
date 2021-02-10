@@ -1,24 +1,24 @@
 require("chai").should();
+const getPort = require("get-port");
+const authedNano = require("../src/nano");
 
 const Container = require("../src/Container");
 
 describe("Container", function () {
   this.timeout(0);
 
-  const container = new Container();
-  let nano;
+  it("should create a reachable Docker container", async () => {
+    const port = await getPort();
+    const container = new Container(port);
 
-  before(async () => {
-    nano = await container.start();
-  });
+    await container.start();
 
-  it("should start a reachable couchdb image", async () => {
+    const nano = authedNano(port, "kivikadmin", "kivikpassword");
     const dbs = await nano.db.list();
+
+    await container.stop();
+
     dbs.should.include("_users");
     dbs.should.include("_replicator");
-  });
-
-  after(async () => {
-    await container.stop();
   });
 });

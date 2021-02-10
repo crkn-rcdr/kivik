@@ -1,4 +1,4 @@
-const Nano = require("nano");
+const authedNano = require("../nano");
 const Kivik = require("../Kivik");
 
 const keys = ["url", "user", "password", "deployFixtures", "createDatabases"];
@@ -12,13 +12,7 @@ module.exports = {
     const kivik = new Kivik({ ...argv, context: "deploy" });
     await kivik.load();
 
-    const nanoOptions = { url: argv.url };
-    if (argv.user) {
-      nanoOptions.requestDefaults = {
-        auth: { username: argv.user, password: argv.password },
-      };
-    }
-    const nanoInstance = Nano(nanoOptions);
+    const nanoInstance = authedNano(argv.url, argv.user, argv.password);
 
     await kivik.deploy(nanoInstance);
   },

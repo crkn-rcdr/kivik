@@ -1,50 +1,25 @@
 const Docker = require("dockerode");
-const Nano = require("nano");
+const authedNano = require("./nano");
 const fetch = require("node-fetch");
 const util = require("util");
-const st = util.promisify(setTimeout);
+const setTimeoutPromise = util.promisify(setTimeout);
 
 const TIMEOUT_START = 10;
 
 const keys = ["image", "verbose"];
 const withDefaults = require("./options").withDefaults(keys);
 
-module.exports = function Container(options = {}) {
+module.exports = function Container(port, options = {}) {
   const { image, verbose } = withDefaults(options);
-  const port = 22222; // TODO: get-port
 
   const docker = new Docker();
 
-  // Ensures that the couch container is accepting requests
-  const _ensureReady = async (port) => {
-    let timeout = TIMEOUT_START;
-    const check = async () => {
-      let ready = false;
-      try {
-        await fetch(`http://localhost:${port}/`);
-        ready = true;
-      } catch (ignore) {}
-
-      return ready;
-    };
-
-    while (true) {
-      if (await check()) {
-        break;
-      }
-      await st(timeout);
-      timeout *= 2;
-    }
-
-    return;
-  };
-
-  // placeholder for the closure in which this.kill stops and removes the container
+  // placeholder for the closure in which this.stop stops and removes the container
   this.stop = async () => {};
 
   // returns a nano instance pointing to the container
   this.start = async () => {
-    const dockerOptions = {
+    const container = await docker.createContainer({
       Image: image,
       ExposedPorts: { "5984/tcp": {} },
       HostConfig: {
@@ -54,30 +29,11 @@ module.exports = function Container(options = {}) {
         },
       },
       Tty: true,
-    };
+    });
 
-    let container;
-    try {
-      container = await docker.createContainer(dockerOptions);
-    } catch (error) {
-      console.error(`Could not create CouchDB container: ${error.message}`);
-      process.exit(1);
-    }
-
-    try {
-      await container.start();
-    } catch (error) {
-      console.error(`Could not start CouchDB container: ${error.message}`);
-      process.exit(1);
-    }
+    await container.start();
 
     const name = (await container.inspect()).Name.substring(1);
-
-    if (verbose > 0) {
-      console.log(
-        `Container ${name} started. View at http://localhost:${port}/_utils`
-      );
-    }
 
     this.stop = async () => {
       await container.stop();
@@ -96,16 +52,31 @@ module.exports = function Container(options = {}) {
       }
     );
 
-    await _ensureReady(port);
+    let timeout = TIMEOUT_START;
+    const check = async () => {
+      let ready = false;
+      try {
+        await fetch(`http://localhost:${port}/`);
+        ready = true;
+      } catch (ignore) {}
 
-    return Nano({
-      url: `http://localhost:${port}`,
-      requestDefaults: {
-        auth: {
-          username: "kivikadmin",
-          password: "kivikpassword",
-        },
-      },
-    });
+      return ready;
+    };
+
+    while (true) {
+      if (await check()) {
+        break;
+      }
+      await setTimeoutPromise(timeout);
+      timeout *= 2;
+    }
+
+    if (verbose > 0) {
+      console.log(
+        `Container ${name} started. View at http://localhost:${port}/_utils`
+      );
+    }
+
+    return authedNano(port, "kivikadmin", "kivikpassword");
   };
 };
