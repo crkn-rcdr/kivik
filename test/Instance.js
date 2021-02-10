@@ -1,7 +1,4 @@
-const chai = require("chai");
-const sinon = require("sinon");
-chai.use(require("sinon-chai"));
-chai.should();
+require("chai").should();
 
 const Instance = require("../src/Instance");
 
@@ -11,10 +8,9 @@ describe("Instance", function () {
   this.timeout(0);
 
   const instance = new Instance({ directory });
-  let exitStub, nano;
+  let nano;
 
   before(async () => {
-    exitStub = sinon.stub(process, "exit");
     nano = await instance.start();
   });
 
@@ -30,6 +26,5 @@ describe("Instance", function () {
 
   after(async () => {
     await instance.stop();
-    exitStub.restore();
   });
 });

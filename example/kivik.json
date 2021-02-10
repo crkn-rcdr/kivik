@@ -1,7 +1,0 @@
-{
-  "url": "http://localhost:22222/",
-  "user": "kivikadmin",
-  "password": "kivikpassword",
-  "fixtures": true,
-  "createDatabases": true
-}

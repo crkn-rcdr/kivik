@@ -1,8 +1,13 @@
 const options = {
+  config: {
+    type: "string",
+    describe:
+      "Key to load a config object for this invocation of kivik in your kivikrc file.",
+  },
   context: {
     type: "string",
     default: "inspect",
-    describe: "The mode Kivik is running in.",
+    hidden: true,
   },
   createDatabases: {
     type: "boolean",
@@ -16,11 +21,9 @@ const options = {
       "Deploys fixtures to the CouchDB endpoint, along with design documents",
   },
   directory: {
-    alias: ["dir", "from"],
     type: "string",
     default: ".",
-    describe:
-      "Directory containing the set of database configuration directories to use.",
+    hidden: true,
   },
   exclude: {
     type: "string",
@@ -52,7 +55,6 @@ const options = {
       "Local port at which the Docker container will be reachable. If left unset, or if the port is unavailable, a random available port will be selected.",
   },
   url: {
-    alias: "to",
     type: "string",
     describe: "CouchDB endpoint receiving database configuration.",
     demandOption: true,
