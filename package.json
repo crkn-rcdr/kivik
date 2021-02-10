@@ -1,5 +1,5 @@
 {
-  "name": "@crkn-rcdr/kivik",
+  "name": "kivik",
   "version": "2.0.0-next",
   "description": "Command-line utility for deploying CouchDB design documents",
   "main": "src/main.js",
@@ -10,6 +10,7 @@
     "ajv": "^7.0.0",
     "dockerode": "^3.2.0",
     "fs-extra": "^9.1.0",
+    "globby": "^11.0.2",
     "nano": "^9.0.0",
     "node-fetch": "^2.6.0",
     "yargs": "^16.2.0"

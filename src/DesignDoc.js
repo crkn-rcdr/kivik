@@ -10,7 +10,7 @@ const designTypes = {
 };
 
 module.exports = function DesignDoc(directory) {
-  this.id = `_design/${directory.slice(directory.lastIndexOf("/") + 1)}`;
+  this.id = `_design/${directory.slice(directory.lastIndexOf(path.sep) + 1)}`;
 
   const _importDir = async (type, mapReduce) => {
     let dir = path.join(directory, type);

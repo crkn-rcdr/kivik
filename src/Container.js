@@ -6,47 +6,22 @@ const st = util.promisify(setTimeout);
 
 const TIMEOUT_START = 10;
 
-module.exports = function Container(options) {
-  options = Object.assign(
-    {},
-    {
-      image: "couchdb:3.1",
-      port: 5984,
-      quiet: false,
-      showOutput: false,
-    },
-    options || {}
-  );
+const keys = ["image", "verbose"];
+const withDefaults = require("./options").withDefaults(keys);
 
-  let dockerOptions = {
-    Image: options.image,
-    ExposedPorts: { "5984/tcp": {} },
-    HostConfig: {
-      Binds: [`${__dirname}/container.ini:/opt/couchdb/etc/local.ini`],
-      PortBindings: {
-        "5984/tcp": [{ HostPort: options.port.toString() }],
-      },
-    },
-    Tty: true,
-  };
+module.exports = function Container(options = {}) {
+  const { image, verbose } = withDefaults(options);
+  const port = 22222; // TODO: get-port
 
-  this.agent = Nano({
-    url: `http://localhost:${options.port}`,
-    requestDefaults: {
-      auth: {
-        username: "kivikadmin",
-        password: "kivikpassword",
-      },
-    },
-  });
+  const docker = new Docker();
 
   // Ensures that the couch container is accepting requests
-  let _ensureReady = async () => {
+  const _ensureReady = async (port) => {
     let timeout = TIMEOUT_START;
     const check = async () => {
       let ready = false;
       try {
-        await fetch(`http://localhost:${options.port}/`);
+        await fetch(`http://localhost:${port}/`);
         ready = true;
       } catch (ignore) {}
 
@@ -64,9 +39,23 @@ module.exports = function Container(options) {
     return;
   };
 
-  let docker = new Docker();
+  // placeholder for the closure in which this.kill stops and removes the container
+  this.stop = async () => {};
 
-  this.run = async () => {
+  // returns a nano instance pointing to the container
+  this.start = async () => {
+    const dockerOptions = {
+      Image: image,
+      ExposedPorts: { "5984/tcp": {} },
+      HostConfig: {
+        Binds: [`${__dirname}/container.ini:/opt/couchdb/etc/local.ini`],
+        PortBindings: {
+          "5984/tcp": [{ HostPort: port.toString() }],
+        },
+      },
+      Tty: true,
+    };
+
     let container;
     try {
       container = await docker.createContainer(dockerOptions);
@@ -84,32 +73,39 @@ module.exports = function Container(options) {
 
     const name = (await container.inspect()).Name.substring(1);
 
-    if (!options.quiet) {
+    if (verbose > 0) {
       console.log(
-        `Container ${name} started. View at http://localhost:${options.port}/_utils`
+        `Container ${name} started. View at http://localhost:${port}/_utils`
       );
     }
 
-    this.kill = async () => {
+    this.stop = async () => {
       await container.stop();
       await container.remove();
-      if (!options.quiet) console.log(`Container ${name} stopped and removed.`);
+      if (verbose > 0) console.log(`Container ${name} stopped and removed.`);
     };
 
-    process.on("SIGINT", this.kill);
+    process.on("SIGINT", this.stop);
 
     container.attach(
       { stream: true, stdout: true, stderr: true },
-      (err, stream) => {
-        if (options.showOutput) {
+      (_, stream) => {
+        if (verbose > 1) {
           stream.pipe(process.stdout);
         }
       }
     );
 
-    await _ensureReady();
-  };
+    await _ensureReady(port);
 
-  // placeholder for the closure in which this.kill stops and removes the container
-  this.kill = async () => {};
+    return Nano({
+      url: `http://localhost:${port}`,
+      requestDefaults: {
+        auth: {
+          username: "kivikadmin",
+          password: "kivikpassword",
+        },
+      },
+    });
+  };
 };

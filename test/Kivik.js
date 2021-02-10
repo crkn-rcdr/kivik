@@ -2,31 +2,40 @@ const chai = require("chai");
 chai.use(require("chai-as-promised"));
 chai.should();
 
+const directory = "example";
+
 const Container = require("../src/Container");
-const TestDeployer = require("../src/TestDeployer");
+const Kivik = require("../src/Kivik");
 
-const port = 22222;
-
-describe("TestDeployer", function () {
+describe("Kivik", function () {
   this.timeout(0);
-  const container = new Container({ quiet: true, port });
-  const testdb = container.agent.use("testdb");
+
+  const container = new Container();
+  let nano, testdb;
+
+  before(async () => {
+    nano = await container.start();
+    testdb = nano.use("testdb");
+  });
 
   describe("with defaults", function () {
-    const testDeployer = new TestDeployer("example", container.agent);
+    const kivik = new Kivik({
+      directory,
+      deployFixtures: true,
+    });
 
     before(async () => {
-      await container.run();
-      await testDeployer.load();
+      await kivik.load();
     });
 
     beforeEach(async () => {
-      await testDeployer.deploy();
+      await kivik.deploy(nano);
     });
 
     it("should load databases", async () => {
-      testDeployer.databaseSet.should.have.property("databases");
-      testDeployer.databaseSet.databases.should.have.length(2);
+      kivik.should.have.property("databases");
+      kivik.databases.should.have.property("testdb");
+      kivik.databases.should.have.property("seconddb");
     });
 
     it("should load fixtures", async () => {
@@ -55,26 +64,23 @@ describe("TestDeployer", function () {
     });
 
     afterEach(async () => {
-      await testDeployer.reset();
-    });
-
-    after(async () => {
-      await container.kill();
+      await kivik.reset(nano);
     });
   });
 
   describe("with a database subset", function () {
-    const testDeployer = new TestDeployer("example", container.agent, [
-      "seconddb",
-    ]);
+    const kivik = new Kivik({
+      directory,
+      include: ["seconddb"],
+      deployFixtures: true,
+    });
 
     before(async () => {
-      await container.run();
-      await testDeployer.load();
+      await kivik.load();
     });
 
     beforeEach(async () => {
-      await testDeployer.deploy();
+      await kivik.deploy(nano);
     });
 
     it("shouldn't load from databases not included in the subset", async () => {
@@ -85,11 +91,11 @@ describe("TestDeployer", function () {
     });
 
     afterEach(async () => {
-      await testDeployer.reset();
+      await kivik.reset(nano);
     });
+  });
 
-    after(async () => {
-      await container.kill();
-    });
+  after(async () => {
+    await container.stop();
   });
 });

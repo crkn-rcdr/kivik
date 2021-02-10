@@ -5,6 +5,8 @@ chai.should();
 
 const handler = require("../../src/cli/validate").handler;
 
+const directory = "example";
+
 const githubJsonUrl =
   "https://raw.githubusercontent.com/crkn-rcdr/kivik/master/example/testdb/fixtures/pickwick.json";
 
@@ -17,26 +19,19 @@ describe("Validate mode handler", function () {
     consoleErrorStub = sinon.stub(console, "error");
   });
 
-  it("should validate a file against a directory", async () => {
+  it("should validate a file", async () => {
     await handler({
+      directory,
       document: "example/testdb/fixtures/pickwick.json",
-      schema: "example/testdb",
+      db: "testdb",
     });
     exitStub.should.have.been.calledWith(0);
   });
 
-  it("should validate a file against a file", async () => {
-    await handler({
-      document: "example/testdb/fixtures/pickwick.json",
-      schema: "example/testdb/schema.json",
-    });
-    exitStub.should.have.been.calledWith(0);
-  });
-
-  it("should validate a URL against a directory", async () => {
+  it("should validate a URL", async () => {
     await handler({
       document: githubJsonUrl,
-      schema: "example/testdb",
+      db: "testdb",
     });
     exitStub.should.have.been.calledWith(0);
   });
@@ -44,7 +39,7 @@ describe("Validate mode handler", function () {
   it("should invalidate an invalid document", async () => {
     await handler({
       document: "example/testdb/fixtures/badfixture.json",
-      schema: "example/testdb",
+      db: "testdb",
     });
     exitStub.should.have.been.calledWith(1);
   });

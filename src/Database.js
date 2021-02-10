@@ -3,24 +3,13 @@ const path = require("path");
 const validate = require("./validate");
 const DesignDoc = require("./DesignDoc");
 
-// options can include:
-// fixtures: deploy fixtures to databases
-// invalidFixtures: deploy fixtures to databases that do not validate
-// createDatabases: create databases when they do not exist
-// quiet: suppress console.log
-module.exports = function Database(directory, options) {
-  options = Object.assign(
-    {},
-    {
-      fixtures: false,
-      invalidFixtures: false,
-      createDatabases: true,
-      quiet: false,
-    },
-    options || {}
-  );
+const keys = ["deployFixtures", "createDatabases", "verbose"];
+const withDefaults = require("./options").withDefaults(keys);
 
-  this.dbName = directory.slice(directory.lastIndexOf("/") + 1);
+module.exports = function Database(directory, options = {}) {
+  options = withDefaults(options);
+
+  this.name = directory.slice(directory.lastIndexOf(path.sep) + 1);
 
   this.load = async () => {
     let schemaFile = path.join(directory, "schema.json");
@@ -48,7 +37,7 @@ module.exports = function Database(directory, options) {
             let response = validate(fixture.document, this.schema);
             fixture.valid = response.success;
             if (!fixture.valid) {
-              if (!options.quiet)
+              if (options.verbose > 0)
                 console.log(
                   `Fixture ${file} does not validate against the schema.`
                 );
@@ -63,7 +52,7 @@ module.exports = function Database(directory, options) {
     try {
       designSubdirectories = await fs.readdir(designDir);
     } catch (e) {
-      if (!options.quiet)
+      if (options.verbose > 0)
         console.log(`No design directory found in ${directory}`);
     }
     this.designDocs = await Promise.all(
@@ -75,16 +64,16 @@ module.exports = function Database(directory, options) {
     );
   };
 
-  this.deploy = async (agent) => {
+  this.deploy = async (nanoInstance) => {
     let dbExists = true;
     try {
-      await agent.db.get(this.dbName);
+      await nanoInstance.db.get(this.name);
     } catch (e) {
       if (!(e.message === "no_db_file")) {
         dbExists = false;
       } else {
         console.error(
-          `Could not determine the status of database ${this.dbName}: ${e.message}`
+          `Could not determine the status of database ${this.name}: ${e.message}`
         );
         return;
       }
@@ -92,33 +81,30 @@ module.exports = function Database(directory, options) {
 
     if (!dbExists) {
       if (options.createDatabases) {
-        if (!options.quiet) {
+        if (options.verbose > 0) {
           console.log(
-            `Database ${this.dbName} does not exist. Will attempt to create it.`
+            `Database ${this.name} does not exist. Will attempt to create it.`
           );
         }
         try {
-          await agent.db.create(this.dbName);
+          await nanoInstance.db.create(this.name);
         } catch (e) {
-          console.error(
-            `Could not create database ${this.dbName}: ${e.message}`
-          );
+          console.error(`Could not create database ${this.name}: ${e.message}`);
         }
       } else {
-        console.error(`Database ${this.dbName} does not exist.`);
+        console.error(`Database ${this.name} does not exist.`);
         return;
       }
     }
 
-    const db = agent.use(this.dbName);
+    const db = nanoInstance.use(this.name);
 
-    if (options.fixtures) {
+    if (options.deployFixtures) {
       try {
         await Promise.all(
-          this.fixtures.map((fixture) => {
-            if (options.invalidFixtures || fixture.valid)
-              db.insert(fixture.document);
-          })
+          this.fixtures.map((fixture) =>
+            fixture.valid ? db.insert(fixture.document) : null
+          )
         );
       } catch (ignore) {}
     }
@@ -144,6 +130,6 @@ module.exports = function Database(directory, options) {
       })
     );
 
-    if (!options.quiet) console.log(`Database ${this.dbName} deployed.`);
+    if (options.verbose > 0) console.log(`Database ${this.name} deployed.`);
   };
 };

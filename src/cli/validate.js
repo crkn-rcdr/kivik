@@ -1,49 +1,71 @@
 const fs = require("fs-extra");
 const fetch = require("node-fetch");
-
+const Kivik = require("../Kivik");
 const validate = require("../validate");
 
+const fromURL = async (input) => {
+  try {
+    const url = new URL(input);
+    const response = await fetch(url);
+    return await response.json();
+  } catch (_) {
+    return null;
+  }
+};
+
+const fromFile = async (input) => {
+  try {
+    return await fs.readJSON(input);
+  } catch (_) {
+    return null;
+  }
+};
+
+const abort = (errorMessage) => {
+  console.error(errorMessage);
+  process.exit(1);
+};
+
 module.exports = {
-  command: ["validate <document> [schema]"],
-  describe:
-    "Validates a JSON document against a JSON schema. The JSON document can either be a file or a URL. The specified schema can either be a file or a directory containing a 'schema.json' file; by default this is the current directory.",
+  command: ["validate <document> <db>"],
+  describe: "Validates a document against a database's JSON Schema.",
+  builder: (yargs) => {
+    return yargs
+      .positional("document", {
+        type: "string",
+        describe:
+          "The document to validate. Can be specified as either a local file or a URL.",
+      })
+      .positional("db", {
+        type: "string",
+        describe:
+          "The database against whose schema the document will be validated.",
+      });
+  },
   handler: async (argv) => {
-    let schemaFile = argv.schema || ".";
-    let schema;
+    const kivik = new Kivik({ ...argv, context: "validate" });
+    console.error("kivik", kivik);
+    await kivik.load();
+    console.error("kivik", kivik);
 
-    try {
-      if ((await fs.stat(schemaFile)).isDirectory()) {
-        schemaFile += "/schema.json";
-      }
-      schema = await fs.readJSON(schemaFile);
-    } catch (e) {
-      console.error("Could not open or parse the JSON schema");
-      console.error(e.message);
-      process.exit(1);
+    const db = kivik.databases[argv.db];
+    if (!db) {
+      abort(`Cannot find database ${argv.db}.`);
+      return;
     }
 
-    let document, fetched;
-    let errors = [];
-    try {
-      let response = await fetch(argv.document);
-      document = await response.json();
-      fetched = true;
-    } catch (e) {
-      errors.push("Could not fetch document remotely: " + e.message);
+    const schema = db.schema;
+    if (!schema) {
+      abort(`Database ${argv.db} does not have an associated schema.`);
+      return;
     }
 
-    if (!fetched) {
-      try {
-        document = await fs.readJSON(argv.document);
-        fetched = true;
-      } catch (e) {
-        errors.push("Could not load document locally: " + e.message);
-      }
-    }
+    const document =
+      (await fromURL(argv.document)) || (await fromFile(argv.document)) || null;
 
-    if (!fetched) {
-      console.error(errors);
-      process.exit(1);
+    if (!document) {
+      abort(`${argv.document} could not be loaded remotely or locally.`);
+      return;
     }
 
     let response = validate(document, schema);
@@ -52,7 +74,9 @@ module.exports = {
       process.exit(0);
     } else {
       console.error("Document is invalid:");
-      console.error(response.errors[0]);
+      for (const error of response.errors) {
+        console.error(error);
+      }
       process.exit(1);
     }
   },

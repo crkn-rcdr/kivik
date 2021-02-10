@@ -1,47 +1,38 @@
 const path = require("path");
 const Container = require("./Container");
-const DatabaseSet = require("./DatabaseSet");
+const Kivik = require("./Kivik");
 
-module.exports = function KivikInstance(directory, options) {
-  options = Object.assign(
-    {},
-    {
-      image: "couchdb:3.1",
-      port: 5984,
-      couchOutput: false,
-      dbSubset: [],
-      invalidFixtures: false,
-      quiet: true,
-    },
-    options
-  );
+const keys = ["image", "directory", "include", "exclude", "verbose"];
+const withDefaults = require("./options").withDefaults(keys);
 
-  this.container = new Container({
-    image: options.image,
-    port: options.port,
-    showOutput: options.couchOutput,
-    quiet: options.quiet,
-  });
+module.exports = function KivikInstance(options = {}) {
+  options = withDefaults(options);
 
-  this.databaseSet = new DatabaseSet(path.resolve(directory || "."), {
-    subset: options.dbSubset,
-    fixtures: true,
-    invalidFixtures: options.invalidFixtures,
-    createDatabases: true,
-    quiet: options.quiet,
-  });
+  options.context = "inspect";
+  options.deployFixtures = true;
+  options.createDatabases = true;
 
-  this.run = async () => {
+  const container = new Container(options);
+
+  this.kivik = new Kivik(options);
+
+  this.start = async () => {
+    let nanoInstance;
     try {
-      await Promise.all([this.databaseSet.load(), this.container.run()]);
-      await this.databaseSet.deploy(this.container.agent);
+      nanoInstance = await container.start();
     } catch (error) {
-      console.error(`Error running a kivik instance: ${e.message}`);
-      await container.kill();
+      console.error(`Error running the Kivik instance: ${e.message}`);
+      await container.stop();
+      return;
     }
+
+    await this.kivik.load();
+    await this.kivik.deploy(nanoInstance);
+
+    return nanoInstance;
   };
 
-  this.kill = async () => {
-    this.container.kill();
+  this.stop = async () => {
+    await container.stop();
   };
 };

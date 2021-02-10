@@ -4,22 +4,21 @@ const Container = require("../src/Container");
 
 describe("Container", function () {
   this.timeout(0);
-  const container = new Container({
-    port: 22222,
-    quiet: true,
-  });
+
+  const container = new Container();
+  let nano;
 
   before(async () => {
-    await container.run();
+    nano = await container.start();
   });
 
   it("should start a reachable couchdb image", async () => {
-    const dbs = await container.agent.db.list();
+    const dbs = await nano.db.list();
     dbs.should.include("_users");
     dbs.should.include("_replicator");
   });
 
   after(async () => {
-    await container.kill();
+    await container.stop();
   });
 });
