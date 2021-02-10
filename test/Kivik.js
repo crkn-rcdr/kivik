@@ -44,6 +44,13 @@ describe("Kivik", function () {
       ge.title.should.equal("Great Expectations");
     });
 
+    it("should load only the valid fixtures", async () => {
+      testdb
+        .get("bad-fixture")
+        .should.eventually.throw()
+        .with.property("statusCode", 404);
+    });
+
     it("should allow for new documents to be added", async () => {
       await testdb.insert({
         _id: "not-a-real-book",
