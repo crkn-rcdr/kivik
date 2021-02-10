@@ -1,52 +1,82 @@
 const fs = require("fs-extra");
+const globby = require("globby");
 const path = require("path");
-const validate = require("./validate");
 const DesignDoc = require("./DesignDoc");
 
 const keys = ["deployFixtures", "createDatabases", "verbose"];
 const withDefaults = require("./options").withDefaults(keys);
 
-module.exports = function Database(directory, options = {}) {
+module.exports = function Database(directory, options = {}, validator = null) {
   options = withDefaults(options);
 
   this.name = directory.slice(directory.lastIndexOf(path.sep) + 1);
 
-  this.load = async () => {
-    let schemaFile = path.join(directory, "schema.json");
-    try {
-      this.schema = await fs.readJSON(schemaFile);
-    } catch (e) {
-      if (e.code !== "ENOENT") {
-        console.error(e.message);
+  this.validate = (_) => {
+    return { valid: true, validationErrors: null };
+  };
+
+  this.hasSchema = false;
+
+  this.loadSchema = async () => {
+    if (validator) {
+      const schemaFile = path.join(directory, "schema.json");
+      let schema;
+
+      try {
+        schema = await fs.readJSON(schemaFile);
+      } catch (e) {
+        if (e.code !== "ENOENT") {
+          console.error(e.message);
+        } else {
+          if (options.verbose > 0)
+            console.log(
+              `Database ${this.name} does not have a matching JSON schema.`
+            );
+        }
+      }
+
+      if (!schema) return;
+
+      try {
+        validator.addSchema(schema, this.name);
+        this.hasSchema = true;
+        this.validate = (document) => {
+          const valid = validator.validate(this.name, document);
+          return { valid, validationErrors: valid ? null : validator.errors };
+        };
+      } catch {
+        console.error(`Error loading schema for database ${this.name}:`);
+        console.error(validator.errorsText());
       }
     }
 
-    let fixturesDir = path.join(directory, "fixtures");
-    let fixtureContents = [];
-    try {
-      fixtureContents = await fs.readdir(fixturesDir);
-    } catch (ignore) {}
-    this.fixtures = await Promise.all(
-      fixtureContents
-        .filter((file) => file.endsWith(".json"))
-        .map(async (file) => {
-          let fixture = {
-            document: await fs.readJSON(path.join(fixturesDir, file)),
-          };
-          if (this.schema) {
-            let response = validate(fixture.document, this.schema);
-            fixture.valid = response.success;
-            if (!fixture.valid) {
-              if (options.verbose > 0)
-                console.log(
-                  `Fixture ${file} does not validate against the schema.`
-                );
-            }
-          }
-          return fixture;
-        })
+    return this;
+  };
+
+  this.loadFixtures = async () => {
+    // TODO: use a stream here?
+    const fixturePaths = await globby(
+      path.posix.join(directory, "fixtures", "*.json"),
+      { absolute: true }
     );
 
+    this.fixtures = await Promise.all(
+      fixturePaths.map(async (fp) => {
+        const document = await fs.readJSON(fp);
+        const response = this.validate(document);
+        if (!response.valid && options.verbose > 0) {
+          const file = fp.slice(fp.lastIndexOf(path.sep) + 1);
+          console.log(
+            `Fixture ${file} does not validate against the schema for database ${this.name}.`
+          );
+          console.log(validator.errorsText(response.validationErrors));
+        }
+        return { document, ...response };
+      })
+    );
+  };
+
+  this.loadDesign = async () => {
     let designDir = path.join(directory, "design");
     let designSubdirectories = [];
     try {
@@ -62,6 +92,12 @@ module.exports = function Database(directory, options = {}) {
         return ddoc;
       })
     );
+  };
+
+  this.load = async () => {
+    await this.loadSchema();
+    await this.loadFixtures();
+    await this.loadDesign();
   };
 
   this.deploy = async (nanoInstance) => {

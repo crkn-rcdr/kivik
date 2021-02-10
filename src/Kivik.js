@@ -1,5 +1,7 @@
 const path = require("path");
 const globby = require("globby");
+const Ajv = require("ajv").default;
+const addFormats = require("ajv-formats").default;
 const Database = require("./Database");
 
 const keys = [
@@ -7,6 +9,7 @@ const keys = [
   "include",
   "exclude",
   "context",
+  // these three are passed to Database
   "deployFixtures",
   "createDatabases",
   "verbose",
@@ -17,21 +20,30 @@ module.exports = function Kivik(options = {}) {
   options = withDefaults(options);
 
   this.databases = {};
+  this.validator = new Ajv();
+  // TODO: config for which formats to add?
+  addFormats(this.validator);
+
+  let loaded = false;
 
   this.load = async () => {
-    const wd = path.resolve(options.directory);
-    const pathStream = globby.stream(options.include, {
-      cwd: wd,
-      ignore: options.exclude,
-      onlyDirectories: true,
-      expandDirectories: false,
-      absolute: true,
-    });
+    if (!loaded) {
+      const wd = path.resolve(options.directory);
+      const pathStream = globby.stream(options.include, {
+        cwd: wd,
+        ignore: options.exclude,
+        onlyDirectories: true,
+        expandDirectories: false,
+        absolute: true,
+      });
 
-    for await (const path of pathStream) {
-      const db = new Database(path, options);
-      await db.load();
-      this.databases[db.name] = db;
+      for await (const path of pathStream) {
+        const db = new Database(path, options, this.validator);
+        await db.load();
+        this.databases[db.name] = db;
+      }
+
+      loaded = true;
     }
   };
 
