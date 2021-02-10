@@ -15,7 +15,7 @@ const parser = yargs(hideBin(process.argv))
   .config("config", "JSON file containing configuration options.")
   .option(options)
   .command([deploy, inspect, validate])
-  .demandCommand()
+  .demandCommand(1, "Please specify a command: deploy, inspect, validate.")
   .help();
 
 parser.parse();

@@ -1,8 +1,8 @@
 const Nano = require("nano");
-const Kivik = require("./Kivik");
+const Kivik = require("../Kivik");
 
 const keys = ["url", "user", "password", "deployFixtures", "createDatabases"];
-const options = require("./options").slice(keys);
+const options = require("../options").slice(keys);
 
 module.exports = {
   command: ["deploy"],

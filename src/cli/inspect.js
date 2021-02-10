@@ -1,5 +1,5 @@
 const Instance = require("../Instance");
-const options = require("./options").slice(["image"]);
+const options = require("../options").slice(["image"]);
 
 module.exports = {
   command: ["inspect"],
