@@ -5,27 +5,20 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Inspect example directory",
       "type": "node",
       "request": "launch",
-      "name": "Inspect example directory",
-      "program": "${workspaceFolder}/src/cli.js",
-      "args": ["inspect", "${workspaceFolder}/example"]
+      "program": "${workspaceFolder}/bin.js",
+      "cwd": "${workspaceFolder}/example",
+      "args": ["inspect"],
+      "console": "integratedTerminal"
     },
     {
       "type": "node",
       "request": "launch",
       "name": "Mocha Tests",
-      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "args": [
-        "-u",
-        "bdd",
-        "--timeout",
-        "999999",
-        "--colors",
-        "${workspaceFolder}/test",
-        "--recursive"
-      ],
-      "internalConsoleOptions": "openOnSessionStart"
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["test"]
     }
   ]
 }

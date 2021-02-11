@@ -6,6 +6,10 @@ module.exports = {
   describe: "Spins up a CouchDB container for inspection",
   builder: options,
   handler: async (argv) => {
+    if (argv.verbose < 1) {
+      argv.verbose = 1;
+      argv.v = 1;
+    }
     const instance = new Instance(argv);
     await instance.start();
   },
