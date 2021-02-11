@@ -2,12 +2,14 @@ const path = require("path");
 const globby = require("globby");
 const Ajv = require("ajv").default;
 const addFormats = require("ajv-formats").default;
+const randomString = require("crypto-random-string");
 const Database = require("./Database");
 
 const keys = [
   "directory",
   "include",
   "exclude",
+  "suffix",
   "context",
   // these three are passed to Database
   "deployFixtures",
@@ -24,6 +26,12 @@ module.exports = function Kivik(options = {}) {
   this.validator = new Ajv();
   // TODO: config for which formats to add?
   addFormats(this.validator);
+
+  if (options.suffix === "random")
+    options.suffix = randomString({ length: 10 });
+  this.dbName = (name) => {
+    return options.suffix ? `${name}-${options.suffix}` : name;
+  };
 
   let loaded = false;
 
@@ -50,7 +58,9 @@ module.exports = function Kivik(options = {}) {
 
   this.deploy = async (nanoInstance) => {
     await Promise.all(
-      Object.values(this.databases).map((db) => db.deploy(nanoInstance))
+      Object.values(this.databases).map((db) =>
+        db.deploy(nanoInstance, this.dbName(db.name))
+      )
     );
   };
 
@@ -58,7 +68,7 @@ module.exports = function Kivik(options = {}) {
     if (options.context === "inspect") {
       await Promise.all(
         Object.values(this.databases).map((db) =>
-          nanoInstance.db.destroy(db.name)
+          nanoInstance.db.destroy(this.dbName(db.name))
         )
       );
     } else {

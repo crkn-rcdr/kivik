@@ -60,6 +60,11 @@ const options = {
     describe:
       "Local port at which the Docker container will be reachable. If left unset, or if the port is unavailable, a random available port will be selected.",
   },
+  suffix: {
+    type: "string",
+    describe:
+      "Suffix to append to database names when deployed. With a database named 'things' and suffix 'test', the database will be deployed as 'things-test'. A suffix of 'random' will be replaced by a random string.",
+  },
   url: {
     type: "string",
     describe: "CouchDB endpoint receiving database configuration.",

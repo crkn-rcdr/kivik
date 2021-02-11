@@ -19,12 +19,7 @@ describe("Kivik", function () {
     testdb = nano.use("testdb");
   });
 
-  describe("with defaults", function () {
-    const kivik = new Kivik({
-      directory,
-      deployFixtures: true,
-    });
-
+  const setupSuite = (kivik) => {
     before(async () => {
       await kivik.load();
     });
@@ -32,6 +27,19 @@ describe("Kivik", function () {
     beforeEach(async () => {
       await kivik.deploy(nano);
     });
+
+    afterEach(async () => {
+      await kivik.reset(nano);
+    });
+  };
+
+  describe("with defaults", function () {
+    const kivik = new Kivik({
+      directory,
+      deployFixtures: true,
+    });
+
+    setupSuite(kivik);
 
     it("should load databases", async () => {
       kivik.should.have.property("databases");
@@ -70,36 +78,45 @@ describe("Kivik", function () {
         .should.eventually.throw()
         .with.property("statusCode", 404);
     });
-
-    afterEach(async () => {
-      await kivik.reset(nano);
-    });
   });
 
   describe("with a database subset", function () {
     const kivik = new Kivik({
       directory,
       include: ["seconddb"],
-      deployFixtures: true,
     });
 
-    before(async () => {
-      await kivik.load();
-    });
-
-    beforeEach(async () => {
-      await kivik.deploy(nano);
-    });
+    setupSuite(kivik);
 
     it("shouldn't load from databases not included in the subset", async () => {
-      testdb
-        .get("great-expectations")
-        .should.eventually.throw()
-        .with.property("statusCode", 404);
+      const list = await nano.db.list();
+      list.should.not.include("testdb");
+      list.should.include("seconddb");
     });
+  });
 
-    afterEach(async () => {
-      await kivik.reset(nano);
+  describe("with a database suffix", async () => {
+    const kivik = new Kivik({ directory, suffix: "test" });
+
+    setupSuite(kivik);
+
+    it("should add the database suffix to deployed database names", async () => {
+      const list = await nano.db.list();
+      list.should.not.include("testdb");
+      list.should.include("testdb-test");
+    });
+  });
+
+  describe("with a random database suffix", async () => {
+    const kivik = new Kivik({ directory, suffix: "random" });
+    const dbName = kivik.dbName("testdb");
+
+    setupSuite(kivik);
+
+    it("should generate and store a random suffix", async () => {
+      dbName.should.not.equal("testdb-random");
+      const list = await nano.db.list();
+      list.should.include(dbName);
     });
   });
 

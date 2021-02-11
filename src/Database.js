@@ -100,16 +100,16 @@ module.exports = function Database(directory, options = {}, validator = null) {
     await this.loadDesign();
   };
 
-  this.deploy = async (nanoInstance) => {
+  this.deploy = async (nanoInstance, name = this.name) => {
     let dbExists = true;
     try {
-      await nanoInstance.db.get(this.name);
+      await nanoInstance.db.get(name);
     } catch (e) {
       if (!(e.message === "no_db_file")) {
         dbExists = false;
       } else {
         console.error(
-          `Could not determine the status of database ${this.name}: ${e.message}`
+          `Could not determine the status of database ${name}: ${e.message}`
         );
         return;
       }
@@ -119,21 +119,21 @@ module.exports = function Database(directory, options = {}, validator = null) {
       if (options.createDatabases) {
         if (options.verbose > 0) {
           console.log(
-            `Database ${this.name} does not exist. Will attempt to create it.`
+            `Database ${name} does not exist. Will attempt to create it.`
           );
         }
         try {
-          await nanoInstance.db.create(this.name);
+          await nanoInstance.db.create(name);
         } catch (e) {
-          console.error(`Could not create database ${this.name}: ${e.message}`);
+          console.error(`Could not create database ${name}: ${e.message}`);
         }
       } else {
-        console.error(`Database ${this.name} does not exist.`);
+        console.error(`Database ${name} does not exist.`);
         return;
       }
     }
 
-    const db = nanoInstance.use(this.name);
+    const db = nanoInstance.use(name);
 
     if (options.deployFixtures) {
       try {
@@ -166,6 +166,6 @@ module.exports = function Database(directory, options = {}, validator = null) {
       })
     );
 
-    if (options.verbose > 0) console.log(`Database ${this.name} deployed.`);
+    if (options.verbose > 0) console.log(`Database ${name} deployed.`);
   };
 };
