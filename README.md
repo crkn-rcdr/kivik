@@ -29,7 +29,6 @@ $ kivik validate path/to/json/document.json path/to/json/schema.json
 - `server`: Base URL of the server. The default is `http://localhost:5984/`. You can specify HTTP authentication in the URL; see the example above.
 - `db`: Specify a particular database to deploy. You can use this option multiple times.
 - `fixtures`: Insert fixtures located in target directory.
-- `create-databases`: Create databases found in the target directory on the server.
 - `quiet`: Suppress console.log output.
 
 ## Expected directory structure

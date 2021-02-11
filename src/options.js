@@ -9,11 +9,6 @@ const options = {
     default: "inspect",
     hidden: true,
   },
-  createDatabases: {
-    type: "boolean",
-    default: true,
-    describe: "Creates databases at the CouchDB endpoint if they do not exist.",
-  },
   deployFixtures: {
     type: "boolean",
     default: false,

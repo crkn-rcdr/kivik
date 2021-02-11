@@ -3,7 +3,7 @@ const globby = require("globby");
 const path = require("path");
 const DesignDoc = require("./DesignDoc");
 
-const keys = ["deployFixtures", "createDatabases", "excludeDesign", "verbose"];
+const keys = ["deployFixtures", "excludeDesign", "verbose"];
 const withDefaults = require("./options").withDefaults(keys);
 
 module.exports = function Database(directory, options = {}, validator = null) {
@@ -141,20 +141,10 @@ module.exports = function Database(directory, options = {}, validator = null) {
     }
 
     if (!dbExists) {
-      if (options.createDatabases) {
-        if (options.verbose > 0) {
-          console.log(
-            `Database ${name} does not exist. Will attempt to create it.`
-          );
-        }
-        try {
-          await nanoInstance.db.create(name);
-        } catch (e) {
-          console.error(`Could not create database ${name}: ${e.message}`);
-        }
-      } else {
-        console.error(`Database ${name} does not exist.`);
-        return;
+      try {
+        await nanoInstance.db.create(name);
+      } catch (e) {
+        console.error(`Could not create database ${name}: ${e.message}`);
       }
     }
 
