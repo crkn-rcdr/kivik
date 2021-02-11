@@ -1,51 +1,16 @@
 const Instance = require("../Instance");
+const options = require("../options").slice(["image", "port"]);
 
 module.exports = {
-  command: ["inspect [directory]", "$0"],
+  command: ["inspect"],
   describe: "Spins up a CouchDB container for inspection",
-  builder: {
-    image: {
-      default: "couchdb:1.7",
-      type: "string",
-      describe: "The base image for the container",
-    },
-    port: {
-      default: 5984,
-      type: "number",
-      describe: "The host port CouchDB will be found at",
-    },
-    "couch-output": {
-      default: false,
-      type: "boolean",
-      describe: "Show CouchDB output",
-    },
-    db: {
-      default: [],
-      type: "array",
-      describe: "Database directory to inspect",
-    },
-    "invalid-fixtures": {
-      default: false,
-      type: "boolean",
-      describe:
-        "Insert fixtures into the inspection database even if they do not validate against the schema",
-    },
-    quiet: {
-      default: false,
-      type: "boolean",
-      describe: "Suppress console output",
-    },
-  },
+  builder: options,
   handler: async (argv) => {
-    const instance = new Instance(argv.directory, {
-      image: argv.image,
-      port: argv.port,
-      couchOutput: argv["couch-output"],
-      dbSubset: argv.db,
-      insertInvalidFixtures: argv["invalid-fixtures"],
-      quiet: argv.quiet,
-    });
-    await instance.run();
-    return instance;
+    if (argv.verbose < 1) {
+      argv.verbose = 1;
+      argv.v = 1;
+    }
+    const instance = new Instance(argv);
+    await instance.start();
   },
 };

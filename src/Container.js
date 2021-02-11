@@ -1,36 +1,62 @@
 const Docker = require("dockerode");
+const authedNano = require("./nano");
+const fetch = require("node-fetch");
 const util = require("util");
+const setTimeoutPromise = util.promisify(setTimeout);
 
 const TIMEOUT_START = 10;
 
-module.exports = function Container(options) {
-  options = Object.assign(
-    {},
-    { image: "couchdb:1.7", port: 5984, quiet: false, showOutput: false },
-    options || {}
-  );
+const keys = ["image", "verbose"];
+const withDefaults = require("./options").withDefaults(keys);
 
-  let dockerOptions = {
-    Image: options.image,
-    ExposedPorts: { "5984/tcp": {} },
-    HostConfig: {
-      PortBindings: {
-        "5984/tcp": [{ HostPort: options.port.toString() }],
+module.exports = function Container(port, options = {}) {
+  const { image, verbose } = withDefaults(options);
+
+  const docker = new Docker();
+
+  // placeholder for the closure in which this.stop stops and removes the container
+  this.stop = async () => {};
+
+  // returns a nano instance pointing to the container
+  this.start = async () => {
+    const container = await docker.createContainer({
+      Image: image,
+      ExposedPorts: { "5984/tcp": {} },
+      HostConfig: {
+        Binds: [`${__dirname}/container.ini:/opt/couchdb/etc/local.ini`],
+        PortBindings: {
+          "5984/tcp": [{ HostPort: port.toString() }],
+        },
       },
-    },
-    Tty: true,
-  };
+      Tty: true,
+    });
 
-  let address = `http://localhost:${options.port}/`;
+    await container.start();
 
-  // Ensures that the couch container is accepting requests
-  let _ensureReady = async () => {
-    const nano = require("nano")(address);
+    const name = (await container.inspect()).Name.substring(1);
+
+    this.stop = async () => {
+      await container.stop();
+      await container.remove();
+      if (verbose > 0) console.log(`Container ${name} stopped and removed.`);
+    };
+
+    process.on("SIGINT", this.stop);
+
+    container.attach(
+      { stream: true, stdout: true, stderr: true },
+      (_, stream) => {
+        if (verbose > 1) {
+          stream.pipe(process.stdout);
+        }
+      }
+    );
+
     let timeout = TIMEOUT_START;
     const check = async () => {
       let ready = false;
       try {
-        await nano.db.list();
+        await fetch(`http://localhost:${port}/`);
         ready = true;
       } catch (ignore) {}
 
@@ -41,53 +67,16 @@ module.exports = function Container(options) {
       if (await check()) {
         break;
       }
-      await util.promisify(setTimeout)(timeout);
+      await setTimeoutPromise(timeout);
       timeout *= 2;
     }
 
-    return;
-  };
-
-  let docker = new Docker();
-
-  this.run = async () => {
-    try {
-      const container = await docker.createContainer(dockerOptions);
-
-      this.kill = async () => {
-        await container.stop();
-        await container.remove();
-        if (!options.quiet)
-          console.log(`Container ${name} stopped and removed.`);
-      };
-
-      await container.start();
-      const name = (await container.inspect()).Name.substring(1);
-      if (!options.quiet)
-        console.log(`Container ${name} started. View at ${address}_utils`);
-
-      process.on("SIGINT", this.kill);
-
-      container.attach(
-        { stream: true, stdout: true, stderr: true },
-        (err, stream) => {
-          if (options.showOutput) {
-            stream.pipe(process.stdout);
-          }
-        }
+    if (verbose > 0) {
+      console.log(
+        `Container ${name} started. View at http://localhost:${port}/_utils`
       );
-
-      await _ensureReady();
-    } catch (error) {
-      console.error(`Could not run CouchDB container: ${error.message}`);
-      process.exit(1);
     }
-  };
 
-  // placeholder for the closure in which this.kill stops and removes the container
-  this.kill = async () => {};
-
-  this.hostURL = () => {
-    return address;
+    return authedNano(port, "kivikadmin", "kivikpassword");
   };
 };

@@ -1,46 +1,50 @@
 const path = require("path");
+const getPort = require("get-port");
 const Container = require("./Container");
-const DatabaseSet = require("./DatabaseSet");
+const Kivik = require("./Kivik");
 
-module.exports = function KivikInstance(directory, options) {
-  options = Object.assign(
-    {},
-    {
-      image: "couchdb:1.7",
-      port: 5984,
-      couchOutput: false,
-      dbSubset: [],
-      invalidFixtures: false,
-      quiet: true,
-    },
-    options
-  );
+const keys = ["image", "port", "directory", "include", "exclude", "verbose"];
+const withDefaults = require("./options").withDefaults(keys);
 
-  this.container = new Container({
-    image: options.image,
-    port: options.port,
-    showOutput: options.couchOutput,
-    quiet: options.quiet,
-  });
-  this.databaseSet = new DatabaseSet(path.resolve(directory || "."), {
-    subset: options.dbSubset,
-    fixtures: true,
-    invalidFixtures: options.invalidFixtures,
-    createDatabases: true,
-    quiet: options.quiet,
-  });
+module.exports = function KivikInstance(options = {}) {
+  options = withDefaults(options);
 
-  this.run = async () => {
-    try {
-      await Promise.all([this.databaseSet.load(), this.container.run()]);
-      await this.databaseSet.deploy(this.container.hostURL());
-    } catch (error) {
-      console.error(`Error running a kivik instance: ${e.message}`);
-      await container.kill();
+  options.context = "inspect";
+  options.deployFixtures = true;
+  options.createDatabases = true;
+
+  this.kivik = new Kivik(options);
+
+  this.port = null;
+  this.stop = async () => {};
+
+  this.start = async () => {
+    const gpo = options.port ? { port: options.port } : {};
+    this.port = await getPort(gpo);
+    if (options.port && options.port !== this.port) {
+      console.warn(
+        `Port ${options.port} is unavailable. The CouchDB instance will be reachable at http://localhost:${this.port}/`
+      );
     }
-  };
 
-  this.kill = async () => {
-    this.container.kill();
+    const container = new Container(this.port, options);
+
+    let nanoInstance;
+    try {
+      nanoInstance = await container.start();
+    } catch (error) {
+      console.error(`Error running the Kivik instance: ${e.message}`);
+      await container.stop();
+      return;
+    }
+
+    this.stop = async () => {
+      await container.stop();
+    };
+
+    await this.kivik.load();
+    await this.kivik.deploy(nanoInstance);
+
+    return nanoInstance;
   };
 };

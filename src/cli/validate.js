@@ -1,58 +1,39 @@
-const fs = require("fs-extra");
-const fetch = require("node-fetch");
-
-const validate = require("../validate");
+const Validator = require("../Validator");
 
 module.exports = {
-  command: ["validate <document> [schema]"],
-  describe:
-    "Validates a JSON document against a JSON schema. The JSON document can either be a file or a URL. The specified schema can either be a file or a directory containing a 'schema.json' file; by default this is the current directory.",
+  command: ["validate <document> <database>"],
+  describe: "Validates a document against a database's JSON Schema.",
+  builder: (yargs) => {
+    return yargs
+      .positional("document", {
+        type: "string",
+        describe:
+          "The document to validate. Can be specified as either a local file or a URL.",
+      })
+      .positional("database", {
+        type: "string",
+        describe:
+          "The database against whose schema the document will be validated.",
+      });
+  },
   handler: async (argv) => {
-    let schemaFile = argv.schema || ".";
-    let schema;
-
+    const validator = new Validator(argv);
     try {
-      if ((await fs.stat(schemaFile)).isDirectory()) {
-        schemaFile += "/schema.json";
+      const response = await validator.validate(argv.document, argv.database);
+      if (response.valid) {
+        console.log(
+          `${argv.document} validates against the schema for database ${argv.database}.`
+        );
+        process.exit(0);
+      } else {
+        console.error(
+          `${argv.document} does not validate against the schema for database ${argv.database}.`
+        );
+        console.error(validator.errorsText(response.errors));
+        process.exit(1);
       }
-      schema = await fs.readJSON(schemaFile);
-    } catch (e) {
-      console.error("Could not open or parse the JSON schema");
-      console.error(e.message);
-      process.exit(1);
-    }
-
-    let document, fetched;
-    let errors = [];
-    try {
-      let response = await fetch(argv.document);
-      document = await response.json();
-      fetched = true;
-    } catch (e) {
-      errors.push("Could not fetch document remotely: " + e.message);
-    }
-
-    if (!fetched) {
-      try {
-        document = await fs.readJSON(argv.document);
-        fetched = true;
-      } catch (e) {
-        errors.push("Could not load document locally: " + e.message);
-      }
-    }
-
-    if (!fetched) {
-      console.error(errors);
-      process.exit(1);
-    }
-
-    let response = validate(document, schema);
-    if (response.success) {
-      console.log("Document is valid!");
-      process.exit(0);
-    } else {
-      console.error("Document is invalid:");
-      console.error(response.errors[0]);
+    } catch (error) {
+      console.error(error);
       process.exit(1);
     }
   },

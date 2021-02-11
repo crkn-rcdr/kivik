@@ -1,0 +1,8 @@
+{
+  "index": {
+    "fields": [{ "title": "desc" }]
+  },
+  "type": "json",
+  "ddoc": "custom_ddoc",
+  "name": "custom-name"
+}

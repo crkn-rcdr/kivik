@@ -1,17 +1,20 @@
+const Ajv = require("ajv").default;
+const addFormats = require("ajv-formats");
 require("chai").should();
 const Database = require("../src/Database");
 const directory = require("path").resolve("example/testdb");
 
 describe("Database", () => {
-  const db = new Database(directory, { quiet: true });
+  const ajv = new Ajv();
+  addFormats(ajv);
+  const db = new Database(directory, { excludeDesign: [] }, ajv);
 
   before(async () => {
     await db.load();
   });
 
   it("loads the database schema", async () => {
-    db.should.have.property("schema");
-    db.schema.should.have.property("$schema");
+    db.hasSchema.should.equal(true);
   });
 
   it("loads fixtures", async () => {
@@ -20,14 +23,29 @@ describe("Database", () => {
   });
 
   it("validates fixtures", async () => {
-    db.fixtures[0].valid.should.be.false;
-    db.fixtures[1].valid.should.be.true;
-    db.fixtures[1].document._id.should.equal("great-expectations");
+    const invalidFixture = db.fixtures.find(
+      (fixture) => fixture.document._id === "bad-fixture"
+    );
+    const validFixture = db.fixtures.find(
+      (fixture) => fixture.document._id === "great-expectations"
+    );
+
+    invalidFixture.valid.should.be.false;
+    validFixture.valid.should.be.true;
+  });
+
+  it("loads indexes", async () => {
+    db.should.have.property("indexes");
+    db.indexes.should.have.length(2);
   });
 
   it("loads design docs", async () => {
     db.should.have.property("designDocs");
     db.designDocs.should.have.length(1);
+  });
+
+  it("passes exclusiveDesign config to design docs", async () => {
     db.designDocs[0].doc.should.have.property("views");
+    db.designDocs[0].doc.views.should.have.property("all_titles.test");
   });
 });

@@ -1,91 +1,140 @@
 const fs = require("fs-extra");
+const globby = require("globby");
 const path = require("path");
-const validate = require("./validate");
 const DesignDoc = require("./DesignDoc");
 
-// options can include:
-// fixtures: deploy fixtures to databases
-// invalidFixtures: deploy fixtures to databases that do not validate
-// createDatabases: create databases when they do not exist
-// quiet: suppress console.log
-module.exports = function Database(directory, options) {
-  options = Object.assign(
-    {},
-    {
-      fixtures: false,
-      invalidFixtures: false,
-      createDatabases: true,
-      quiet: false,
-    },
-    options || {}
-  );
+const keys = ["deployFixtures", "createDatabases", "excludeDesign", "verbose"];
+const withDefaults = require("./options").withDefaults(keys);
 
-  this.dbName = directory.slice(directory.lastIndexOf("/") + 1);
+module.exports = function Database(directory, options = {}, validator = null) {
+  options = withDefaults(options);
 
-  this.load = async () => {
-    let schemaFile = path.join(directory, "schema.json");
-    try {
-      this.schema = await fs.readJSON(schemaFile);
-    } catch (e) {
-      if (e.code !== "ENOENT") {
-        console.error(e.message);
+  this.name = directory.slice(directory.lastIndexOf(path.sep) + 1);
+
+  this.validate = (_) => {
+    return { valid: true, validationErrors: null };
+  };
+
+  this.fixtures = [];
+  this.indexes = [];
+  this.designDocs = [];
+
+  this.hasSchema = false;
+
+  this.loadSchema = async () => {
+    if (validator) {
+      const schemaFile = path.join(directory, "schema.json");
+      let schema;
+
+      try {
+        schema = await fs.readJSON(schemaFile);
+      } catch (e) {
+        if (e.code !== "ENOENT") {
+          console.error(e.message);
+        } else {
+          if (options.verbose > 0)
+            console.log(
+              `Database ${this.name} does not have a matching JSON schema.`
+            );
+        }
+      }
+
+      if (!schema) return;
+
+      try {
+        validator.addSchema(schema, this.name);
+        this.hasSchema = true;
+        this.validate = (document) => {
+          const valid = validator.validate(this.name, document);
+          return { valid, validationErrors: valid ? null : validator.errors };
+        };
+      } catch {
+        console.error(`Error loading schema for database ${this.name}:`);
+        console.error(validator.errorsText());
       }
     }
 
-    let fixturesDir = path.join(directory, "fixtures");
-    let fixtureContents = [];
-    try {
-      fixtureContents = await fs.readdir(fixturesDir);
-    } catch (ignore) {}
-    this.fixtures = await Promise.all(
-      fixtureContents
-        .filter((file) => file.endsWith(".json"))
-        .map(async (file) => {
-          let fixture = {
-            document: await fs.readJSON(path.join(fixturesDir, file)),
-          };
-          if (this.schema) {
-            let response = validate(fixture.document, this.schema);
-            fixture.valid = response.success;
-            if (!fixture.valid) {
-              if (!options.quiet)
-                console.log(
-                  `Fixture ${file} does not validate against the schema.`
-                );
-            }
-          }
-          return fixture;
-        })
+    return this;
+  };
+
+  this.loadFixtures = async () => {
+    // TODO: use a stream here?
+    const fixturePaths = await globby(
+      path.posix.join(directory, "fixtures", "*.json"),
+      { absolute: true }
     );
 
+    this.fixtures = await Promise.all(
+      fixturePaths.map(async (fp) => {
+        const document = await fs.readJSON(fp);
+        const response = this.validate(document);
+        if (!response.valid && options.verbose > 0) {
+          const file = fp.slice(fp.lastIndexOf(path.sep) + 1);
+          console.log(
+            `Fixture ${file} does not validate against the schema for database ${this.name}:`,
+            validator.errorsText(response.validationErrors)
+          );
+        }
+        return { document, ...response };
+      })
+    );
+  };
+
+  this.loadIndexes = async () => {
+    const indexPaths = await globby(
+      path.posix.join(directory, "indexes", "*.json"),
+      { absolute: true }
+    );
+
+    this.indexes = await Promise.all(
+      indexPaths.map(async (ip) => {
+        const name = ip.slice(
+          ip.lastIndexOf(path.sep) + 1,
+          ip.lastIndexOf(".json")
+        );
+        const index = await fs.readJSON(ip);
+        if (!index.name) index.name = name;
+        if (!index.ddoc) index.ddoc = `index_${name}`;
+        return index;
+      })
+    );
+  };
+
+  this.loadDesign = async () => {
     let designDir = path.join(directory, "design");
     let designSubdirectories = [];
     try {
       designSubdirectories = await fs.readdir(designDir);
     } catch (e) {
-      if (!options.quiet)
+      if (options.verbose > 0)
         console.log(`No design directory found in ${directory}`);
     }
     this.designDocs = await Promise.all(
       designSubdirectories.map(async (dir) => {
-        let ddoc = new DesignDoc(path.join(designDir, dir));
+        let ddoc = new DesignDoc(path.join(designDir, dir), options);
         await ddoc.load();
         return ddoc;
       })
     );
   };
 
-  this.deploy = async (address) => {
-    let nano = require("nano")(address);
+  this.load = async () => {
+    await this.loadSchema();
+    await this.loadFixtures();
+    await this.loadIndexes();
+    await this.loadDesign();
+  };
+
+  this.deploy = async (nanoInstance, name = this.name) => {
     let dbExists = true;
     try {
-      await nano.db.get(this.dbName);
+      await nanoInstance.db.get(name);
     } catch (e) {
-      if (!(e.error === "no_db_file")) {
+      if (!(e.message === "no_db_file")) {
         dbExists = false;
       } else {
         console.error(
-          `Could not determine the status of database ${this.dbName}: ${e.error}`
+          `Could not determine the status of database ${name}: ${e.message}`
         );
         return;
       }
@@ -93,34 +142,44 @@ module.exports = function Database(directory, options) {
 
     if (!dbExists) {
       if (options.createDatabases) {
-        if (!options.quiet) {
+        if (options.verbose > 0) {
           console.log(
-            `Database ${this.dbName} does not exist. Will attempt to create it.`
+            `Database ${name} does not exist. Will attempt to create it.`
           );
         }
         try {
-          await nano.db.create(this.dbName);
+          await nanoInstance.db.create(name);
         } catch (e) {
-          console.error(`Could not create database ${this.dbName}: ${e.error}`);
+          console.error(`Could not create database ${name}: ${e.message}`);
         }
       } else {
-        console.error(`Database ${this.dbName} does not exist.`);
+        console.error(`Database ${name} does not exist.`);
         return;
       }
     }
 
-    const db = nano.use(this.dbName);
+    const db = nanoInstance.use(name);
 
-    if (options.fixtures) {
+    if (options.deployFixtures) {
       try {
         await Promise.all(
-          this.fixtures.map((fixture) => {
-            if (options.invalidFixtures || fixture.valid)
-              db.insert(fixture.document);
-          })
+          this.fixtures.map((fixture) =>
+            fixture.valid ? db.insert(fixture.document) : null
+          )
         );
       } catch (ignore) {}
     }
+
+    await Promise.all(
+      this.indexes.map(async (index) => {
+        nanoInstance.relax({
+          db: name,
+          path: "/_index",
+          method: "post",
+          body: index,
+        });
+      })
+    );
 
     await Promise.all(
       this.designDocs.map(async (ddoc) => {
@@ -130,7 +189,7 @@ module.exports = function Database(directory, options) {
         } catch (e) {
           if (!e.statusCode === 404) {
             console.error(
-              `Could not determine status of design doc ${ddoc.id}: ${e.error}`
+              `Could not determine status of design doc ${ddoc.id}: ${e.message}`
             );
           }
         }
@@ -138,11 +197,11 @@ module.exports = function Database(directory, options) {
         try {
           await db.insert(ddoc.docWithRev(rev));
         } catch (e) {
-          console.error(`Could not insert design doc ${ddoc.id}: ${e.error}`);
+          console.error(`Could not insert design doc ${ddoc.id}: ${e.message}`);
         }
       })
     );
 
-    if (!options.quiet) console.log(`Database ${this.dbName} deployed.`);
+    if (options.verbose > 0) console.log(`Database ${name} deployed.`);
   };
 };

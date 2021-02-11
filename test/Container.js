@@ -1,35 +1,24 @@
-const chai = require("chai");
-chai.use(require("chai-http"));
-chai.should();
+require("chai").should();
+const getPort = require("get-port");
+const authedNano = require("../src/nano");
+
 const Container = require("../src/Container");
 
 describe("Container", function () {
   this.timeout(0);
-  const container = new Container({
-    image: "couchdb:1.7",
-    port: 22222,
-    quiet: true,
-  });
 
-  before(async () => {
-    await container.run();
-  });
+  it("should create a reachable Docker container", async () => {
+    const port = await getPort();
+    const container = new Container(port);
 
-  it("should have a correctly set host URL", () => {
-    container.hostURL().should.equal("http://localhost:22222/");
-  });
+    await container.start();
 
-  it("should start a reachable couchdb image", async () => {
-    let response = await chai
-      .request("http://localhost:22222")
-      .get("/")
-      .set("Accept", "application/json");
-    response.status.should.equal(200);
-    response.should.be.json;
-    JSON.parse(response.text).should.have.property("couchdb", "Welcome");
-  });
+    const nano = authedNano(port, "kivikadmin", "kivikpassword");
+    const dbs = await nano.db.list();
 
-  after(async () => {
-    await container.kill();
+    await container.stop();
+
+    dbs.should.include("_users");
+    dbs.should.include("_replicator");
   });
 });
