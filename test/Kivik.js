@@ -60,6 +60,19 @@ describe("Kivik", function () {
         .with.property("statusCode", 404);
     });
 
+    it("should post indexes", async () => {
+      const indexesResponse = await nano.relax({
+        db: "testdb",
+        method: "get",
+        path: "/_index",
+      });
+      indexesResponse.total_rows.should.equal(3);
+      indexesResponse.indexes.find((index) => index.name === "title").should.not
+        .be.undefined;
+      indexesResponse.indexes.find((index) => index.name === "custom-name")
+        .should.not.be.undefined;
+    });
+
     it("should allow for new documents to be added", async () => {
       await testdb.insert({
         _id: "not-a-real-book",

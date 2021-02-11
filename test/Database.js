@@ -34,6 +34,11 @@ describe("Database", () => {
     validFixture.valid.should.be.true;
   });
 
+  it("loads indexes", async () => {
+    db.should.have.property("indexes");
+    db.indexes.should.have.length(2);
+  });
+
   it("loads design docs", async () => {
     db.should.have.property("designDocs");
     db.designDocs.should.have.length(1);

@@ -15,6 +15,10 @@ module.exports = function Database(directory, options = {}, validator = null) {
     return { valid: true, validationErrors: null };
   };
 
+  this.fixtures = [];
+  this.indexes = [];
+  this.designDocs = [];
+
   this.hasSchema = false;
 
   this.loadSchema = async () => {
@@ -76,6 +80,26 @@ module.exports = function Database(directory, options = {}, validator = null) {
     );
   };
 
+  this.loadIndexes = async () => {
+    const indexPaths = await globby(
+      path.posix.join(directory, "indexes", "*.json"),
+      { absolute: true }
+    );
+
+    this.indexes = await Promise.all(
+      indexPaths.map(async (ip) => {
+        const name = ip.slice(
+          ip.lastIndexOf(path.sep) + 1,
+          ip.lastIndexOf(".json")
+        );
+        const index = await fs.readJSON(ip);
+        if (!index.name) index.name = name;
+        if (!index.ddoc) index.ddoc = `index_${name}`;
+        return index;
+      })
+    );
+  };
+
   this.loadDesign = async () => {
     let designDir = path.join(directory, "design");
     let designSubdirectories = [];
@@ -97,6 +121,7 @@ module.exports = function Database(directory, options = {}, validator = null) {
   this.load = async () => {
     await this.loadSchema();
     await this.loadFixtures();
+    await this.loadIndexes();
     await this.loadDesign();
   };
 
@@ -144,6 +169,17 @@ module.exports = function Database(directory, options = {}, validator = null) {
         );
       } catch (ignore) {}
     }
+
+    await Promise.all(
+      this.indexes.map(async (index) => {
+        nanoInstance.relax({
+          db: name,
+          path: "/_index",
+          method: "post",
+          body: index,
+        });
+      })
+    );
 
     await Promise.all(
       this.designDocs.map(async (ddoc) => {
