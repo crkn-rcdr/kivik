@@ -11,7 +11,6 @@ module.exports = function KivikInstance(options = {}) {
 
   options.context = "inspect";
   options.deployFixtures = true;
-  options.createDatabases = true;
 
   this.kivik = new Kivik(options);
 

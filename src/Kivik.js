@@ -13,7 +13,6 @@ const keys = [
   "context",
   // these three are passed to Database
   "deployFixtures",
-  "createDatabases",
   "excludeDesign",
   "verbose",
 ];

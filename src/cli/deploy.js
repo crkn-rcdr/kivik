@@ -1,14 +1,7 @@
 const authedNano = require("../nano");
 const Kivik = require("../Kivik");
 
-const keys = [
-  "url",
-  "user",
-  "password",
-  "deployFixtures",
-  "createDatabases",
-  "suffix",
-];
+const keys = ["url", "user", "password", "deployFixtures", "suffix"];
 const options = require("../options").slice(keys);
 
 module.exports = {
