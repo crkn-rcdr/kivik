@@ -67,9 +67,9 @@ module.exports = function Database(directory, options = {}, validator = null) {
         if (!response.valid && options.verbose > 0) {
           const file = fp.slice(fp.lastIndexOf(path.sep) + 1);
           console.log(
-            `Fixture ${file} does not validate against the schema for database ${this.name}.`
+            `Fixture ${file} does not validate against the schema for database ${this.name}:`,
+            validator.errorsText(response.validationErrors)
           );
-          console.log(validator.errorsText(response.validationErrors));
         }
         return { document, ...response };
       })
