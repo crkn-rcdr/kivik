@@ -32,6 +32,12 @@ const options = {
     describe:
       "Directories, or globs of directories, that do not contain database configuration.",
   },
+  excludeDesign: {
+    type: "string",
+    array: true,
+    default: ["*.test.js"],
+    describe: "JavaScript files to ignore when processing design documents.",
+  },
   image: {
     default: "couchdb:3.1",
     type: "string",

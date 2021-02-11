@@ -3,7 +3,7 @@ const globby = require("globby");
 const path = require("path");
 const DesignDoc = require("./DesignDoc");
 
-const keys = ["deployFixtures", "createDatabases", "verbose"];
+const keys = ["deployFixtures", "createDatabases", "excludeDesign", "verbose"];
 const withDefaults = require("./options").withDefaults(keys);
 
 module.exports = function Database(directory, options = {}, validator = null) {
@@ -87,7 +87,7 @@ module.exports = function Database(directory, options = {}, validator = null) {
     }
     this.designDocs = await Promise.all(
       designSubdirectories.map(async (dir) => {
-        let ddoc = new DesignDoc(path.join(designDir, dir));
+        let ddoc = new DesignDoc(path.join(designDir, dir), options);
         await ddoc.load();
         return ddoc;
       })

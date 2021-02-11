@@ -7,7 +7,7 @@ const directory = require("path").resolve("example/testdb");
 describe("Database", () => {
   const ajv = new Ajv();
   addFormats(ajv);
-  const db = new Database(directory, {}, ajv);
+  const db = new Database(directory, { excludeDesign: [] }, ajv);
 
   before(async () => {
     await db.load();
@@ -37,6 +37,10 @@ describe("Database", () => {
   it("loads design docs", async () => {
     db.should.have.property("designDocs");
     db.designDocs.should.have.length(1);
+  });
+
+  it("passes exclusiveDesign config to design docs", async () => {
     db.designDocs[0].doc.should.have.property("views");
+    db.designDocs[0].doc.views.should.have.property("all_titles.test");
   });
 });

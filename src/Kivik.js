@@ -12,6 +12,7 @@ const keys = [
   // these three are passed to Database
   "deployFixtures",
   "createDatabases",
+  "excludeDesign",
   "verbose",
 ];
 const withDefaults = require("./options").withDefaults(keys);

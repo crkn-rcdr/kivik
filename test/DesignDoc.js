@@ -26,10 +26,13 @@ describe("DesignDoc", () => {
       doc.views.all_titles.reduce.should.equal("_count");
     });
 
+    it("should not load files excluded by the excludeDesign argument", async () => {
+      doc.views.should.not.have.property("all_titles.test");
+    });
+
     it("should not load files not ending in .js", async () => {
       doc.should.have.property("views");
       doc.views.should.not.have.property("not_a_js_file");
-      Object.keys(doc.views).length.should.equal(2);
     });
 
     it("should load updates from the updates directory", async () => {
@@ -51,6 +54,16 @@ describe("DesignDoc", () => {
       doc.should.have.property("filters");
       doc.filters.should.have.property("multiple_titles");
     });
+
+    it("should load a validate_doc_update function", async () => {
+      doc.should.have.property("validate_doc_update");
+      doc.validate_doc_update.should.have.string("forbidden");
+    });
+
+    it("should load an autoupdate boolean", async () => {
+      doc.should.have.property("autoupdate");
+      doc.autoupdate.should.equal(false);
+    });
   });
 
   describe("With no functions", () => {
@@ -70,6 +83,20 @@ describe("DesignDoc", () => {
       emptyDDoc.doc.should.not.have.property("shows");
       emptyDDoc.doc.should.not.have.property("views");
       emptyDDoc.doc.should.not.have.property("lists");
+    });
+  });
+
+  describe("With excludeDesign set", () => {
+    const ddoc = new DesignDoc(directory, { excludeDesign: [] });
+    let doc;
+
+    before(async () => {
+      await ddoc.load();
+      doc = ddoc.doc;
+    });
+
+    it("should include all .js files", async () => {
+      doc.views.should.have.property("all_titles.test");
     });
   });
 });

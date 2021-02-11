@@ -1,53 +1,84 @@
 const fs = require("fs-extra");
 const path = require("path");
+const globby = require("globby");
 
-const designTypes = {
-  views: { mapReduce: true },
-  shows: {},
-  lists: {},
-  updates: {},
-  filters: {},
+// Object.fromEntries is Node 12+
+const objectFromEntries = (entries) => {
+  const obj = {};
+  for (const [key, value] of entries) {
+    obj[key] = value;
+  }
+  return obj;
 };
 
-module.exports = function DesignDoc(directory) {
+const designTypes = {
+  views: { multi: true, type: "object" },
+  shows: { multi: true, type: "function" },
+  lists: { multi: true, type: "function" },
+  updates: { multi: true, type: "function" },
+  filters: { multi: true, type: "function" },
+  validate_doc_update: { multi: false, type: "function" },
+  autoupdate: { multi: false, type: "boolean" },
+};
+
+const withDefaults = require("./options").withDefaults(["excludeDesign"]);
+
+module.exports = function DesignDoc(directory, options = {}) {
+  const { excludeDesign } = withDefaults(options);
+
   this.id = `_design/${directory.slice(directory.lastIndexOf(path.sep) + 1)}`;
+  this.doc = { _id: this.id };
 
-  const _importDir = async (type, mapReduce) => {
-    let dir = path.join(directory, type);
-    let dirContents;
-    try {
-      dirContents = await fs.readdir(dir);
-    } catch (err) {
-      if (!err.code === "ENOENT") throw err;
-      return null;
-    }
+  const _import = async (design) => {
+    const info = designTypes[design];
+    const designPath = path.join(directory, design);
+    if (info.multi) {
+      const exists = await fs.pathExists(designPath);
+      if (!exists) return null;
 
-    let obj = {};
-    dirContents
-      .filter((file) => file.endsWith(".js"))
-      .forEach((file) => {
-        let name = file.slice(0, file.lastIndexOf(".js"));
-        let fileContents = require(path.join(dir, file));
-        if (mapReduce) {
-          // expect an object with a required map function and an optional reduce function
-          obj[name] = { map: fileContents.map.toString() };
-          if (fileContents.reduce) {
-            obj[name].reduce = fileContents.reduce.toString();
-          }
+      const files = await globby("*.js", {
+        ignore: excludeDesign,
+        cwd: designPath,
+        absolute: true,
+      });
+
+      const entries = files.map((filePath) => {
+        const key = filePath.slice(
+          filePath.lastIndexOf(path.sep) + 1,
+          filePath.lastIndexOf(".js")
+        );
+        const module = require(filePath);
+        if (info.type === "object") {
+          return [
+            key,
+            objectFromEntries(
+              Object.entries(module).map((entry) => [
+                entry[0],
+                entry[1].toString(),
+              ])
+            ),
+          ];
         } else {
-          // expect a function
-          obj[name] = fileContents.toString();
+          return [key, module.toString()];
         }
       });
-    return obj;
+
+      return entries.length > 0 ? objectFromEntries(entries) : null;
+    } else {
+      try {
+        const module = require(designPath);
+        return info.type === "boolean" ? !!module : module.toString();
+      } catch {
+        return null;
+      }
+    }
   };
 
   this.load = async () => {
-    this.doc = { _id: this.id };
     await Promise.all(
-      Object.keys(designTypes).map(async (type) => {
-        let functionObj = await _importDir(type, designTypes[type].mapReduce);
-        if (functionObj) this.doc[type] = functionObj;
+      Object.keys(designTypes).map(async (design) => {
+        let rv = await _import(design);
+        if (rv !== null) this.doc[design] = rv;
       })
     );
   };
