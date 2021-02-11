@@ -9,8 +9,6 @@ module.exports = {
   describe: "Deploys design documents to a remote database",
   builder: options,
   handler: async (argv) => {
-    console.log(argv);
-    process.exit(0);
     const kivik = new Kivik({ ...argv, context: "deploy" });
     await kivik.load();
 
