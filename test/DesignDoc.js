@@ -5,18 +5,17 @@ const directory = path.resolve("example/testdb/design/test");
 const emptyDirectory = path.resolve("example/testdb/design/empty");
 
 describe("DesignDoc", () => {
-  describe("With functions", () => {
-    const ddoc = new DesignDoc(directory);
-    let doc;
+  let id, doc;
 
+  describe("With functions", () => {
     before(async () => {
-      await ddoc.load();
-      doc = ddoc.doc;
+      const ddoc = await DesignDoc.fromDirectory(directory);
+      id = ddoc.id();
+      doc = (await DesignDoc.fromDirectory(directory)).doc();
     });
 
     it("should generate a design doc from a directory", async () => {
-      ddoc.id.should.equal("_design/test");
-      doc._id.should.equal("_design/test");
+      id.should.equal("_design/test");
     });
 
     it("should load views from the views directory", async () => {
@@ -67,32 +66,30 @@ describe("DesignDoc", () => {
   });
 
   describe("With no functions", () => {
-    const emptyDDoc = new DesignDoc(emptyDirectory);
-
     before(async () => {
-      await emptyDDoc.load();
+      doc = (await DesignDoc.fromDirectory(emptyDirectory)).doc();
     });
 
     it("should load empty design document directories", async () => {
-      emptyDDoc.doc._id.should.equal("_design/empty");
+      doc._id.should.equal("_design/empty");
     });
 
     it("should not create function objects", async () => {
-      emptyDDoc.doc.should.not.have.property("filters");
-      emptyDDoc.doc.should.not.have.property("updates");
-      emptyDDoc.doc.should.not.have.property("shows");
-      emptyDDoc.doc.should.not.have.property("views");
-      emptyDDoc.doc.should.not.have.property("lists");
+      doc.should.not.have.property("filters");
+      doc.should.not.have.property("updates");
+      doc.should.not.have.property("shows");
+      doc.should.not.have.property("views");
+      doc.should.not.have.property("lists");
     });
   });
 
   describe("With excludeDesign set", () => {
-    const ddoc = new DesignDoc(directory, { excludeDesign: [] });
-    let doc;
-
     before(async () => {
-      await ddoc.load();
-      doc = ddoc.doc;
+      doc = (
+        await DesignDoc.fromDirectory(directory, {
+          excludeDesign: [],
+        })
+      ).doc();
     });
 
     it("should include all .js files", async () => {

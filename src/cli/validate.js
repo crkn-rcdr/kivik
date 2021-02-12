@@ -1,4 +1,4 @@
-const Validator = require("../Validator");
+const getValidator = require("../getValidator");
 
 module.exports = {
   command: ["validate <document> <database>"],
@@ -17,22 +17,30 @@ module.exports = {
       });
   },
   handler: async (argv) => {
-    const validator = new Validator(argv);
     try {
-      const response = await validator.validate(argv.document, argv.database);
-      if (response.valid) {
-        console.log(
-          `${argv.document} validates against the schema for database ${argv.database}.`
-        );
-        process.exit(0);
+      const validator = await getValidator(argv.directory, argv);
+      const response = await validator(argv.database)(argv.document);
+
+      if (response) {
+        if (response.valid) {
+          console.log(
+            `${argv.document} validates against the schema for database ${argv.database}.`
+          );
+          process.exit(0);
+        } else {
+          console.error(
+            `${argv.document} does not validate against the schema for database ${argv.database}.`,
+            console.error(response.errors)
+          );
+          process.exit(1);
+        }
       } else {
         console.error(
-          `${argv.document} does not validate against the schema for database ${argv.database}.`
+          `There is no schema available for database ${argv.database}`
         );
-        console.error(validator.errorsText(response.errors));
         process.exit(1);
       }
-    } catch (error) {
+    } catch {
       console.error(error);
       process.exit(1);
     }

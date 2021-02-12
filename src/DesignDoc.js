@@ -1,15 +1,7 @@
 const fs = require("fs-extra");
 const path = require("path");
 const globby = require("globby");
-
-// Object.fromEntries is Node 12+
-const objectFromEntries = (entries) => {
-  const obj = {};
-  for (const [key, value] of entries) {
-    obj[key] = value;
-  }
-  return obj;
-};
+const objectFromEntries = require("./util").objectFromEntries;
 
 const designTypes = {
   views: { multi: true, type: "object" },
@@ -23,11 +15,8 @@ const designTypes = {
 
 const withDefaults = require("./options").withDefaults(["excludeDesign"]);
 
-module.exports = function DesignDoc(directory, options = {}) {
+const fromDirectory = async (directory, options = {}) => {
   const { excludeDesign } = withDefaults(options);
-
-  this.id = `_design/${directory.slice(directory.lastIndexOf(path.sep) + 1)}`;
-  this.doc = { _id: this.id };
 
   const _import = async (design) => {
     const info = designTypes[design];
@@ -74,18 +63,31 @@ module.exports = function DesignDoc(directory, options = {}) {
     }
   };
 
-  this.load = async () => {
-    await Promise.all(
-      Object.keys(designTypes).map(async (design) => {
-        let rv = await _import(design);
-        if (rv !== null) this.doc[design] = rv;
-      })
-    );
-  };
+  const name = directory.slice(directory.lastIndexOf(path.sep) + 1);
+  const doc = { _id: `_design/${name}` };
 
-  this.docWithRev = (rev) => {
-    let doc = {};
-    if (rev) doc["_rev"] = rev;
-    return Object.assign(doc, this.doc);
-  };
+  await Promise.all(
+    Object.keys(designTypes).map(async (design) => {
+      let rv = await _import(design);
+      if (rv !== null) doc[design] = rv;
+    })
+  );
+
+  return new DesignDoc(doc);
 };
+
+class DesignDoc {
+  constructor(doc) {
+    this._doc = doc;
+  }
+
+  id() {
+    return this._doc._id;
+  }
+
+  doc(rev = undefined) {
+    return rev ? { ...this._doc, _rev: rev } : this._doc;
+  }
+}
+
+module.exports = { fromDirectory, default: DesignDoc };

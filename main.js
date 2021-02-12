@@ -1,12 +1,12 @@
 const Container = require("./src/Container");
 const Instance = require("./src/Instance");
 const Kivik = require("./src/Kivik");
-const Validator = require("./src/Validator");
+const getValidator = require("./src/getValidator");
 
 module.exports = {
   default: Instance,
   Kivik,
   Instance,
   Container,
-  Validator,
+  getValidator,
 };

@@ -7,7 +7,7 @@ const directory = "example";
 describe("Instance", function () {
   this.timeout(0);
 
-  const instance = new Instance({ directory });
+  const instance = new Instance(directory);
   let nano;
 
   before(async () => {

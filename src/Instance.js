@@ -6,14 +6,13 @@ const Kivik = require("./Kivik");
 const keys = ["image", "port", "directory", "include", "exclude", "verbose"];
 const withDefaults = require("./options").withDefaults(keys);
 
-module.exports = function KivikInstance(options = {}) {
+module.exports = function KivikInstance(directory, options = {}) {
   options = withDefaults(options);
 
   options.context = "inspect";
   options.deployFixtures = true;
 
-  this.kivik = new Kivik(options);
-
+  this.kivik = null;
   this.port = null;
   this.stop = async () => {};
 
@@ -41,7 +40,7 @@ module.exports = function KivikInstance(options = {}) {
       await container.stop();
     };
 
-    await this.kivik.load();
+    this.kivik = await Kivik.fromDirectory(directory, options);
     await this.kivik.deploy(nanoInstance);
 
     return nanoInstance;

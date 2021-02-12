@@ -1,6 +1,6 @@
 const Nano = require("nano");
 
-module.exports = (urlOrPort, user = undefined, pass = undefined) => {
+const authedNano = (urlOrPort, user = undefined, pass = undefined) => {
   const url = Number.isInteger(urlOrPort)
     ? `http://localhost:${urlOrPort}/`
     : urlOrPort;
@@ -14,3 +14,14 @@ module.exports = (urlOrPort, user = undefined, pass = undefined) => {
 
   return Nano(nanoOptions);
 };
+
+// Object.fromEntries is Node 12+
+const objectFromEntries = (entries) => {
+  const obj = {};
+  for (const [key, value] of entries) {
+    obj[key] = value;
+  }
+  return obj;
+};
+
+module.exports = { objectFromEntries, authedNano };
