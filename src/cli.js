@@ -1,8 +1,8 @@
 const fs = require("fs-extra");
 const path = require("path");
-
 const YAML = require("yaml");
 const findUp = require("find-up");
+const { slice: sliceOptions } = require("./options");
 
 const context = (wd) => {
   const confPath = findUp.sync(
@@ -42,8 +42,13 @@ const setContextArg = (argv) => {
   return argv;
 };
 
-const keys = ["config", "directory", "include", "exclude", "verbose"];
-const options = require("./options").slice(keys);
+const options = sliceOptions([
+  "config",
+  "directory",
+  "include",
+  "exclude",
+  "verbose",
+]);
 
 const commands = [
   require("./cli/deploy"),

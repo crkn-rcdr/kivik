@@ -1,7 +1,16 @@
 const fs = require("fs-extra");
 const path = require("path");
 const globby = require("globby");
-const objectFromEntries = require("./util").objectFromEntries;
+const { withDefaults } = require("../options");
+
+// Object.fromEntries is Node 12+
+const objectFromEntries = (entries) => {
+  const obj = {};
+  for (const [key, value] of entries) {
+    obj[key] = value;
+  }
+  return obj;
+};
 
 const designTypes = {
   views: { multi: true, type: "object" },
@@ -13,10 +22,10 @@ const designTypes = {
   autoupdate: { multi: false, type: "boolean" },
 };
 
-const withDefaults = require("./options").withDefaults(["excludeDesign"]);
+const defaulted = withDefaults(["excludeDesign"]);
 
-const fromDirectory = async (directory, options = {}) => {
-  const { excludeDesign } = withDefaults(options);
+module.exports = async (directory, options = {}) => {
+  const { excludeDesign } = defaulted(options);
 
   const _import = async (design) => {
     const info = designTypes[design];
@@ -73,21 +82,5 @@ const fromDirectory = async (directory, options = {}) => {
     })
   );
 
-  return new DesignDoc(doc);
+  return doc;
 };
-
-class DesignDoc {
-  constructor(doc) {
-    this._doc = doc;
-  }
-
-  id() {
-    return this._doc._id;
-  }
-
-  doc(rev = undefined) {
-    return rev ? { ...this._doc, _rev: rev } : this._doc;
-  }
-}
-
-module.exports = { fromDirectory, default: DesignDoc };

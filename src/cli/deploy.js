@@ -1,8 +1,14 @@
-const authedNano = require("../util").authedNano;
+const { slice: sliceOptions } = require("../options");
+const { authedNano } = require("../util");
 const Kivik = require("../Kivik");
 
-const keys = ["url", "user", "password", "deployFixtures", "suffix"];
-const options = require("../options").slice(keys);
+const options = sliceOptions([
+  "url",
+  "user",
+  "password",
+  "deployFixtures",
+  "suffix",
+]);
 
 module.exports = {
   command: ["deploy"],

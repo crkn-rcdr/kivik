@@ -1,32 +1,45 @@
-require("chai").should();
+const should = require("chai").should();
+
+const path = require("path");
 const Database = require("../src/Database");
-const directory = require("path").resolve("example/testdb");
+const getValidator = require("../src/getValidator");
+const directory = path.resolve("example");
 
 describe("Database", () => {
   before(async () => {
-    db = await Database.fromDirectory(directory, { excludeDesign: [] });
+    const validate = (await getValidator(directory))("testdb");
+    db = await Database.fromDirectory(
+      path.join(directory, "testdb"),
+      validate,
+      { excludeDesign: [] }
+    );
+  });
+
+  it("provides a validator", async () => {
+    db.validate.should.be.a("function");
   });
 
   it("loads fixtures", async () => {
-    db.should.have.property("fixtures");
-    Object.keys(db.fixtures).should.have.length(5);
+    db.fixtures.should.be.a("object");
+    db.fixtures.should.respondTo("withId");
+    should.exist(db.fixtures.withId("great-expectations"));
+    should.not.exist(db.fixtures.withId("bad-fixture"));
   });
 
   it("loads indexes", async () => {
-    db.should.have.property("indexes");
-    db.indexes.should.have.property("title");
-    db.indexes.title.should.have.property("name");
-    db.indexes.title.name.should.equal("title");
-    db.indexes.should.have.property("fully_specified");
+    db.indexes.should.be.a("object");
+    db.indexes.should.respondTo("withName");
+    should.exist(db.indexes.withName("title"));
   });
 
   it("loads design docs", async () => {
-    db.should.have.property("designDocs");
-    db.designDocs.should.have.property("_design/test");
+    db.designDocs.should.be.a("object");
+    db.designDocs.should.respondTo("withId");
+    should.exist(db.designDocs.withId("_design/test"));
   });
 
   it("passes exclusiveDesign config to design docs", async () => {
-    const doc = db.designDocs["_design/test"].doc();
+    const doc = db.designDocs.withId("_design/test");
     doc.should.have.property("views");
     doc.views.should.have.property("all_titles.test");
   });

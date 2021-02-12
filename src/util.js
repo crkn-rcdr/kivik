@@ -15,13 +15,4 @@ const authedNano = (urlOrPort, user = undefined, pass = undefined) => {
   return Nano(nanoOptions);
 };
 
-// Object.fromEntries is Node 12+
-const objectFromEntries = (entries) => {
-  const obj = {};
-  for (const [key, value] of entries) {
-    obj[key] = value;
-  }
-  return obj;
-};
-
-module.exports = { objectFromEntries, authedNano };
+module.exports = { authedNano };
