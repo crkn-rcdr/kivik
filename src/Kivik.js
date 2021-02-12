@@ -1,10 +1,11 @@
 const path = require("path");
 const globby = require("globby");
 const randomString = require("crypto-random-string");
+const { withDefaults } = require("./options");
 const getValidator = require("./getValidator");
 const Database = require("./Database");
 
-const keys = [
+const defaulted = withDefaults([
   "include",
   "exclude",
   "suffix",
@@ -13,11 +14,13 @@ const keys = [
   "deployFixtures",
   "excludeDesign",
   "verbose",
-];
-const withDefaults = require("./options").withDefaults(keys);
+]);
 
 const fromDirectory = async (directory, options = {}) => {
-  options = withDefaults(options);
+  options = defaulted(options);
+
+  if (options.suffix === "random")
+    options.suffix = randomString({ length: 10 });
 
   const validator = await getValidator(directory, options);
 
@@ -33,11 +36,11 @@ const fromDirectory = async (directory, options = {}) => {
   });
 
   for await (const dir of dirStream) {
-    const dbName = dir.slice(dir.lastIndexOf(path.sep) + 1);
+    const dbName = path.basename(dir);
     databases[dbName] = await Database.fromDirectory(
       dir,
-      options,
-      validator(dbName)
+      validator(dbName),
+      options
     );
   }
 
@@ -45,13 +48,10 @@ const fromDirectory = async (directory, options = {}) => {
 };
 
 class Kivik {
-  constructor(databases, validator, options) {
+  constructor(databases, validator, options = {}) {
     this.databases = databases;
     this.validator = validator;
-    this.suffix =
-      options.suffix === "random"
-        ? randomString({ length: 10 })
-        : options.suffix;
+    this.suffix = options.suffix;
   }
 
   suffixedName(name) {

@@ -1,13 +1,19 @@
-const path = require("path");
 const getPort = require("get-port");
 const Container = require("./Container");
 const Kivik = require("./Kivik");
+const { withDefaults } = require("./options");
 
-const keys = ["image", "port", "directory", "include", "exclude", "verbose"];
-const withDefaults = require("./options").withDefaults(keys);
+const defaulted = withDefaults([
+  "image",
+  "port",
+  "directory",
+  "include",
+  "exclude",
+  "verbose",
+]);
 
 module.exports = function KivikInstance(directory, options = {}) {
-  options = withDefaults(options);
+  options = defaulted(options);
 
   options.context = "inspect";
   options.deployFixtures = true;

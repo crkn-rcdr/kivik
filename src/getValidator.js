@@ -4,6 +4,7 @@ const fetch = require("node-fetch");
 const Ajv = require("ajv").default;
 const addFormats = require("ajv-formats").default;
 const globby = require("globby");
+const { withDefaults } = require("./options");
 
 const fromURL = async (input) => {
   try {
@@ -23,11 +24,10 @@ const fromFile = async (input) => {
   }
 };
 
-const keys = ["include", "exclude"];
-const withDefaults = require("./options").withDefaults(keys);
+const defaulted = withDefaults(["include", "exclude"]);
 
 module.exports = async (directory, options = {}) => {
-  const { include, exclude } = withDefaults(options);
+  const { include, exclude } = defaulted(options);
 
   const ajv = new Ajv();
   // TODO: config for which formats to add?
