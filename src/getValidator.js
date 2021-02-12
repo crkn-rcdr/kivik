@@ -33,16 +33,36 @@ module.exports = async (directory, options = {}) => {
   // TODO: config for which formats to add?
   addFormats(ajv);
 
+  const schemas = [];
+  const cwd = path.resolve(directory);
+
+  schemas.push(
+    ...(
+      await globby("schemas/*.json", {
+        cwd: cwd,
+        absolute: true,
+      })
+    ).map((fullPath) => {
+      return [fullPath, path.basename(fullPath, ".json")];
+    })
+  );
+
   const schemaMap = (glob) => path.posix.join(glob, "schema.json");
-  const schemaPaths = await globby(include.map(schemaMap), {
-    ignore: exclude.map(schemaMap),
-    cwd: path.resolve(directory),
-    absolute: true,
-  });
+  schemas.push(
+    ...(
+      await globby(include.map(schemaMap), {
+        ignore: exclude.map(schemaMap),
+        cwd: cwd,
+        absolute: true,
+      })
+    ).map((fullPath) => {
+      return [fullPath, path.basename(path.dirname(fullPath))];
+    })
+  );
+
   await Promise.all(
-    schemaPaths.map(async (sp) => {
-      const split = sp.split("/");
-      ajv.addSchema(await fs.readJSON(sp), split[split.length - 2]);
+    schemas.map(async ([path, key]) => {
+      ajv.addSchema(await fs.readJSON(path), key);
     })
   );
 
