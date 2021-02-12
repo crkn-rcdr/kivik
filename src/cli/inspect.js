@@ -10,7 +10,7 @@ module.exports = {
       argv.verbose = 1;
       argv.v = 1;
     }
-    const instance = new Instance(argv);
+    const instance = new Instance(argv.directory, argv);
     await instance.start();
   },
 };

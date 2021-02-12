@@ -1,6 +1,6 @@
 require("chai").should();
 const getPort = require("get-port");
-const authedNano = require("../src/nano");
+const authedNano = require("../src/util").authedNano;
 
 const Container = require("../src/Container");
 

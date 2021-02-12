@@ -1,7 +1,7 @@
 const getPort = require("get-port");
 const chai = require("chai");
 chai.use(require("chai-as-promised"));
-chai.should();
+const should = chai.should();
 
 const directory = "example";
 
@@ -11,17 +11,18 @@ const Kivik = require("../src/Kivik");
 describe("Kivik", function () {
   this.timeout(0);
 
-  let container, nano, testdb;
+  let kivik, container, nano, testdb;
 
   before(async () => {
+    kivik = await Kivik.fromDirectory(directory);
     container = new Container(await getPort());
     nano = await container.start();
     testdb = nano.use("testdb");
   });
 
-  const setupSuite = (kivik) => {
+  const setupSuite = (directory, options) => {
     before(async () => {
-      await kivik.load();
+      kivik = await Kivik.fromDirectory(directory, options);
     });
 
     beforeEach(async () => {
@@ -29,17 +30,19 @@ describe("Kivik", function () {
     });
 
     afterEach(async () => {
-      await kivik.reset(nano);
+      await kivik.destroy(nano);
     });
   };
 
   describe("with defaults", function () {
-    const kivik = new Kivik({
-      directory,
+    setupSuite(directory, {
       deployFixtures: true,
     });
 
-    setupSuite(kivik);
+    it("should load the validator", async () => {
+      kivik.should.have.property("validator");
+      kivik.validator.should.be.a("function");
+    });
 
     it("should load databases", async () => {
       kivik.should.have.property("databases");
@@ -47,33 +50,35 @@ describe("Kivik", function () {
       kivik.databases.should.have.property("seconddb");
     });
 
-    it("should load fixtures", async () => {
+    it("should deploy fixtures", async () => {
       const ge = await testdb.get("great-expectations");
-      ge.should.haveOwnProperty("title");
+      ge.should.have.property("title");
       ge.title.should.equal("Great Expectations");
     });
 
-    it("should load only the valid fixtures", async () => {
+    it("should only deploy the valid fixtures", async () => {
       testdb
         .get("bad-fixture")
         .should.eventually.throw()
         .with.property("statusCode", 404);
     });
 
-    it("should post indexes", async () => {
+    it("should deploy indexes", async () => {
       const indexesResponse = await nano.relax({
         db: "testdb",
         method: "get",
         path: "/_index",
       });
       indexesResponse.total_rows.should.equal(3);
-      indexesResponse.indexes.find((index) => index.name === "title").should.not
-        .be.undefined;
-      indexesResponse.indexes.find((index) => index.name === "custom-name")
-        .should.not.be.undefined;
+      should.exist(
+        indexesResponse.indexes.find((index) => index.name === "title")
+      );
+      should.exist(
+        indexesResponse.indexes.find((index) => index.name === "custom-name")
+      );
     });
 
-    it("should allow for new documents to be added", async () => {
+    it("should allow for new documents to be posted", async () => {
       await testdb.insert({
         _id: "not-a-real-book",
         title: "this isn't a real book",
@@ -94,12 +99,7 @@ describe("Kivik", function () {
   });
 
   describe("with a database subset", function () {
-    const kivik = new Kivik({
-      directory,
-      include: ["seconddb"],
-    });
-
-    setupSuite(kivik);
+    setupSuite(directory, { include: ["seconddb"] });
 
     it("shouldn't load from databases not included in the subset", async () => {
       const list = await nano.db.list();
@@ -109,9 +109,7 @@ describe("Kivik", function () {
   });
 
   describe("with a database suffix", async () => {
-    const kivik = new Kivik({ directory, suffix: "test" });
-
-    setupSuite(kivik);
+    setupSuite(directory, { suffix: "test" });
 
     it("should add the database suffix to deployed database names", async () => {
       const list = await nano.db.list();
@@ -121,12 +119,10 @@ describe("Kivik", function () {
   });
 
   describe("with a random database suffix", async () => {
-    const kivik = new Kivik({ directory, suffix: "random" });
-    const dbName = kivik.dbName("testdb");
-
-    setupSuite(kivik);
+    setupSuite(directory, { suffix: "random" });
 
     it("should generate and store a random suffix", async () => {
+      const dbName = kivik.suffixedName("testdb");
       dbName.should.not.equal("testdb-random");
       const list = await nano.db.list();
       list.should.include(dbName);

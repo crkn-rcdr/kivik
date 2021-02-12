@@ -1,4 +1,4 @@
-const authedNano = require("../nano");
+const authedNano = require("../util").authedNano;
 const Kivik = require("../Kivik");
 
 const keys = ["url", "user", "password", "deployFixtures", "suffix"];
@@ -9,8 +9,10 @@ module.exports = {
   describe: "Deploys design documents to a remote database",
   builder: options,
   handler: async (argv) => {
-    const kivik = new Kivik({ ...argv, context: "deploy" });
-    await kivik.load();
+    const kivik = Kivik.fromDirectory(argv.directory, {
+      ...argv,
+      context: "deploy",
+    });
 
     const nanoInstance = authedNano(argv.url, argv.user, argv.password);
 

@@ -1,5 +1,5 @@
 const Docker = require("dockerode");
-const authedNano = require("./nano");
+const authedNano = require("./util").authedNano;
 const fetch = require("node-fetch");
 const util = require("util");
 const setTimeoutPromise = util.promisify(setTimeout);
