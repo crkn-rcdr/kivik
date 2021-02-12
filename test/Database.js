@@ -1,24 +1,40 @@
 const should = require("chai").should();
+
+const path = require("path");
 const Database = require("../src/Database");
-const directory = require("path").resolve("example/testdb");
+const getValidator = require("../src/getValidator");
+const directory = path.resolve("example");
 
 describe("Database", () => {
   before(async () => {
-    db = await Database.fromDirectory(directory, null, { excludeDesign: [] });
+    const validate = (await getValidator(directory))("testdb");
+    db = await Database.fromDirectory(
+      path.join(directory, "testdb"),
+      validate,
+      { excludeDesign: [] }
+    );
+  });
+
+  it("provides a validator", async () => {
+    db.validate.should.be.a("function");
   });
 
   it("loads fixtures", async () => {
-    db.should.have.property("fixtures");
+    db.fixtures.should.be.a("object");
+    db.fixtures.should.respondTo("withId");
     should.exist(db.fixtures.withId("great-expectations"));
+    should.not.exist(db.fixtures.withId("bad-fixture"));
   });
 
   it("loads indexes", async () => {
-    db.should.have.property("indexes");
+    db.indexes.should.be.a("object");
+    db.indexes.should.respondTo("withName");
     should.exist(db.indexes.withName("title"));
   });
 
   it("loads design docs", async () => {
-    db.should.have.property("designDocs");
+    db.designDocs.should.be.a("object");
+    db.designDocs.should.respondTo("withId");
     should.exist(db.designDocs.withId("_design/test"));
   });
 
