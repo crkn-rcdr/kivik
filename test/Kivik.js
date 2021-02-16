@@ -15,7 +15,7 @@ describe("Kivik", function () {
 
   before(async () => {
     kivik = await Kivik.fromDirectory(directory);
-    container = new Container(await getPort());
+    container = await Container.get(await getPort());
     nano = await container.start();
     testdb = nano.use("testdb");
   });

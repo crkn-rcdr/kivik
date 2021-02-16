@@ -7,11 +7,12 @@ const directory = "example";
 describe("Instance", function () {
   this.timeout(0);
 
-  const instance = new Instance(directory);
-  let nano;
+  let instance;
 
   before(async () => {
-    nano = await instance.start();
+    instance = await Instance.get(directory);
+    await instance.start();
+    await instance.deploy();
   });
 
   it("should create and load a Kivik instance", async () => {
@@ -20,7 +21,7 @@ describe("Instance", function () {
   });
 
   it("should create and start a reachable Container", async () => {
-    const db = await nano.db.get("testdb");
+    const db = await instance.nano.db.get("testdb");
     db.should.haveOwnProperty("db_name", "testdb");
   });
 

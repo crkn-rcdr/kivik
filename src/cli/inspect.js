@@ -12,7 +12,11 @@ module.exports = {
       argv.verbose = 1;
       argv.v = 1;
     }
-    const instance = new Instance(argv.directory, argv);
+    const instance = await Instance.get(argv.directory, argv.port, argv);
     await instance.start();
+
+    process.on("SIGINT", () => {
+      instance.stop();
+    });
   },
 };

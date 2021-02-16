@@ -1,54 +1,61 @@
 const getPort = require("get-port");
-const Container = require("./Container");
 const Kivik = require("./Kivik");
+const Container = require("./Container");
 const { withDefaults } = require("./options");
 
 const defaulted = withDefaults([
   "image",
   "port",
+  "user",
+  "password",
   "directory",
   "include",
   "exclude",
   "verbose",
 ]);
 
-module.exports = function KivikInstance(directory, options = {}) {
+const get = async (directory, port = undefined, options = {}) => {
   options = defaulted(options);
-
-  options.context = "inspect";
   options.deployFixtures = true;
 
-  this.kivik = null;
-  this.port = null;
-  this.stop = async () => {};
+  const kivik = await Kivik.fromDirectory(directory, options);
 
-  this.start = async () => {
-    const gpo = options.port ? { port: options.port } : {};
-    this.port = await getPort(gpo);
-    if (options.port && options.port !== this.port) {
-      console.warn(
-        `Port ${options.port} is unavailable. The CouchDB instance will be reachable at http://localhost:${this.port}/`
-      );
-    }
+  const cPort = await getPort(port ? { port } : {});
+  const container = await Container.get(cPort, options);
 
-    const container = new Container(this.port, options);
-
-    let nanoInstance;
-    try {
-      nanoInstance = await container.start();
-    } catch (error) {
-      console.error(`Error running the Kivik instance: ${e.message}`);
-      await container.stop();
-      return;
-    }
-
-    this.stop = async () => {
-      await container.stop();
-    };
-
-    this.kivik = await Kivik.fromDirectory(directory, options);
-    await this.kivik.deploy(nanoInstance);
-
-    return nanoInstance;
-  };
+  return new Instance(kivik, container);
 };
+
+class Instance {
+  constructor(kivik, container) {
+    this.kivik = kivik;
+    this.container = container;
+    this.nano = undefined;
+  }
+
+  async start() {
+    this.nano = await this.container.start();
+  }
+
+  async stop() {
+    await this.container.stop();
+  }
+
+  async deploy() {
+    if (this.nano) {
+      await this.kivik.deploy(this.nano);
+    } else {
+      throw new Error("Start the instance before deploying it.");
+    }
+  }
+
+  async destroy() {
+    if (this.nano) {
+      await this.kivik.destroy(this.nano);
+    } else {
+      throw new Error("Start the instance before deploying it.");
+    }
+  }
+}
+
+module.exports = { default: Instance, get };
