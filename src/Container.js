@@ -6,47 +6,55 @@ const { authedNano } = require("./util");
 
 const TIMEOUT_START = 10;
 
-const keys = ["image", "verbose"];
-const withDefaults = require("./options").withDefaults(keys);
+const keys = ["image", "user", "password", "verbose"];
+const defaulted = require("./options").withDefaults(keys);
 
-module.exports = function Container(port, options = {}) {
-  const { image, verbose } = withDefaults(options);
+const get = async (port, options = {}) => {
+  const {
+    image,
+    user = "kivikadmin",
+    password = "kivikadmin",
+    verbose,
+  } = defaulted(options);
 
   const docker = new Docker();
 
-  // placeholder for the closure in which this.stop stops and removes the container
-  this.stop = async () => {};
+  const dc = await docker.createContainer({
+    Image: image,
+    ExposedPorts: { "5984/tcp": {} },
+    Env: [`COUCHDB_USER=${user}`, `COUCHDB_PASSWORD=${password}`],
+    HostConfig: {
+      PortBindings: {
+        "5984/tcp": [{ HostPort: port.toString() }],
+      },
+    },
+    Tty: true,
+  });
+
+  return new Container(dc, port, { user, password, verbose });
+};
+
+class Container {
+  constructor(dc, port, options) {
+    options = defaulted(options);
+    this.dockerInterface = dc;
+    this.port = port;
+    this._nano = authedNano(port, options.user, options.password);
+    this._verbose = options.verbose || 0;
+
+    this.dockerInterface.inspect().then((response) => {
+      this.name = response.Name.substring(1);
+    });
+  }
 
   // returns a nano instance pointing to the container
-  this.start = async () => {
-    const container = await docker.createContainer({
-      Image: image,
-      ExposedPorts: { "5984/tcp": {} },
-      HostConfig: {
-        Binds: [`${__dirname}/container.ini:/opt/couchdb/etc/local.ini`],
-        PortBindings: {
-          "5984/tcp": [{ HostPort: port.toString() }],
-        },
-      },
-      Tty: true,
-    });
+  async start() {
+    await this.dockerInterface.start();
 
-    await container.start();
-
-    const name = (await container.inspect()).Name.substring(1);
-
-    this.stop = async () => {
-      await container.stop();
-      await container.remove();
-      if (verbose > 0) console.log(`Container ${name} stopped and removed.`);
-    };
-
-    process.on("SIGINT", this.stop);
-
-    container.attach(
+    this.dockerInterface.attach(
       { stream: true, stdout: true, stderr: true },
       (_, stream) => {
-        if (verbose > 1) {
+        if (this._verbose > 1) {
           stream.pipe(process.stdout);
         }
       }
@@ -56,7 +64,7 @@ module.exports = function Container(port, options = {}) {
     const check = async () => {
       let ready = false;
       try {
-        await fetch(`http://localhost:${port}/`);
+        await fetch(`http://localhost:${this.port}/`);
         ready = true;
       } catch (ignore) {}
 
@@ -71,12 +79,35 @@ module.exports = function Container(port, options = {}) {
       timeout *= 2;
     }
 
-    if (verbose > 0) {
+    const createDb = async (db) => {
+      return this._nano.relax({ path: db, method: "put", qs: { n: 1 } });
+    };
+    await createDb("_users");
+    await createDb("_replicator");
+    await createDb("_global_changes");
+
+    if (this._verbose > 0) {
       console.log(
-        `Container ${name} started. View at http://localhost:${port}/_utils`
+        `Container ${this.name} started. View at http://localhost:${this.port}/_utils`
       );
     }
 
-    return authedNano(port, "kivikadmin", "kivikpassword");
-  };
-};
+    return this._nano;
+  }
+
+  async stop() {
+    const running = (await this.dockerInterface.inspect()).State.Status;
+    if (running) {
+      await this.dockerInterface.stop();
+      await this.dockerInterface.remove();
+      if (this._verbose > 0)
+        console.log(`Container ${this.name} stopped and removed.`);
+    } else {
+      throw new Error(
+        "Attempting to stop a Kivik Container that is not started."
+      );
+    }
+  }
+}
+
+module.exports = { default: Container, get };
