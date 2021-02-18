@@ -1,7 +1,6 @@
 const Docker = require("dockerode");
 const fetch = require("node-fetch");
 const util = require("util");
-const { info } = require("winston");
 const setTimeoutPromise = util.promisify(setTimeout);
 const Logger = require("./Logger");
 const { authedNano } = require("./util");
