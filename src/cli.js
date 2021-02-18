@@ -6,5 +6,6 @@ const commands = require("./cli/commands");
 
 const argv = getParser().parse(hideBin(process.argv));
 
+argv.cli = true;
 Logger.provideOptions(argv);
 commands[argv._[0]](argv);

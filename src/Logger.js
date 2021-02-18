@@ -14,12 +14,12 @@ const levels = {
 };
 
 const colors = {
-  error: "red",
-  alert: "yellow",
-  warn: "yellow",
-  info: "green",
-  couch: "grey",
-  debug: "blue",
+  error: "bold red",
+  alert: "bold yellow",
+  warn: "bold yellow",
+  info: "bold green",
+  couch: "bold grey",
+  debug: "bold blue",
 };
 
 const levelFromNumber = (num) =>
@@ -34,7 +34,7 @@ const logger = winston.createLogger({
   handleRejections: true,
   transports: [
     new transports.Console({
-      format: format.combine(format.cli(), format.simple()),
+      format: format.combine(format.colorize(), format.simple()),
     }),
   ],
 });

@@ -8,13 +8,16 @@ const { authedNano } = require("./util");
 const logger = Logger.get();
 const TIMEOUT_START = 10;
 
-const keys = ["image", "user", "password"];
+const keys = ["cli", "image", "user", "password"];
 const defaulted = require("./options").withDefaults(keys);
 
 const get = async (port, options = {}) => {
-  const { image, user = "kivikadmin", password = "kivikadmin" } = defaulted(
-    options
-  );
+  const {
+    cli,
+    image,
+    user = "kivikadmin",
+    password = "kivikadmin",
+  } = defaulted(options);
 
   const docker = new Docker();
 
@@ -30,7 +33,7 @@ const get = async (port, options = {}) => {
     Tty: true,
   });
 
-  return new Container(dc, port, { user, password });
+  return new Container(dc, port, { cli, user, password });
 };
 
 class Container {
@@ -39,6 +42,7 @@ class Container {
     this.dockerInterface = dc;
     this.port = port;
     this._nano = authedNano(port, options.user, options.password);
+    this._cli = options.cli;
 
     this.dockerInterface.inspect().then((response) => {
       this.name = response.Name.substring(1);
@@ -89,7 +93,7 @@ class Container {
     await createDb("_global_changes");
 
     logger.log({
-      level: "info",
+      level: this._cli ? "alert" : "info",
       message: `Container ${this.name} started. View at http://localhost:${this.port}/_utils`,
     });
 
@@ -102,7 +106,7 @@ class Container {
       await this.dockerInterface.stop();
       await this.dockerInterface.remove();
       logger.log({
-        level: "info",
+        level: this._cli ? "alert" : "info",
         message: `Container ${this.name} stopped and removed.`,
       });
     } else {

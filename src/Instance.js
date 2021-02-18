@@ -4,6 +4,7 @@ const Container = require("./Container");
 const { withDefaults } = require("./options");
 
 const defaulted = withDefaults([
+  "cli",
   "image",
   "port",
   "user",

@@ -2,6 +2,7 @@ const options = {
   cli: {
     type: "boolean",
     describe: "Whether Kivik has been invoked from the command line.",
+    default: false,
     hidden: true,
   },
   config: {
