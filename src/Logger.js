@@ -6,6 +6,7 @@ const { withDefaults } = require("./options");
 
 const levels = {
   error: 0,
+  alert: 0,
   warn: 1,
   info: 2,
   couch: 3,
@@ -14,6 +15,7 @@ const levels = {
 
 const colors = {
   error: "red",
+  alert: "yellow",
   warn: "yellow",
   info: "green",
   couch: "grey",
@@ -27,7 +29,7 @@ winston.addColors(colors);
 
 const logger = winston.createLogger({
   levels,
-  level: "warn",
+  level: "error",
   handleExceptions: true,
   handleRejections: true,
   transports: [

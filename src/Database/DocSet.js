@@ -34,8 +34,7 @@ const getFixtures = async (directory, validate = null, options = {}) => {
         const response = await validate(fixture);
         if (!response.valid) {
           logger.warn(
-            `Fixture ${basename} does not validate against schema:`,
-            response.errors
+            `Fixture ${basename} does not validate against schema: ${response.errors}`
           );
         }
         return response.valid;

@@ -13,11 +13,15 @@ module.exports = {
   },
   inspect: async (argv) => {
     const instance = await Instance.get(argv.directory, argv.port, argv);
-    await instance.start();
 
-    process.on("SIGINT", () => {
+    const handle = () => {
       instance.stop();
-    });
+    };
+
+    process.on("SIGINT", handle);
+    process.on("SIGTERM", handle);
+
+    await instance.start();
   },
   validate: async (argv) => {
     const logger = Logger.get();
