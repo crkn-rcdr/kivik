@@ -3,16 +3,14 @@ const should = require("chai").should();
 const path = require("path");
 const Database = require("../src/Database");
 const getValidator = require("../src/getValidator");
-const directory = path.resolve("example");
+const getExampleDir = require("./_getExampleDir");
 
 describe("Database", () => {
   before(async () => {
-    const validate = (await getValidator(directory))("testdb");
-    db = await Database.fromDirectory(
-      path.join(directory, "testdb"),
-      validate,
-      { excludeDesign: [] }
-    );
+    const validate = (await getValidator(getExampleDir()))("testdb");
+    db = await Database.fromDirectory(getExampleDir("testdb"), validate, {
+      excludeDesign: [],
+    });
   });
 
   it("provides a validator", async () => {

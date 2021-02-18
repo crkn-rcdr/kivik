@@ -1,15 +1,15 @@
 const path = require("path");
 require("chai").should();
+
 const designDoc = require("../../src/Database/designDoc");
-const directory = path.resolve("example/testdb/design/test");
-const emptyDirectory = path.resolve("example/testdb/design/empty");
+const getExampleDir = require("../_getExampleDir");
 
 describe("Database/designDoc", () => {
   let doc;
 
   describe("With functions", () => {
     before(async () => {
-      doc = await designDoc(directory);
+      doc = await designDoc(getExampleDir("testdb", "design", "test"));
     });
 
     it("should generate a design doc from a directory", async () => {
@@ -65,7 +65,7 @@ describe("Database/designDoc", () => {
 
   describe("With no functions", () => {
     before(async () => {
-      doc = await designDoc(emptyDirectory);
+      doc = await designDoc(getExampleDir("testdb", "design", "empty"));
     });
 
     it("should load empty design document directories", async () => {
@@ -83,7 +83,9 @@ describe("Database/designDoc", () => {
 
   describe("With excludeDesign set", () => {
     before(async () => {
-      doc = await designDoc(directory, { excludeDesign: [] });
+      doc = await designDoc(getExampleDir("testdb", "design", "test"), {
+        excludeDesign: [],
+      });
     });
 
     it("should include all .js files", async () => {

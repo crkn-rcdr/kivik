@@ -6,14 +6,12 @@ const getValidator = require("./getValidator");
 const Database = require("./Database");
 
 const defaulted = withDefaults([
-  "include",
-  "exclude",
-  "suffix",
-  "context",
-  // these three are passed to Database
   "deployFixtures",
+  "exclude",
   "excludeDesign",
-  "verbose",
+  "include",
+  "logLevel",
+  "suffix",
 ]);
 
 const fromDirectory = async (directory, options = {}) => {

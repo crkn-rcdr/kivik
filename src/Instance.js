@@ -11,7 +11,6 @@ const defaulted = withDefaults([
   "directory",
   "include",
   "exclude",
-  "verbose",
 ]);
 
 const get = async (directory, port = undefined, options = {}) => {

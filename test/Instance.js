@@ -1,8 +1,7 @@
 require("chai").should();
 
 const Instance = require("../src/Instance");
-
-const directory = "example";
+const getExampleDir = require("./_getExampleDir");
 
 describe("Instance", function () {
   this.timeout(0);
@@ -10,7 +9,7 @@ describe("Instance", function () {
   let instance;
 
   before(async () => {
-    instance = await Instance.get(directory);
+    instance = await Instance.get(getExampleDir());
     await instance.start();
     await instance.deploy();
   });

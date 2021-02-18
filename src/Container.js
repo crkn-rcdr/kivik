@@ -1,21 +1,21 @@
 const Docker = require("dockerode");
 const fetch = require("node-fetch");
 const util = require("util");
+const { info } = require("winston");
 const setTimeoutPromise = util.promisify(setTimeout);
+const Logger = require("./Logger");
 const { authedNano } = require("./util");
 
+const logger = Logger.get();
 const TIMEOUT_START = 10;
 
-const keys = ["image", "user", "password", "verbose"];
+const keys = ["image", "user", "password"];
 const defaulted = require("./options").withDefaults(keys);
 
 const get = async (port, options = {}) => {
-  const {
-    image,
-    user = "kivikadmin",
-    password = "kivikadmin",
-    verbose,
-  } = defaulted(options);
+  const { image, user = "kivikadmin", password = "kivikadmin" } = defaulted(
+    options
+  );
 
   const docker = new Docker();
 
@@ -31,7 +31,7 @@ const get = async (port, options = {}) => {
     Tty: true,
   });
 
-  return new Container(dc, port, { user, password, verbose });
+  return new Container(dc, port, { user, password });
 };
 
 class Container {
@@ -40,7 +40,6 @@ class Container {
     this.dockerInterface = dc;
     this.port = port;
     this._nano = authedNano(port, options.user, options.password);
-    this._verbose = options.verbose || 0;
 
     this.dockerInterface.inspect().then((response) => {
       this.name = response.Name.substring(1);
@@ -54,9 +53,13 @@ class Container {
     this.dockerInterface.attach(
       { stream: true, stdout: true, stderr: true },
       (_, stream) => {
-        if (this._verbose > 1) {
-          stream.pipe(process.stdout);
-        }
+        stream.on("data", (chunk) => {
+          logger.couch(chunk.toString().trim());
+        });
+        stream.on("error", (error) => logger.error(error));
+        stream.on("end", () =>
+          logger.info(`No longer attached to container ${this.name}.`)
+        );
       }
     );
 
@@ -86,11 +89,10 @@ class Container {
     await createDb("_replicator");
     await createDb("_global_changes");
 
-    if (this._verbose > 0) {
-      console.log(
-        `Container ${this.name} started. View at http://localhost:${this.port}/_utils`
-      );
-    }
+    logger.log({
+      level: "info",
+      message: `Container ${this.name} started. View at http://localhost:${this.port}/_utils`,
+    });
 
     return this._nano;
   }
@@ -100,8 +102,10 @@ class Container {
     if (running) {
       await this.dockerInterface.stop();
       await this.dockerInterface.remove();
-      if (this._verbose > 0)
-        console.log(`Container ${this.name} stopped and removed.`);
+      logger.log({
+        level: "info",
+        message: `Container ${this.name} stopped and removed.`,
+      });
     } else {
       throw new Error(
         "Attempting to stop a Kivik Container that is not started."

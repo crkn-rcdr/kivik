@@ -3,10 +3,9 @@ const chai = require("chai");
 chai.use(require("chai-as-promised"));
 const should = chai.should();
 
-const directory = "example";
-
 const Container = require("../src/Container");
 const Kivik = require("../src/Kivik");
+const getExampleDir = require("./_getExampleDir");
 
 describe("Kivik", function () {
   this.timeout(0);
@@ -14,15 +13,14 @@ describe("Kivik", function () {
   let kivik, container, nano, testdb;
 
   before(async () => {
-    kivik = await Kivik.fromDirectory(directory);
     container = await Container.get(await getPort());
     nano = await container.start();
     testdb = nano.use("testdb");
   });
 
-  const setupSuite = (directory, options) => {
+  const setupSuite = (options) => {
     before(async () => {
-      kivik = await Kivik.fromDirectory(directory, options);
+      kivik = await Kivik.fromDirectory(getExampleDir(), options);
     });
 
     beforeEach(async () => {
@@ -35,7 +33,7 @@ describe("Kivik", function () {
   };
 
   describe("with defaults", function () {
-    setupSuite(directory, {
+    setupSuite({
       deployFixtures: true,
     });
 
@@ -99,7 +97,7 @@ describe("Kivik", function () {
   });
 
   describe("with a database subset", function () {
-    setupSuite(directory, { include: ["seconddb"] });
+    setupSuite({ include: ["seconddb"] });
 
     it("shouldn't load from databases not included in the subset", async () => {
       const list = await nano.db.list();
@@ -109,7 +107,7 @@ describe("Kivik", function () {
   });
 
   describe("with a database suffix", async () => {
-    setupSuite(directory, { suffix: "test" });
+    setupSuite({ suffix: "test" });
 
     it("should add the database suffix to deployed database names", async () => {
       const list = await nano.db.list();
@@ -119,7 +117,7 @@ describe("Kivik", function () {
   });
 
   describe("with a random database suffix", async () => {
-    setupSuite(directory, { suffix: "random" });
+    setupSuite({ suffix: "random" });
 
     it("should generate and store a random suffix", async () => {
       const dbName = kivik.suffixedName("testdb");
