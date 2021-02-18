@@ -62,10 +62,10 @@ module.exports = (wd = process.cwd()) =>
     .command(
       "inspect",
       "Spins up a CouchDB container for inspection",
-      options.slice(["image", "port"])
+      options.slice(["port", "image", "user", "password"])
     )
     .command(
-      "validate",
+      "validate <document> <database>",
       "Validates a document against a database's JSON Schema",
       (yargs) => {
         return yargs

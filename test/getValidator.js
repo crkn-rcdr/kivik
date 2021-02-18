@@ -46,6 +46,6 @@ describe("Validator", function () {
   it("should invalidate an invalid document", async () => {
     const response = await testdb(invalid);
     response.valid.should.be.false;
-    response.errors.should.include("title should be string");
+    response.errors.should.include("should be string");
   });
 });

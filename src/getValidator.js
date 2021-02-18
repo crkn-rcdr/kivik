@@ -83,8 +83,8 @@ module.exports = async (directory, options = {}) => {
         const errors = valid
           ? ""
           : validate.errors
-              .map((e) => `${e.schemaPath} ${e.message}`)
-              .join(", ");
+              .map((e, i) => `\t${i + 1}. ${e.schemaPath} ${e.message}`)
+              .join("\n");
 
         return { valid, errors };
       };
