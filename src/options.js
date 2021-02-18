@@ -1,31 +1,32 @@
 const options = {
+  cli: {
+    type: "boolean",
+    describe: "Whether Kivik has been invoked from the command line.",
+    default: false,
+    hidden: true,
+  },
   config: {
     type: "string",
     describe:
       "Key to load a config object for this invocation of kivik in your kivikrc file.",
   },
-  context: {
-    type: "string",
-    default: "inspect",
-    hidden: true,
-  },
   deployFixtures: {
     type: "boolean",
     default: false,
-    describe:
-      "Deploys fixtures to the CouchDB endpoint, along with design documents",
+    describe: "Deploys fixtures to the CouchDB endpoint, e.g. for testing.",
   },
   directory: {
     type: "string",
     default: ".",
     hidden: true,
+    describe: "Path to the root directory containing Kivik configuration.",
   },
   exclude: {
     type: "string",
     array: true,
     default: ["schemas", "node_modules"],
     describe:
-      "Directories, or globs of directories, that do not contain database configuration.",
+      "Subdirectories of the root directory which do not contain database configuration.",
   },
   excludeDesign: {
     type: "string",
@@ -36,14 +37,20 @@ const options = {
   image: {
     default: "couchdb:3.1",
     type: "string",
-    describe: "The base image for the instance's container",
+    describe: "The base image for the instance's container.",
   },
   include: {
     type: "string",
     array: true,
     default: ["*"],
     describe:
-      "Directories, or globs of directories, which contain database configuration.",
+      "Subdirectories of the root directory which contain database configuration.",
+  },
+  logLevel: {
+    type: "string",
+    choices: ["error", "warn", "info", "couch", "debug"],
+    describe:
+      "If set, Kivik will log output at and above the provided log level to $KIVIKDIR/.kivik.log",
   },
   password: {
     type: "string",
@@ -76,7 +83,7 @@ const options = {
     type: "count",
     default: 0,
     describe:
-      "Verbosity level. -v gives you a few extra strings, -vv gives you CouchDB's output if you're running an instance.",
+      "Verbosity level: 0 for errors, 1 for warnings, etc. For logging when invoked programmatically, see 'logLevel'",
   },
 };
 
@@ -87,7 +94,8 @@ const slice = (keys) => {
   }, {});
 };
 
-const withDefaults = (keys) => {
+const withDefaults = (keys = undefined) => {
+  if (!keys) keys = Object.keys(options);
   return (opts) => {
     return keys.reduce((rv, key) => {
       rv[key] = key in opts ? opts[key] : options[key].default;

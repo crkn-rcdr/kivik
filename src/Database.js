@@ -2,13 +2,11 @@ const path = require("path");
 const { getDesign, getFixtures } = require("./Database/DocSet");
 const { getIndexes } = require("./Database/IndexSet");
 const { withDefaults } = require("./options");
+const Logger = require("./Logger");
 
-const defaulted = withDefaults([
-  "deployFixtures",
-  "excludeDesign",
-  "suffix",
-  "verbose",
-]);
+const logger = Logger.get();
+
+const defaulted = withDefaults(["deployFixtures", "excludeDesign", "suffix"]);
 
 const fromDirectory = async (directory, validate = null, options = {}) => {
   options = defaulted(options);
@@ -63,8 +61,7 @@ class Database {
     await this.indexes.deploy(nanoInstance, this.name);
     await this.designDocs.deploy(db);
 
-    if (this._options.verbose > 0)
-      console.log(`Database ${this.name} deployed.`);
+    logger.info(`Database ${this.name} deployed.`);
   }
 }
 

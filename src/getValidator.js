@@ -77,12 +77,16 @@ module.exports = async (directory, options = {}) => {
           throw `${documentPath} could not be loaded remotely or locally.`;
         }
 
-        const valid = ajv.validate(key, document);
+        const validate = ajv.getSchema(key);
+        const valid = validate(document);
 
-        return {
-          valid,
-          errors: valid ? "" : ajv.errorsText(),
-        };
+        const errors = valid
+          ? ""
+          : validate.errors
+              .map((e, i) => `\t${i + 1}. ${e.schemaPath} ${e.message}`)
+              .join("\n");
+
+        return { valid, errors };
       };
     } else {
       return undefined;

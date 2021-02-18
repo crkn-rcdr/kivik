@@ -4,6 +4,7 @@ const Container = require("./Container");
 const { withDefaults } = require("./options");
 
 const defaulted = withDefaults([
+  "cli",
   "image",
   "port",
   "user",
@@ -11,7 +12,6 @@ const defaulted = withDefaults([
   "directory",
   "include",
   "exclude",
-  "verbose",
 ]);
 
 const get = async (directory, port = undefined, options = {}) => {

@@ -2,6 +2,9 @@ const fs = require("fs-extra");
 const path = require("path");
 const globby = require("globby");
 const designDoc = require("./designDoc");
+const Logger = require("../Logger");
+
+const logger = Logger.get();
 
 const getDesign = async (directory, options = {}) => {
   const designDirs = await globby(path.join(directory, "*"), {
@@ -29,10 +32,9 @@ const getFixtures = async (directory, validate = null, options = {}) => {
     const results = await Promise.all(
       fixtures.map(async ([basename, fixture]) => {
         const response = await validate(fixture);
-        if (options.verbose > 1 && !response.valid) {
-          console.warn(
-            `Fixture ${basename} does not validate against schema:`,
-            response.errors
+        if (!response.valid) {
+          logger.warn(
+            `Fixture ${basename} does not validate against schema: ${response.errors}`
           );
         }
         return response.valid;

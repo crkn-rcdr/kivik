@@ -2,7 +2,7 @@
   "name": "kivik",
   "version": "2.0.0-next",
   "description": "Command-line utility for deploying CouchDB design documents",
-  "main": "./main.js",
+  "main": "./src/main.js",
   "repository": "https://github.com/crkn-rcdr/kivik",
   "author": "Sascha Adler <sadler@crkn.ca>",
   "license": "MIT",
@@ -17,11 +17,12 @@
     "globby": "^11.0.2",
     "nano": "^9.0.0",
     "node-fetch": "^2.6.0",
+    "winston": "^3.3.3",
     "yaml": "^1.10.0",
     "yargs": "^16.2.0"
   },
   "bin": {
-    "kivik": "./bin.js"
+    "kivik": "./src/cli.js"
   },
   "engines": {
     "node": ">=10.0.0"

@@ -1,69 +1,29 @@
-const fs = require("fs-extra");
-const path = require("path");
-const YAML = require("yaml");
-const findUp = require("find-up");
-const { slice: sliceOptions } = require("./options");
+#!/usr/bin/env node
+const getParser = require("./cli/parser");
+const { hideBin } = require("yargs/helpers");
+const Logger = require("./Logger");
+const { withDefaults } = require("./options");
 
-const context = (wd) => {
-  const confPath = findUp.sync(
-    ["kivikrc.json", "kivikrc.yml", "kivikrc.yaml"],
-    { cwd: wd || process.cwd() }
+const deploy = require("./cli/deploy");
+const inspect = require("./cli/inspect");
+const validate = require("./cli/validate");
+
+const handlers = { deploy, inspect, validate };
+
+const argv = getParser().parse(hideBin(process.argv));
+const command = argv._[0];
+const handler = handlers[command];
+
+if (!handler) {
+  Logger.get().error(
+    `${command} is not a valid Kivik command. See 'kivik --help' for more information.`
   );
-  if (confPath) {
-    const conf = YAML.parse(fs.readFileSync(confPath, { encoding: "utf-8" }));
-    return { configFromFile: conf, directory: path.dirname(confPath) };
-  } else {
-    return { directory: process.cwd() };
-  }
-};
+  process.exit(1);
+}
 
-const applyConfig = (argv) => {
-  const conf = argv.configFromFile;
-  const innerConfigs = conf.configs || {};
-  const key = argv.config;
+const options = withDefaults()(argv);
 
-  if (conf) {
-    if (key && !(key in innerConfigs))
-      throw new Error(`configs.${key} is unspecified in your kivikrc file.`);
+options.cli = true;
+Logger.provideOptions(options);
 
-    const innerConf = key ? innerConfigs[key] : {};
-    argv = Object.assign({}, conf, innerConf, argv);
-  }
-
-  delete argv.configFromFile;
-  delete argv.configs;
-  delete argv.config;
-  return argv;
-};
-
-const setContextArg = (argv) => {
-  const c = argv._[0];
-  if (c) argv.context = c;
-  return argv;
-};
-
-const options = sliceOptions([
-  "config",
-  "directory",
-  "include",
-  "exclude",
-  "verbose",
-]);
-
-const commands = [
-  require("./cli/deploy"),
-  require("./cli/inspect"),
-  require("./cli/validate"),
-];
-
-const parser = (config) =>
-  require("yargs/yargs")()
-    .scriptName("kivik")
-    .option(options)
-    .config(config)
-    .middleware([setContextArg, applyConfig], true)
-    .command(commands)
-    .demandCommand(1, "Please specify a command: deploy, inspect, validate.")
-    .help();
-
-module.exports = { parser, context };
+handler(options);

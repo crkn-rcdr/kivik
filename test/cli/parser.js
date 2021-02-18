@@ -2,12 +2,11 @@ const chai = require("chai");
 chai.use(require("chai-as-promised"));
 chai.should();
 
-const path = require("path");
-const examplePath = path.resolve(`${__dirname}/../example`);
+const getParser = require("../../src/cli/parser");
+const exampleDir = require("../_getExampleDir");
 
-const cli = require("../src/cli");
-const defaultParser = cli.parser(cli.context(examplePath));
-const subdirParser = cli.parser(cli.context(path.join(examplePath, "testdb")));
+const defaultParser = getParser(exampleDir());
+const subdirParser = getParser(exampleDir("testdb"));
 
 const bareArgv = "deploy --help";
 const confArgv = "deploy --config test --help";
@@ -20,8 +19,6 @@ const parse = async (parser, input) => {
     parser.parse(input, (err, argv, output) => resolve({ err, argv, output }));
   });
 };
-
-let handler;
 
 describe("CLI", function () {
   it("Should load config from rc file", async () => {
