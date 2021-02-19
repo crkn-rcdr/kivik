@@ -3,7 +3,7 @@ const fetch = require("node-fetch");
 const util = require("util");
 const setTimeoutPromise = util.promisify(setTimeout);
 const Logger = require("./Logger");
-const { authedNano } = require("./util");
+const Nano = require("./Nano");
 
 const logger = Logger.get();
 const TIMEOUT_START = 10;
@@ -41,7 +41,7 @@ class Container {
     options = defaulted(options);
     this.dockerInterface = dc;
     this.port = port;
-    this._nano = authedNano(port, options.user, options.password);
+    this._nano = Nano.localhost(port, options);
     this._cli = options.cli;
 
     this.dockerInterface.inspect().then((response) => {

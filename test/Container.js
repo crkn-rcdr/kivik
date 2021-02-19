@@ -3,7 +3,6 @@ chai.use(require("chai-as-promised"));
 chai.should();
 
 const getPort = require("get-port");
-const authedNano = require("../src/util").authedNano;
 
 const Container = require("../src/Container");
 const user = "kivikadmin";
@@ -17,9 +16,8 @@ describe("Container", function () {
     const port = await getPort();
     container = await Container.get(port, { user, password });
 
-    await container.start();
+    const nano = await container.start();
 
-    const nano = authedNano(port, user, password);
     nano.db.list().should.eventually.have.length(3);
 
     await container.stop();
