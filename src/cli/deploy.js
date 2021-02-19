@@ -1,14 +1,14 @@
 const Kivik = require("../Kivik");
-const { authedNano } = require("../util");
+const Nano = require("../Nano");
 
 module.exports = async (argv) => {
   const kivik = await Kivik.fromDirectory(argv.directory, argv);
 
-  const nanoInstance = authedNano(argv.url, argv.user, argv.password);
+  const nano = Nano.get(argv.url, argv);
 
-  if (!nanoInstance) {
+  if (!nano) {
     process.exit(1);
   }
 
-  await kivik.deploy(nanoInstance);
+  await kivik.deploy(nano);
 };

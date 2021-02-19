@@ -1,23 +1,21 @@
-const Nano = require("nano");
+const getNano = require("nano");
 const Logger = require("./Logger");
 
 const logger = Logger.get();
 
-const authedNano = (urlOrPort, user = undefined, pass = undefined) => {
-  const url = Number.isInteger(urlOrPort)
-    ? `http://localhost:${urlOrPort}/`
-    : urlOrPort;
+const get = (url, options) => {
+  const { user, password } = options;
 
   try {
     const nanoOptions = { url: new URL(url) };
 
     if (user) {
       nanoOptions.requestDefaults = {
-        auth: { username: user, password: pass },
+        auth: { username: user, password },
       };
     }
 
-    return Nano(nanoOptions);
+    return getNano(nanoOptions);
   } catch (error) {
     if (error.code === "ERR_INVALID_URL") {
       logger.error(`${url} is an invalid URL.`);
@@ -29,4 +27,8 @@ const authedNano = (urlOrPort, user = undefined, pass = undefined) => {
   return null;
 };
 
-module.exports = { authedNano };
+const localhost = (port, options) => {
+  return get(`http://localhost:${port}`, options);
+};
+
+module.exports = { get, localhost };
