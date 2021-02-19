@@ -10,5 +10,6 @@ module.exports = async (argv) => {
   process.on("SIGINT", handle);
   process.on("SIGTERM", handle);
 
-  await instance.start();
+  const nano = await instance.start();
+  await instance.deploy(nano);
 };
