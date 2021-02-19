@@ -28,7 +28,7 @@ const get = (url, options) => {
 };
 
 const localhost = (port, options) => {
-  return get(`https://localhost:${port}`, options);
+  return get(`http://localhost:${port}`, options);
 };
 
 module.exports = { get, localhost };
