@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.0-alpha.2] - 2021-02-22
+
+- `kivik validate` positional arguments are saved
+
 ## [2.0.0-alpha.1] - 2021-02-19
 
 - `kivik inspect` actually deploys Couch config
@@ -74,6 +78,7 @@
 - Multiple design document support
 - View (map/reduce) and update function support within design documents
 
+[2.0.0-alpha.2]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.2
 [2.0.0-alpha.1]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.1
 [2.0.0-alpha.0]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.0
 [1.3.0]: https://github.com/crkn-rcdr/kivik/releases/tag/v1.3.0

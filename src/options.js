@@ -10,6 +10,11 @@ const options = {
     describe:
       "Key to load a config object for this invocation of kivik in your kivikrc file.",
   },
+  database: {
+    type: "string",
+    hidden: true,
+    describe: "The database whose schema will be validated against a document",
+  },
   deployFixtures: {
     type: "boolean",
     default: false,
@@ -20,6 +25,11 @@ const options = {
     default: ".",
     hidden: true,
     describe: "Path to the root directory containing Kivik configuration.",
+  },
+  document: {
+    type: "string",
+    hidden: true,
+    describe: "The document to validate against a database's schema",
   },
   exclude: {
     type: "string",
