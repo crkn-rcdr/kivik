@@ -16,8 +16,12 @@ describe("Validator", function () {
     testdb = validator("testdb");
   });
 
-  it("should return undefined if there is no schema for a key", () => {
-    should.not.exist(validator("notakey"));
+  it("should return a function for databases with schema.json", () => {
+    testdb.should.be.a("function");
+  });
+
+  it("should return undefined for databases with no schema.json", () => {
+    should.not.exist(validator("seconddb"));
   });
 
   it("should validate a file", async () => {

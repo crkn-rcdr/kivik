@@ -62,8 +62,8 @@ module.exports = async (directory, options = {}) => {
     keyFunc: (fullPath) => path.basename(path.dirname(fullPath)),
   });
 
-  return (key) => {
-    const validate = ajv.getSchema(key);
+  return (database) => {
+    const validate = ajv.getSchema(database);
 
     if (typeof validate === "function") {
       return async (document) => {
@@ -80,7 +80,6 @@ module.exports = async (directory, options = {}) => {
           throw `${documentPath} could not be loaded remotely or locally.`;
         }
 
-        const validate = ajv.getSchema(key);
         const valid = validate(document);
 
         const errors = valid

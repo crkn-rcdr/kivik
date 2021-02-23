@@ -83,9 +83,9 @@ console.log(localResponse);
 
 Validates a file against a database's schema.
 
-Schema validation is handled by [Ajv](https://ajv.js.org). A database's schema can be located at `./schemas/$DB.json`, or `./$DB/schema.json` (but not both!). Every JSON file in `./schemas/` will be added to Ajv, and all of the schemas are added before validation takes place, which allows for references between schema files.
+Schema validation is handled by [Ajv](https://ajv.js.org). For anything to be validated against a database's schema, the schema needs to be located at `./$DB/schema.json`. Every JSON file in `./schemas/**/*.json` will also be added to Ajv. Database schemas can reference these other schemas [using the `$ref` keyword](https://json-schema.org/understanding-json-schema/structuring.html#reuse), which Ajv parses according to the `$id` property of each schema. See the [example directory](example) for a basic demonstration.
 
-Validation also takes place on database fixtures, when the database has a schema.
+When a database has a schema, its fixtures will be validated against the schema. Invalid fixtures will not be deployed.
 
 ### Deploy
 
