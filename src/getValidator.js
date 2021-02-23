@@ -11,7 +11,11 @@ const addSchemasFrom = async (ajv, options) => {
   const paths = await globby(include, { exclude, cwd, absolute: true });
   await Promise.all(
     paths.map(async (fullPath) => {
-      ajv.addSchema(await fs.readJSON(fullPath), keyFunc(fullPath));
+      if (keyFunc) {
+        ajv.addSchema(await fs.readJSON(fullPath), keyFunc(fullPath));
+      } else {
+        ajv.addSchema(await fs.readJSON(fullPath));
+      }
     })
   );
 };
@@ -47,10 +51,9 @@ module.exports = async (directory, options = {}) => {
   const schemaMap = (glob) => path.posix.join(glob, "schema.json");
 
   await addSchemasFrom(ajv, {
-    include: "schemas/*.json",
+    include: "schemas/**/*.json",
     exclude: [],
     cwd,
-    keyFunc: (fullPath) => path.basename(fullPath, ".json"),
   });
   await addSchemasFrom(ajv, {
     include: include.map(schemaMap),
@@ -59,8 +62,8 @@ module.exports = async (directory, options = {}) => {
     keyFunc: (fullPath) => path.basename(path.dirname(fullPath)),
   });
 
-  return (key) => {
-    const validate = ajv.getSchema(key);
+  return (database) => {
+    const validate = ajv.getSchema(database);
 
     if (typeof validate === "function") {
       return async (document) => {
@@ -77,7 +80,6 @@ module.exports = async (directory, options = {}) => {
           throw `${documentPath} could not be loaded remotely or locally.`;
         }
 
-        const validate = ajv.getSchema(key);
         const valid = validate(document);
 
         const errors = valid
