@@ -15,6 +15,7 @@ describe("Validator", function () {
     validator = await getValidator(getExampleDir());
     testdb = validator("testdb");
   });
+
   it("should return undefined if there is no schema for a key", () => {
     should.not.exist(validator("notakey"));
   });
