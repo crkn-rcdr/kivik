@@ -11,7 +11,11 @@ const addSchemasFrom = async (ajv, options) => {
   const paths = await globby(include, { exclude, cwd, absolute: true });
   await Promise.all(
     paths.map(async (fullPath) => {
-      ajv.addSchema(await fs.readJSON(fullPath), keyFunc(fullPath));
+      if (keyFunc) {
+        ajv.addSchema(await fs.readJSON(fullPath), keyFunc(fullPath));
+      } else {
+        ajv.addSchema(await fs.readJSON(fullPath));
+      }
     })
   );
 };
@@ -50,7 +54,6 @@ module.exports = async (directory, options = {}) => {
     include: "schemas/**/*.json",
     exclude: [],
     cwd,
-    keyFunc: (fullPath) => path.basename(fullPath, ".json"),
   });
   await addSchemasFrom(ajv, {
     include: include.map(schemaMap),
