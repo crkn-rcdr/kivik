@@ -22,15 +22,7 @@
       "minItems": 1
     },
     "published": {
-      "description": "Year, or range of years, in which the book was published",
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "minimum": 1800,
-        "maximum": 1900
-      },
-      "minItems": 1,
-      "maxItems": 2
+      "$ref": "testdb/published.json"
     }
   },
   "required": ["_id", "title", "published"]
