@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.0.0-alpha.3] - 2021-02-22
+
+- Validation checks subdirectories of `schemas/` for JSON files
+- Database schemas found in `$DB/schema.json` are the only ones that can be referenced by `getValidator`
+
 ## [2.0.0-alpha.2] - 2021-02-22
 
 - `kivik validate` positional arguments are saved
@@ -78,6 +83,7 @@
 - Multiple design document support
 - View (map/reduce) and update function support within design documents
 
+[2.0.0-alpha.3]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.3
 [2.0.0-alpha.2]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.2
 [2.0.0-alpha.1]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.1
 [2.0.0-alpha.0]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.0
