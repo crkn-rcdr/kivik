@@ -12,12 +12,7 @@ const keys = ["cli", "image", "user", "password"];
 const defaulted = require("./options").withDefaults(keys);
 
 const get = async (port, options = {}) => {
-  const {
-    cli,
-    image,
-    user = "kivikadmin",
-    password = "kivikadmin",
-  } = defaulted(options);
+  const { cli, image, user = "kivik", password = "kivik" } = defaulted(options);
 
   const docker = new Docker();
 

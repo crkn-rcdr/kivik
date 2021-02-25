@@ -5,8 +5,6 @@ chai.should();
 const getPort = require("get-port");
 
 const Container = require("../src/Container");
-const user = "kivikadmin";
-const password = "kivikadmin";
 
 describe("Container", function () {
   this.timeout(0);
@@ -14,9 +12,12 @@ describe("Container", function () {
 
   it("should create a reachable Docker container", async () => {
     const port = await getPort();
-    container = await Container.get(port, { user, password });
+    container = await Container.get(port);
 
     const nano = await container.start();
+
+    nano.config.requestDefaults.auth.username.should.equal("kivik");
+    nano.config.requestDefaults.auth.password.should.equal("kivik");
 
     nano.db.list().should.eventually.have.length(3);
 
