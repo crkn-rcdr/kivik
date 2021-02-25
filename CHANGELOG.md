@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.0-alpha.4] - 2021-02-25
+
+- Incorporates the new [@crkn-rcdr/nano](https://github.com/crkn-rcdr/nano) package
+
 ## [2.0.0-alpha.3] - 2021-02-22
 
 - Validation checks subdirectories of `schemas/` for JSON files

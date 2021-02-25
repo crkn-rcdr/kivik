@@ -92,11 +92,15 @@ $ kivik deploy --url http://couchserver:5984/ --user user --password password
 ```
 
 ```js
-import { Kivik, nano } from "kivik";
+import Nano from "@crkn-rcdr/nano";
+import { Kivik } from "kivik";
 import options from "./options";
 
 const kivik = await Kivik.fromDirectory("path/to/dir", options);
-const nano = nano(options);
+const nano = Nano.get("http://couchserver:5984", {
+  user: "user",
+  password: "password",
+});
 await kivik.deploy(nano);
 ```
 
