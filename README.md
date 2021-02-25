@@ -57,11 +57,9 @@ Each operation has specific configuration options, as well.
 
 ### Validate
 
-(TODO: switch the arguments around?)
-
 ```shell
-$ kivik validate path/to/file.json db
-$ kivik validate https://example.com/file.json db
+$ kivik validate db path/to/file.json
+$ kivik validate db https://example.com/file.json
 ```
 
 ```js

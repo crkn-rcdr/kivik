@@ -65,19 +65,19 @@ module.exports = (wd = process.cwd()) =>
       options.slice(["port", "image", "user", "password"])
     )
     .command(
-      "validate <document> <database>",
+      "validate <database> <document>",
       "Validates a document against a database's JSON Schema",
       (yargs) => {
         return yargs
-          .positional("document", {
-            type: "string",
-            describe:
-              "The document to validate. Can be specified as either a local file or a URL.",
-          })
           .positional("database", {
             type: "string",
             describe:
               "The database against whose schema the document will be validated.",
+          })
+          .positional("document", {
+            type: "string",
+            describe:
+              "The document to validate. Can be specified as either a local file or a URL.",
           });
       }
     )
