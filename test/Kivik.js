@@ -37,11 +37,6 @@ describe("Kivik", function () {
       deployFixtures: true,
     });
 
-    it("should load the validator", async () => {
-      kivik.should.have.property("validator");
-      kivik.validator.should.be.a("function");
-    });
-
     it("should load databases", async () => {
       kivik.should.have.property("databases");
       kivik.databases.should.have.property("testdb");

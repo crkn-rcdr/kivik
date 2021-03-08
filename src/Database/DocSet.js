@@ -31,11 +31,15 @@ const getFixtures = async (directory, validate = null, options = {}) => {
   if (typeof validate === "function") {
     const results = await Promise.all(
       fixtures.map(async ([basename, fixture]) => {
-        const response = await validate(fixture);
+        let response = await validate(fixture);
+        if (typeof response === "boolean") {
+          response = { valid: response };
+        }
         if (!response.valid) {
-          logger.warn(
-            `Fixture ${basename} does not validate against schema: ${response.errors}`
-          );
+          logger.warn(`Fixture ${basename} does not validate against schema.`);
+          if (response.errors) {
+            logger.warn(response.errors);
+          }
         }
         return response.valid;
       })

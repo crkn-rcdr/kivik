@@ -20,7 +20,7 @@ const parse = async (parser, input) => {
   });
 };
 
-describe("CLI", function () {
+describe("cli/parser", function () {
   it("Should load config from rc file", async () => {
     const response = await parse(defaultParser, bareArgv);
     response.should.have.property("argv");

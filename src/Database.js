@@ -8,11 +8,23 @@ const logger = Logger.get();
 
 const defaulted = withDefaults(["deployFixtures", "excludeDesign", "suffix"]);
 
-const fromDirectory = async (directory, validate = null, options = {}) => {
+const fromDirectory = async (directory, options = {}) => {
   options = defaulted(options);
 
   const basename = path.basename(directory);
   const name = options.suffix ? `${basename}-${options.suffix}` : basename;
+
+  let validate = null;
+  try {
+    const vPath = path.join(directory, "validate.js");
+    validate = require(vPath);
+    if (typeof validate !== "function") {
+      logger.error(
+        `${path.join(basename, "validate.js")} does not export a function.`
+      );
+    }
+  } catch (_) {}
+
   const fixtures = await getFixtures(
     path.join(directory, "fixtures"),
     validate,

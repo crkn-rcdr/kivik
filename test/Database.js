@@ -1,19 +1,16 @@
 const should = require("chai").should();
 
-const path = require("path");
 const Database = require("../src/Database");
-const getValidator = require("../src/getValidator");
 const getExampleDir = require("./_getExampleDir");
 
 describe("Database", () => {
   before(async () => {
-    const validate = (await getValidator(getExampleDir()))("testdb");
-    db = await Database.fromDirectory(getExampleDir("testdb"), validate, {
+    db = await Database.fromDirectory(getExampleDir("testdb"), {
       excludeDesign: [],
     });
   });
 
-  it("provides a validator", async () => {
+  it("loads the validate function in validate.js", async () => {
     db.validate.should.be.a("function");
   });
 

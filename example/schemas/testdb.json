@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "/testdb.json",
+  "$id": "/testdb",
   "title": "kivik example schema",
   "description": "A JSON schema for documents stored in this example database",
   "type": "object",
@@ -22,7 +22,15 @@
       "minItems": 1
     },
     "published": {
-      "$ref": "/testdb/published.json"
+      "description": "Year, or range of years, in which the book was published",
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1800,
+        "maximum": 1900
+      },
+      "minItems": 1,
+      "maxItems": 2
     }
   },
   "required": ["_id", "title", "published"]
