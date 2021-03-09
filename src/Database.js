@@ -12,6 +12,7 @@ const fromDirectory = async (directory, options = {}) => {
   options = defaulted(options);
 
   const basename = path.basename(directory);
+  const validateName = path.join(basename, "validate.js");
   const name = options.suffix ? `${basename}-${options.suffix}` : basename;
 
   let validate = null;
@@ -19,11 +20,16 @@ const fromDirectory = async (directory, options = {}) => {
     const vPath = path.join(directory, "validate.js");
     validate = require(vPath);
     if (typeof validate !== "function") {
-      logger.error(
-        `${path.join(basename, "validate.js")} does not export a function.`
-      );
+      logger.error(`${validateName} does not export a function.`);
     }
-  } catch (_) {}
+  } catch (error) {
+    if (error.code !== "MODULE_NOT_FOUND") {
+      logger.error(`Error loading ${validateName}`);
+      logger.error(error);
+    } else {
+      logger.info(`${basename} does not provide a validator`);
+    }
+  }
 
   const fixtures = await getFixtures(
     path.join(directory, "fixtures"),
