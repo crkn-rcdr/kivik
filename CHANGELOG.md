@@ -1,8 +1,9 @@
 # Changelog
 
-## [2.0.0-alpha.4] - 2021-02-25
+## [2.0.0-alpha.4] - 2021-03-09
 
 - Incorporates the new [@crkn-rcdr/nano](https://github.com/crkn-rcdr/nano) package
+- De-opinionates Kivik when it comes to validation. Supply any old function that returns a boolean (or an object where the valid property is a boolean) and Kivik will validate things based on that.
 
 ## [2.0.0-alpha.3] - 2021-02-22
 
@@ -87,6 +88,7 @@
 - Multiple design document support
 - View (map/reduce) and update function support within design documents
 
+[2.0.0-alpha.4]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.4
 [2.0.0-alpha.3]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.3
 [2.0.0-alpha.2]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.2
 [2.0.0-alpha.1]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.1
