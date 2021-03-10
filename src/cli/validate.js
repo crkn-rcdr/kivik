@@ -2,6 +2,7 @@ const fs = require("fs-extra");
 const fetch = require("node-fetch");
 const path = require("path");
 const Database = require("../Database");
+const getValidate = require("../Database/validate");
 const Logger = require("../Logger");
 
 const fromURL = async (input) => {
@@ -25,11 +26,9 @@ const fromFile = async (input) => {
 module.exports = async (argv) => {
   const logger = Logger.get();
 
-  const db = await Database.fromDirectory(
-    path.join(argv.directory, argv.database)
-  );
+  const validate = getValidate(path.join(argv.directory, argv.database), true);
 
-  if (typeof db.validate === "function") {
+  if (typeof validate === "function") {
     const document =
       (await fromURL(argv.document)) || (await fromFile(argv.document)) || null;
 
@@ -38,29 +37,9 @@ module.exports = async (argv) => {
       process.exit(1);
     }
 
-    let response = db.validate(document);
-    if (typeof response === "boolean") {
-      response = { valid: response };
-    }
-
-    if (response.valid) {
-      logger.alert(
-        `${argv.document} validates against database ${argv.database}.`
-      );
-      process.exit(0);
-    } else {
-      logger.error(
-        `${argv.document} does not validate against database ${argv.database}.`
-      );
-      if (response.errors) {
-        logger.error(JSON.stringify(response.errors, null, 2));
-      }
-      process.exit(1);
-    }
+    const valid = await validate(argv.document, document);
+    process.exit(valid ? 0 : 1);
   } else {
-    logger.error(
-      `${path.join(argv.database, "validate.js")} does not export a function.`
-    );
     process.exit(1);
   }
 };
