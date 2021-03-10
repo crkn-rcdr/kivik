@@ -19,23 +19,31 @@ const getDesign = async (directory, options = {}) => {
   return new DocSet(docs);
 };
 
-const getFixtures = async (directory, validate = null, options = {}) => {
+const getFixtures = async (directory, validate = null) => {
   let fixtures = await Promise.all(
     (
       await globby(path.posix.join(directory, "*.json"), {
         absolute: true,
       })
-    ).map(async (fp) => [path.basename(fp), await fs.readJSON(fp)])
+    ).map(async (fp) => {
+      const key = path.basename(fp);
+      const { _rev, ...fixture } = await fs.readJSON(fp);
+      return [key, fixture];
+    })
   );
 
   if (typeof validate === "function") {
     const results = await Promise.all(
       fixtures.map(async ([basename, fixture]) => {
-        const response = await validate(fixture);
+        let response = await validate(fixture);
+        if (typeof response === "boolean") {
+          response = { valid: response };
+        }
         if (!response.valid) {
-          logger.warn(
-            `Fixture ${basename} does not validate against schema: ${response.errors}`
-          );
+          logger.warn(`Fixture ${basename} does not validate against schema.`);
+          if (response.errors) {
+            logger.warn(response.errors);
+          }
         }
         return response.valid;
       })
@@ -45,15 +53,6 @@ const getFixtures = async (directory, validate = null, options = {}) => {
   }
 
   return new DocSet(fixtures.map((pair) => pair[1]));
-};
-
-const insertWithRev = async (nanoDb, doc) => {
-  let rev;
-  try {
-    rev = (await nanoDb.get(doc._id))._rev;
-  } catch (ignore) {}
-
-  return nanoDb.insert(rev ? { doc, _rev: rev } : doc);
 };
 
 class DocSet {
@@ -66,9 +65,16 @@ class DocSet {
   }
 
   async deploy(nanoDb) {
-    return await Promise.all(
-      this._docs.map((doc) => insertWithRev(nanoDb, doc))
-    );
+    if (this._docs.length > 0) {
+      const keys = this._docs.map((doc) => doc._id);
+      const response = await nanoDb.fetch({ keys });
+      response.rows
+        .filter((row) => !row.error)
+        .forEach((row) => {
+          this.withId(row.id)._rev = row.value.rev;
+        });
+      await nanoDb.bulk({ docs: this._docs });
+    }
   }
 }
 

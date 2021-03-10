@@ -11,9 +11,8 @@ This package has nothing to do with [the Go kivik CouchDB library](https://githu
 Kivik's opinionated nature lies in its expectation of a directory structure where it will find all of the CouchDB configuration you'd like to test and deploy. This repository contains an [example directory structure](example) which contains all possible kinds of configuration, as explained below:
 
 - `./kivirc.(json|yaml|yml)`: The Kivik [RC File](#RC-File).
-- `./schemas/*.json`: JSON Schema files loaded by the [validator](#Validate).
 - `./$DB/`: Subdirectories (that haven't been [excluded](#options)) are treated as CouchDB databases with the name `$DB`.
-  - `./$DB/schema.json`: The JSON Schema corresponding to this particular database, loaded by the [validator](#Validate).
+  - `./$DB/validate.js`: A module that returns a function that [validates data against the database](#Validate).
   - `./$DB/fixtures/*.json`: Test fixtures for ths database. Not deployed by default, but can be configured to do so for testing.
   - `./$DB/indexes/*.json`: Query indexes for use by the [Mango JSON query server](https://docs.couchdb.org/en/stable/api/database/find.html#db-index)
   - `./$DB/design/$DDOC/`: [Design document](https://docs.couchdb.org/en/stable/ddocs/ddocs.html) configuration. The design document specified in this directory will be deployed to CouchDB with the id `_design/$DDOC`. See the [`test` design document](example/testdb/design/test) for a demonstration of how a design document is laid out.
@@ -62,28 +61,22 @@ $ kivik validate db path/to/file.json
 $ kivik validate db https://example.com/file.json
 ```
 
-```js
-import { getValidator } from "kivik";
+Validates a file against a database's validation function that you provide.
 
-const localFile = "path/to/file.json";
-const remoteFile = "https://example.com/file.json";
-const database = "db";
+To provide a validation function, have `$DB/validate.js` export it. The function can return a boolean, or an object of the form
 
-const validator = await getValidator("path/to/dir");
-const dbValidate = validator(database);
-
-const localResponse = await dbValidate(localFile);
-const remoteResponse = await dbValidate(remoteFile);
-
-// { valid: boolean, errors: string[] }
-console.log(localResponse);
+```ts
+interface ValidationResponse {
+  valid: boolean;
+  errors?: JsonValue;
+}
 ```
 
-Validates a file against a database's schema.
+(`errors` is stringified in log output.)
 
-Schema validation is handled by [Ajv](https://ajv.js.org). For anything to be validated against a database's schema, the schema needs to be located at `./$DB/schema.json`. Every JSON file in `./schemas/**/*.json` will also be added to Ajv. Database schemas can reference these other schemas [using the `$ref` keyword](https://json-schema.org/understanding-json-schema/structuring.html#reuse), which Ajv parses according to the `$id` property of each schema. See the [example directory](example) for a basic demonstration.
+When a database has a validation function, its fixtures will be validated against it. Invalid fixtures will not be deployed.
 
-When a database has a schema, its fixtures will be validated against the schema. Invalid fixtures will not be deployed.
+The example directory contains a validation function that uses [Ajv](https://ajv.js.org) to validate data against a JSON Schema.
 
 ### Deploy
 

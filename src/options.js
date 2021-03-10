@@ -13,7 +13,7 @@ const options = {
   database: {
     type: "string",
     hidden: true,
-    describe: "The database whose schema will be validated against a document",
+    describe: "The database which will be validated against a document",
   },
   deployFixtures: {
     type: "boolean",
@@ -29,7 +29,7 @@ const options = {
   document: {
     type: "string",
     hidden: true,
-    describe: "The document to validate against a database's schema",
+    describe: "The document to validate against a database",
   },
   exclude: {
     type: "string",

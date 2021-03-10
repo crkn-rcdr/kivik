@@ -1,27 +1,45 @@
-const getValidator = require("../getValidator");
+const fs = require("fs-extra");
+const fetch = require("node-fetch");
+const path = require("path");
+const Database = require("../Database");
+const getValidate = require("../Database/validate");
 const Logger = require("../Logger");
+
+const fromURL = async (input) => {
+  try {
+    const url = new URL(input);
+    const response = await fetch(url);
+    return await response.json();
+  } catch (_) {
+    return null;
+  }
+};
+
+const fromFile = async (input) => {
+  try {
+    return await fs.readJSON(input);
+  } catch (_) {
+    return null;
+  }
+};
 
 module.exports = async (argv) => {
   const logger = Logger.get();
 
-  const validator = await getValidator(argv.directory, argv);
-  const validate = validator(argv.database);
-  const response = await validate(argv.document);
+  const validate = getValidate(path.join(argv.directory, argv.database), true);
 
-  if (response) {
-    if (response.valid) {
-      logger.alert(
-        `${argv.document} validates against the schema for database ${argv.database}.`
-      );
-      process.exit(0);
-    } else {
-      logger.error(
-        `${argv.document} does not validate against the schema for database ${argv.database}:\n${response.errors}`
-      );
+  if (typeof validate === "function") {
+    const document =
+      (await fromURL(argv.document)) || (await fromFile(argv.document)) || null;
+
+    if (!document) {
+      logger.error(`${argv.document} could not be loaded remotely or locally.`);
       process.exit(1);
     }
+
+    const valid = await validate(argv.document, document);
+    process.exit(valid ? 0 : 1);
   } else {
-    logger.error(`There is no schema available for database ${argv.database}`);
     process.exit(1);
   }
 };

@@ -8,11 +8,29 @@ const logger = Logger.get();
 
 const defaulted = withDefaults(["deployFixtures", "excludeDesign", "suffix"]);
 
-const fromDirectory = async (directory, validate = null, options = {}) => {
+const fromDirectory = async (directory, options = {}) => {
   options = defaulted(options);
 
   const basename = path.basename(directory);
+  const validateName = path.join(basename, "validate.js");
   const name = options.suffix ? `${basename}-${options.suffix}` : basename;
+
+  let validate = null;
+  try {
+    const vPath = path.join(directory, "validate.js");
+    validate = require(vPath);
+    if (typeof validate !== "function") {
+      logger.error(`${validateName} does not export a function.`);
+    }
+  } catch (error) {
+    if (error.code !== "MODULE_NOT_FOUND") {
+      logger.error(`Error loading ${validateName}`);
+      logger.error(error);
+    } else {
+      logger.info(`${basename} does not provide a validator`);
+    }
+  }
+
   const fixtures = await getFixtures(
     path.join(directory, "fixtures"),
     validate,
