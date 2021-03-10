@@ -19,13 +19,17 @@ const getDesign = async (directory, options = {}) => {
   return new DocSet(docs);
 };
 
-const getFixtures = async (directory, validate = null, options = {}) => {
+const getFixtures = async (directory, validate = null) => {
   let fixtures = await Promise.all(
     (
       await globby(path.posix.join(directory, "*.json"), {
         absolute: true,
       })
-    ).map(async (fp) => [path.basename(fp), await fs.readJSON(fp)])
+    ).map(async (fp) => {
+      const key = path.basename(fp);
+      const { _rev, ...fixture } = await fs.readJSON(fp);
+      return [key, fixture];
+    })
   );
 
   if (typeof validate === "function") {
