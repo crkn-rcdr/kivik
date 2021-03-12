@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-alpha.5
+
+- `kivik fixtures`: Test whether your database fixtures validate.
+
 ## [2.0.0-alpha.4] - 2021-03-09
 
 - Incorporates the new [@crkn-rcdr/nano](https://github.com/crkn-rcdr/nano) package

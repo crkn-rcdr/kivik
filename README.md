@@ -72,11 +72,25 @@ interface ValidationResponse {
 }
 ```
 
-(`errors` is stringified in log output.)
+(`errors` is passed through `JSON.stringify` in log output.)
 
 When a database has a validation function, its fixtures will be validated against it. Invalid fixtures will not be deployed.
 
 The example directory contains a validation function that uses [Ajv](https://ajv.js.org) to validate data against a JSON Schema.
+
+### Fixtures
+
+```shell
+$ kivik fixtures
+```
+
+```js
+import { Kivik } from "kivik";
+
+const errors = await Kivik.testFixtures("path/to/dir", options);
+```
+
+Returns a report of fixtures that do not validate against their database's validate function.
 
 ### Deploy
 

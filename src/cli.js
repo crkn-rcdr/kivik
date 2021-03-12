@@ -5,10 +5,11 @@ const Logger = require("./Logger");
 const { withDefaults } = require("./options");
 
 const deploy = require("./cli/deploy");
+const fixtures = require("./cli/fixtures");
 const inspect = require("./cli/inspect");
 const validate = require("./cli/validate");
 
-const handlers = { deploy, inspect, validate };
+const handlers = { deploy, fixtures, inspect, validate };
 
 const argv = getParser().parse(hideBin(process.argv));
 const command = argv._[0];

@@ -1,45 +1,62 @@
 const path = require("path");
 const { getDesign, getFixtures } = require("./Database/DocSet");
 const { getIndexes } = require("./Database/IndexSet");
+const getValidate = require("./Database/validate");
 const { withDefaults } = require("./options");
 const Logger = require("./Logger");
 
 const logger = Logger.get();
 
-const defaulted = withDefaults(["deployFixtures", "excludeDesign", "suffix"]);
+const defaulted = withDefaults([
+  "cli",
+  "deployFixtures",
+  "excludeDesign",
+  "suffix",
+]);
 
-const fromDirectory = async (directory, options = {}) => {
-  options = defaulted(options);
+const setup = async (directory, options) => {
+  const dbName = path.basename(directory);
+  const validate = getValidate(directory, options.cli);
 
-  const basename = path.basename(directory);
-  const validateName = path.join(basename, "validate.js");
-  const name = options.suffix ? `${basename}-${options.suffix}` : basename;
-
-  let validate = null;
-  try {
-    const vPath = path.join(directory, "validate.js");
-    validate = require(vPath);
-    if (typeof validate !== "function") {
-      logger.error(`${validateName} does not export a function.`);
-    }
-  } catch (error) {
-    if (error.code !== "MODULE_NOT_FOUND") {
-      logger.error(`Error loading ${validateName}`);
-      logger.error(error);
-    } else {
-      logger.info(`${basename} does not provide a validator`);
-    }
-  }
-
-  const fixtures = await getFixtures(
+  const { valid: fixtures, invalid: fixtureErrors } = await getFixtures(
     path.join(directory, "fixtures"),
     validate,
     options
   );
+
+  return { dbName, validate, fixtures, fixtureErrors };
+};
+
+const fromDirectory = async (directory, options = {}) => {
+  options = defaulted(options);
+
+  const { dbName, validate, fixtures, fixtureErrors } = await setup(
+    directory,
+    options
+  );
+
+  const name = options.suffix ? `${dbName}-${options.suffix}` : dbName;
+
+  Object.entries(fixtureErrors).forEach(([name, errors]) => {
+    let message = `${dbName}/fixtures/${name} does not validate.`;
+    if (errors) {
+      message += "\n" + JSON.stringify(errors, null, 2);
+    }
+    logger.warn(message);
+  });
+
   const indexes = await getIndexes(path.join(directory, "indexes"));
   const designDocs = await getDesign(path.join(directory, "design"), options);
 
   return new Database(name, fixtures, indexes, designDocs, validate, options);
+};
+
+const testFixtures = async (directory, options = {}) => {
+  options = defaulted(options);
+
+  const { fixtureErrors } = await setup(directory, options);
+
+  return fixtureErrors;
 };
 
 class Database {
@@ -83,4 +100,4 @@ class Database {
   }
 }
 
-module.exports = { default: Database, fromDirectory };
+module.exports = { default: Database, fromDirectory, testFixtures };

@@ -20,39 +20,27 @@ const getDesign = async (directory, options = {}) => {
 };
 
 const getFixtures = async (directory, validate = null) => {
-  let fixtures = await Promise.all(
-    (
-      await globby(path.posix.join(directory, "*.json"), {
-        absolute: true,
-      })
-    ).map(async (fp) => {
-      const key = path.basename(fp);
-      const { _rev, ...fixture } = await fs.readJSON(fp);
-      return [key, fixture];
-    })
-  );
+  const valid = [];
+  const invalid = {};
+  for await (const fp of globby.stream(path.posix.join(directory, "*.json"), {
+    absolute: true,
+  })) {
+    const name = path.basename(fp);
+    const { _rev, ...fixture } = await fs.readJSON(fp);
 
-  if (typeof validate === "function") {
-    const results = await Promise.all(
-      fixtures.map(async ([basename, fixture]) => {
-        let response = await validate(fixture);
-        if (typeof response === "boolean") {
-          response = { valid: response };
-        }
-        if (!response.valid) {
-          logger.warn(`Fixture ${basename} does not validate against schema.`);
-          if (response.errors) {
-            logger.warn(response.errors);
-          }
-        }
-        return response.valid;
-      })
-    );
-
-    fixtures = fixtures.filter((_pair, i) => results[i]);
+    if (typeof validate === "function") {
+      const response = await validate(fixture);
+      if (!response.valid) {
+        invalid[name] = response.message;
+      } else {
+        valid.push(fixture);
+      }
+    } else {
+      valid.push(fixture);
+    }
   }
 
-  return new DocSet(fixtures.map((pair) => pair[1]));
+  return { valid: new DocSet(valid), invalid };
 };
 
 class DocSet {

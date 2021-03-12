@@ -59,6 +59,7 @@ module.exports = (wd = process.cwd()) =>
       "Deploys design documents to a remote database",
       options.slice(["deployFixtures", "suffix", "password", "url", "user"])
     )
+    .command("fixtures", "Test that each database's fixtures validate")
     .command(
       "inspect",
       "Spins up a CouchDB container for inspection",

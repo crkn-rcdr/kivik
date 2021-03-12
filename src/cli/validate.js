@@ -1,7 +1,6 @@
 const fs = require("fs-extra");
 const fetch = require("node-fetch");
 const path = require("path");
-const Database = require("../Database");
 const getValidate = require("../Database/validate");
 const Logger = require("../Logger");
 
@@ -37,8 +36,15 @@ module.exports = async (argv) => {
       process.exit(1);
     }
 
-    const valid = await validate(argv.document, document);
-    process.exit(valid ? 0 : 1);
+    const response = await validate(document);
+
+    if (response.valid) {
+      logger.alert(response.message);
+      process.exit(0);
+    } else {
+      logger.error(response.message);
+      process.exit(1);
+    }
   } else {
     process.exit(1);
   }

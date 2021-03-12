@@ -1,12 +1,13 @@
+const { type } = require("os");
 const path = require("path");
 const Logger = require("../Logger");
 const logger = Logger.get();
 
-module.exports = (directory, cli = false) => {
-  const alertIfCli = (message) => {
-    cli ? logger.alert(message) : logger.info(message);
-  };
+const alertIfCli = (cli, message) => {
+  cli ? logger.alert(message) : logger.info(message);
+};
 
+module.exports = (directory, cli = false) => {
   const dbName = path.basename(directory);
   try {
     const vPath = path.join(directory, "validate.js");
@@ -20,28 +21,34 @@ module.exports = (directory, cli = false) => {
       logger.error(`Error loading ${dbName}/validate.js`);
       logger.error(error);
     } else {
-      alertIfCli(`Database ${dbName} does not provide a validator`);
+      alertIfCli(cli, `Database ${dbName} does not provide a validator`);
     }
     return null;
   }
 
-  return async (docName, document) => {
-    let response = await validate(document);
-    if (typeof response === "boolean") {
-      response = { valid: response };
-    }
+  return async (document) => {
+    const response = await validate(document);
+    let valid;
+    let errors = "";
 
-    if (response.valid) {
-      alertIfCli(`${docName} validates against database ${dbName}.`);
+    if (typeof response === "object") {
+      valid = !!response.valid;
+      errors =
+        "\nValidator errors:\n" + JSON.stringify(response.errors, null, 2);
     } else {
-      logger.error(`${docName} does not validate against database ${dbName}.`);
-      if (response.errors) {
-        logger.error(
-          "Validator errors: " + JSON.stringify(response.errors, null, 2)
-        );
-      }
+      valid = !!response;
     }
 
-    return response.valid;
+    if (valid) {
+      return {
+        valid,
+        message: `The document validates against database ${dbName}.`,
+      };
+    } else {
+      return {
+        valid,
+        message: `The document does not validate against database ${dbName}.${errors}`,
+      };
+    }
   };
 };

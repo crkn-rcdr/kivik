@@ -12,13 +12,13 @@ describe("Database", () => {
 
   it("loads the validate function in validate.js", async () => {
     db.validate.should.be.a("function");
-    should.not.exist(db.fixtures.withId("bad-fixture"));
   });
 
-  it("loads fixtures, and removes _rev fields from them", async () => {
+  it("loads and validates fixtures, and removes _rev fields from them", async () => {
     db.fixtures.should.be.a("object");
     db.fixtures.should.respondTo("withId");
     should.exist(db.fixtures.withId("pickwick-papers"));
+    should.not.exist(db.fixtures.withId("bad-fixture"));
   });
 
   it("loads indexes", async () => {
