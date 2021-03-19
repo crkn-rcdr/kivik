@@ -1,5 +1,5 @@
 const Kivik = require("../Kivik");
-const Nano = require("@crkn-rcdr/nano").default;
+const Nano = require("@crkn-rcdr/nano");
 
 module.exports = async (argv) => {
   const kivik = await Kivik.fromDirectory(argv.directory, argv);

@@ -3,7 +3,7 @@ const fetch = require("node-fetch");
 const util = require("util");
 const setTimeoutPromise = util.promisify(setTimeout);
 const Logger = require("./Logger");
-const Nano = require("@crkn-rcdr/nano").default;
+const Nano = require("@crkn-rcdr/nano");
 
 const logger = Logger.get();
 const TIMEOUT_START = 10;

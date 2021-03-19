@@ -99,7 +99,7 @@ $ kivik deploy --url http://couchserver:5984/ --user user --password password
 ```
 
 ```js
-import Nano from "@crkn-rcdr/nano";
+import * as Nano from "@crkn-rcdr/nano";
 import { Kivik } from "kivik";
 import options from "./options";
 

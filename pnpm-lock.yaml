@@ -1,5 +1,5 @@
 dependencies:
-  '@crkn-rcdr/nano': 1.0.1
+  '@crkn-rcdr/nano': 2.0.0
   crypto-random-string: 3.3.1
   dockerode: 3.2.1
   find-up: 5.0.0
@@ -19,14 +19,14 @@ devDependencies:
   sinon-chai: 3.5.0_chai@4.3.4+sinon@9.2.4
 lockfileVersion: 5.2
 packages:
-  /@crkn-rcdr/nano/1.0.1:
+  /@crkn-rcdr/nano/2.0.0:
     dependencies:
       nano: 9.0.3
     dev: false
     engines:
       node: '>= 10.0.0'
     resolution:
-      integrity: sha512-48r+WdnPVqZDVlYcRwja9oIaiEsEufEauPZCekrl3JVBuX2EGbRjnkE08Jtp0wVasbR4jmUuDz2ZBH6BMEXWCQ==
+      integrity: sha512-e9vXSQE3N/T0TwfLgXy2T8aDvO7erpH68bBVRXgAMMPRPPgG7EWwSK3nz3QlI5PpSUGMzmLqyQwmpm15HL/yKg==
   /@dabh/diagnostics/2.0.2:
     dependencies:
       colorspace: 1.1.2
@@ -1427,7 +1427,7 @@ packages:
     resolution:
       integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 specifiers:
-  '@crkn-rcdr/nano': ^1.0.0
+  '@crkn-rcdr/nano': ^2.0.0
   ajv: ^7.2.1
   chai: ^4.3.3
   chai-as-promised: ^7.1.1
