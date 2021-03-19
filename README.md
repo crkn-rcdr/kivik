@@ -160,8 +160,8 @@ TODO: Add logging info
 $ git clone https://github.com/crkn-rcdr/kivik
 $ cd kivik
 $ docker pull couchdb:3.1
-$ npm install
-$ npm test
+$ pnpm install
+$ pnpm test
 ```
 
 ## Bugs, feature requests, etc.
