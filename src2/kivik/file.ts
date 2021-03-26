@@ -8,13 +8,12 @@ import {
 import { JsonObject as JSONObject, JsonValue as JSONValue } from "type-fest";
 import { ValidateFunction } from "./database";
 
-export type GlobMode = "all" | "fixtures" | "validate";
+export type GlobMode = "all" | "deploy" | "fixtures" | "validate";
 
-export const globs = (type: GlobMode = "all"): string[] => {
-	const validateGlobs = ["*/validate.js"];
-	const fixtureGlobs = [...validateGlobs, "*/fixtures/*.json"];
-	const allGlobs = [
-		...fixtureGlobs,
+export const globs = (mode: GlobMode = "all"): string[] => {
+	const validateGlob = ["*/validate.js"];
+	const fixtureGlobs = [...validateGlob, "*/fixtures/*.json"];
+	const deployGlobs = [
 		"*/design/*/autoupdate.js",
 		"*/design/*/validate_doc_update.js",
 		"*/design/*/filters/*.js",
@@ -25,14 +24,14 @@ export const globs = (type: GlobMode = "all"): string[] => {
 		"*/indexes/*.json",
 	];
 
-	switch (type) {
-		case "validate":
-			return validateGlobs;
-		case "fixtures":
-			return fixtureGlobs;
-		case "all":
-			return allGlobs;
-	}
+	const globs: Record<GlobMode, string[]> = {
+		all: [...fixtureGlobs, ...deployGlobs],
+		deploy: deployGlobs,
+		fixtures: fixtureGlobs,
+		validate: validateGlob,
+	};
+
+	return globs[mode];
 };
 
 type Root = "design" | "fixtures" | "indexes" | "validate.js";

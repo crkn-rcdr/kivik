@@ -32,7 +32,7 @@ export default (context: InitContext) => {
 				),
 		handler: async (argv: DeployArgv) => {
 			const fullContext = context.withArgv(argv);
-			const kivik = await createKivik(fullContext);
+			const kivik = await createKivik(fullContext, "deploy");
 			fullContext.log("success", "DEPLOY");
 			await kivik.close();
 		},
