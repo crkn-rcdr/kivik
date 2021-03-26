@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { parse } from "./parse";
 import { init as initContext } from "../context";
+import { parse } from "./parse";
 
 try {
 	parse(process.argv.slice(2), initContext(process.cwd()));

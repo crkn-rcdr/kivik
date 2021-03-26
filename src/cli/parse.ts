@@ -1,6 +1,6 @@
 import yargs from "yargs";
-import { InitContext } from "../context";
-import { Level } from "../context/logger";
+
+import { InitContext, LogLevel, logLevels } from "../context";
 import deploy from "./deploy";
 import fixtures from "./fixtures";
 import instance from "./instance";
@@ -8,7 +8,7 @@ import validate from "./validate";
 
 export interface CommonArgv {
 	color: boolean;
-	logLevel: Level;
+	logLevel: LogLevel;
 	quiet: boolean;
 }
 
@@ -25,7 +25,7 @@ export const parse = (argv: string[], context: InitContext): void => {
 				type: "string",
 				alias: "l",
 				default: "warn",
-				choices: ["error", "success", "warn", "info", "couch"],
+				choices: logLevels,
 				describe: "Log level.",
 			},
 			quiet: {

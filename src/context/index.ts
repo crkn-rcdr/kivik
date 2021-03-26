@@ -1,12 +1,17 @@
 import { Logger } from "winston";
-import { normalizeRc, NormalizedRc } from "./rc";
 import { readFileSync as readFile } from "fs-extra";
 import { parse as parseYAML } from "yaml";
 import { sync as findUp } from "find-up";
-import { create as createLogger, Level } from "./logger";
-import { CommonArgv } from "../cli/parse";
 
-export { format as defaultLoggerFormat } from "./logger";
+import { CommonArgv } from "../cli/parse";
+import { create as createLogger, Level } from "./logger";
+import { normalizeRc, NormalizedRc } from "./rc";
+
+export {
+	format as defaultLoggerFormat,
+	levels as logLevels,
+	Level as LogLevel,
+} from "./logger";
 
 export type InitContext = {
 	readonly directory: string;

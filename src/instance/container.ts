@@ -2,8 +2,9 @@ import Docker from "dockerode";
 import getPort from "get-port";
 import { localhost as localNano } from "@crkn-rcdr/nano";
 import { ServerScope } from "nano";
-import { Context } from "../context";
 import pRetry from "p-retry";
+
+import { Context } from "../context";
 
 export const get = async (context: Context): Promise<Container> => {
 	const { port: desiredPort, image, user, password } = context.rc.local;

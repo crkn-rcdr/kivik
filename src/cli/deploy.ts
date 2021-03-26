@@ -1,9 +1,10 @@
 import yargs from "yargs";
 import * as Nano from "@crkn-rcdr/nano";
 import { ServerScope } from "nano";
-import { CommonArgv } from "./parse";
+
 import { InitContext } from "../context";
 import { get as createKivik } from "../kivik";
+import { CommonArgv } from "./parse";
 
 type DeployArgv = CommonArgv & {
 	// Even though the builder can't return undefined, the type system still expects the possibility

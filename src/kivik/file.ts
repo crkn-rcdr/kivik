@@ -7,8 +7,8 @@ import {
 } from "path";
 import { JsonObject as JSONObject, JsonValue as JSONValue } from "type-fest";
 
-import { ValidateFunction } from "./database";
 import { Mode } from "..";
+import { ValidateFunction } from "./database";
 
 export const globs = (mode: Mode = "instance"): string[] => {
 	const validateGlob = ["*/validate.js"];

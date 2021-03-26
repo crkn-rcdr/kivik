@@ -1,6 +1,3 @@
-import { DesignFile, KivikFile, ValidateFile } from "./file";
-import { DesignDoc } from "./design-doc";
-import { DatabaseContext } from "../context";
 import {
 	DocumentScope,
 	MaybeDocument,
@@ -8,7 +5,11 @@ import {
 	DocumentResponseRow,
 } from "nano";
 
-export type Fixture = {
+import { DesignFile, KivikFile, ValidateFile } from "./file";
+import { DesignDoc } from "./design-doc";
+import { DatabaseContext } from "../context";
+
+type Fixture = {
 	file: KivikFile;
 	valid: boolean;
 };

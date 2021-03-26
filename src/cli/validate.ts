@@ -2,11 +2,12 @@ import { sep as pathSeparator } from "path";
 import axios from "axios";
 import { readJSON } from "fs-extra";
 import yargs from "yargs";
+import { MaybeDocument } from "nano";
+
 import { InitContext } from "../context";
-import { CommonArgv } from "./parse";
 import { get as createKivik } from "../kivik";
 import { Database } from "../kivik/database";
-import { MaybeDocument } from "nano";
+import { CommonArgv } from "./parse";
 
 const fetchDocument = async (input: string): Promise<MaybeDocument> => {
 	if (input.startsWith("https://") || input.startsWith("http://")) {

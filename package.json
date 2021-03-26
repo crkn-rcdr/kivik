@@ -21,7 +21,7 @@
   ],
   "license": "Unlicense",
   "bin": {
-    "kivik": "./dist/cli.js"
+    "kivik": "./dist/cli/index.js"
   },
   "engines": {
     "node": ">=12.0.0"

@@ -1,6 +1,6 @@
 import { InitContext } from "../context";
-import { CommonArgv } from "./parse";
 import { get as createKivik } from "../kivik";
+import { CommonArgv } from "./parse";
 
 export default (context: InitContext) => {
 	return {

@@ -9,7 +9,7 @@ export interface LoggerOptions {
 	attachToConsole: boolean;
 }
 
-const levels: Record<Level, { level: number; color: string }> = {
+const levelConfig: Record<Level, { level: number; color: string }> = {
 	error: { level: 0, color: "bold red" },
 	success: { level: 1, color: "bold green" },
 	warn: { level: 2, color: "bold yellow" },
@@ -17,7 +17,8 @@ const levels: Record<Level, { level: number; color: string }> = {
 	couch: { level: 4, color: "bold grey" },
 };
 
-export type Level = "success" | "error" | "warn" | "info" | "couch";
+export const levels = ["success", "error", "warn", "info", "couch"] as const;
+export type Level = typeof levels[number];
 
 /**
  * Sets up Kivik's default logger format.
@@ -40,10 +41,10 @@ export const format = (color: boolean): Winston.Logform.Format => {
  */
 export const create = (options: LoggerOptions): Winston.Logger => {
 	const colors = Object.fromEntries(
-		Object.entries(levels).map(([level, obj]) => [level, obj.color])
+		Object.entries(levelConfig).map(([level, obj]) => [level, obj.color])
 	);
 	const wlevels = Object.fromEntries(
-		Object.entries(levels).map(([level, obj]) => [level, obj.level])
+		Object.entries(levelConfig).map(([level, obj]) => [level, obj.level])
 	);
 
 	Winston.addColors(colors);

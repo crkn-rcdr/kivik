@@ -1,7 +1,8 @@
-import { DesignType, DesignFile } from "./file";
 import { JsonValue as JSONValue } from "type-fest";
-import { DatabaseContext } from "../context";
 import { MaybeDocument } from "nano";
+
+import { DatabaseContext } from "../context";
+import { DesignType, DesignFile } from "./file";
 
 export class DesignDoc {
 	readonly name: string;
