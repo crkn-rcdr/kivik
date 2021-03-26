@@ -133,8 +133,10 @@ export class KivikFile {
 	}
 }
 
-export type DesignFile = Required<KivikFile> & { fileType: "design" };
-export type ValidateFile = KivikFile & {
+export type DesignFile = Omit<Required<KivikFile>, "fileType"> & {
+	fileType: "design";
+};
+export type ValidateFile = Omit<KivikFile, "fileType" | "content"> & {
 	fileType: "validate";
 	content: ValidateFunction;
 };

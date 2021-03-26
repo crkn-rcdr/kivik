@@ -87,7 +87,7 @@ export class Database {
 
 	validate(doc: MaybeDocument): ValidateResponse {
 		if (this._validate) {
-			const validateFunc = this._validate.content as ValidateFunction;
+			const validateFunc = this._validate.content;
 			const response = validateFunc(doc);
 			if (typeof response === "boolean") {
 				return { valid: response };
