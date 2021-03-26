@@ -1,5 +1,5 @@
 import yargs from "yargs";
-import { Context } from "../context";
+import { InitContext } from "../context";
 import deploy from "./deploy";
 import fixtures from "./fixtures";
 import instance from "./instance";
@@ -11,7 +11,7 @@ export interface CommonArgv {
 	quiet: boolean;
 }
 
-export const parse = (argv: string[], context: Context): void => {
+export const parse = (argv: string[], context: InitContext): void => {
 	yargs(argv)
 		.scriptName("kivik")
 		.options({

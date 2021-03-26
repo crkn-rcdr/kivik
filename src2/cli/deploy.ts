@@ -2,7 +2,7 @@ import yargs from "yargs";
 import * as Nano from "@crkn-rcdr/nano";
 import CouchDBNano from "nano";
 import { CommonArgv } from "./parse";
-import { Context } from "../context";
+import { InitContext } from "../context";
 import { init as createKivik } from "../kivik";
 
 type DeployArgv = CommonArgv & {
@@ -10,7 +10,7 @@ type DeployArgv = CommonArgv & {
 	deployment?: CouchDBNano.ServerScope;
 };
 
-export default (context: Context) => {
+export default (context: InitContext) => {
 	return {
 		command: "deploy <deployment>",
 		describe: "Deploys design documents to a remote database",
@@ -31,9 +31,9 @@ export default (context: Context) => {
 					}
 				),
 		handler: async (argv: DeployArgv) => {
-			context.createLogger(argv);
-			const kivik = await createKivik(context);
-			context.log("success", "DEPLOY");
+			const fullContext = context.withArgv(argv);
+			const kivik = await createKivik(fullContext);
+			fullContext.log("success", "DEPLOY");
 			await kivik.close();
 		},
 	};

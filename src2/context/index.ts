@@ -8,33 +8,47 @@ import { CommonArgv } from "../cli/parse";
 
 export { format as defaultLoggerFormat } from "./logger";
 
-export class Context {
+export type InitContext = {
 	readonly directory: string;
-	private logger: Logger | null;
 	readonly rc: NormalizedRc;
+	readonly withArgv: (argv: CommonArgv) => Context;
+};
 
-	constructor(directory: string) {
-		this.directory = directory;
-		this.logger = null;
-		const confPath = findUp(["kivikrc.json", "kivikrc.yml", "kivikrc.yaml"], {
-			cwd: directory,
-		});
-		this.rc = normalizeRc(
-			confPath ? parseYAML(readFile(confPath, { encoding: "utf-8" })) : {}
-		);
-	}
+export type Context = Omit<InitContext, "withArgv"> & {
+	readonly logger: Logger;
+	readonly log: (level: Level, message: string) => void;
+	readonly withDatabase: (db: string) => DatabaseContext;
+};
 
-	createLogger(argv: CommonArgv) {
-		this.logger = createLogger({
+export type DatabaseContext = Omit<Context, "withDatabase"> & {
+	readonly database: string;
+};
+
+export const init = (directory: string): InitContext => {
+	const confPath = findUp(["kivikrc.json", "kivikrc.yml", "kivikrc.yaml"], {
+		cwd: directory,
+	});
+	const rc = normalizeRc(
+		confPath ? parseYAML(readFile(confPath, { encoding: "utf-8" })) : {}
+	);
+
+	const withArgv = (argv: CommonArgv): Context => {
+		const logger = createLogger({
 			color: argv.color,
 			level: argv.logLevel,
 			attachToConsole: !argv.quiet,
 		});
-		this.log("info", "Logger initialized.");
-	}
 
-	log(level: Level, message: any) {
-		if (!this.logger) return;
-		this.logger.log(level, message);
-	}
-}
+		const log = (level: Level, message: string) => logger.log(level, message);
+
+		log("info", "Logger initialized.");
+
+		const withDatabase = (db: string) => {
+			return { directory, rc, logger, log, database: db };
+		};
+
+		return { directory, rc, logger, log, withDatabase };
+	};
+
+	return { directory, rc, withArgv };
+};

@@ -1,6 +1,6 @@
 import { DesignFile, KivikFile, ValidateFile } from "./file";
 import { DesignDoc } from "./design-doc";
-import { Context } from "../context";
+import { DatabaseContext } from "../context";
 import { MaybeDocument } from "nano";
 
 export type Fixture = {
@@ -24,13 +24,13 @@ export type ValidateResponse = {
 
 export class Database {
 	readonly name: string;
-	readonly context: Context;
+	readonly context: DatabaseContext;
 	readonly designDocs: Map<string, DesignDoc>;
 	readonly fixtures: Map<string, Fixture>;
 	readonly indexes: Map<string, KivikFile>;
 	private _validate: ValidateFile | null;
 
-	constructor(name: string, context: Context) {
+	constructor(name: string, context: DatabaseContext) {
 		this.name = name;
 		this.context = context;
 		this.designDocs = new Map();
@@ -53,13 +53,17 @@ export class Database {
 
 	private updateDesignDoc(file: DesignFile) {
 		if (!this.designDocs.has(file.ddoc))
-			this.designDocs.set(file.ddoc, new DesignDoc(file.ddoc));
+			this.designDocs.set(file.ddoc, new DesignDoc(file.ddoc, this.context));
 		const designDoc = this.designDocs.get(file.ddoc) as DesignDoc;
 		designDoc.updateFile(file);
 	}
 
 	private updateFixture(file: KivikFile) {
 		this.fixtures.set(file.name, { file, valid: true });
+		this.context.log(
+			"info",
+			`Updated fixture ${file.name} in db: ${this.name}`
+		);
 	}
 
 	private updateIndex(file: KivikFile) {
@@ -67,10 +71,15 @@ export class Database {
 		if (!index["name"]) index["name"] = file.name;
 		if (!index["ddoc"]) index["ddoc"] = `index_${file.name}`;
 		this.indexes.set(file.name, file);
+		this.context.log("info", `Updated index ${file.name} in db: ${this.name}`);
 	}
 
 	private updateValidate(file: ValidateFile) {
 		this._validate = file;
+		this.context.log(
+			"info",
+			`Updated the validate function in db: ${this.name}`
+		);
 	}
 
 	canValidate(): boolean {

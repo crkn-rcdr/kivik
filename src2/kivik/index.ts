@@ -1,4 +1,5 @@
 import { watch, FSWatcher } from "chokidar";
+import { join as joinPath } from "path";
 import pEvent from "p-event";
 import { Context } from "../context";
 import { GlobMode, globs as fileGlobs, KivikFile } from "./file";
@@ -46,7 +47,10 @@ export class Kivik {
 		const file = new KivikFile(path, this.context.directory);
 
 		if (!this.databases.has(file.db))
-			this.databases.set(file.db, new Database(file.db, this.context));
+			this.databases.set(
+				file.db,
+				new Database(file.db, this.context.withDatabase(file.db))
+			);
 
 		const database = this.databases.get(file.db) as Database;
 		database.updateFile(file);
@@ -58,7 +62,9 @@ export class Kivik {
 			for (const [fixtureName, errorString] of Object.entries(
 				db.validateFixtures()
 			)) {
-				errors[`${dbName}.${fixtureName}`] = errorString;
+				errors[
+					`${joinPath(dbName, "fixtures", fixtureName)}.json`
+				] = errorString;
 			}
 		}
 		return errors;

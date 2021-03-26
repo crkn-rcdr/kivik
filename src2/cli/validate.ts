@@ -2,7 +2,7 @@ import { sep as pathSeparator } from "path";
 import axios from "axios";
 import { readJSON } from "fs-extra";
 import yargs from "yargs";
-import { Context } from "../context";
+import { InitContext } from "../context";
 import { CommonArgv } from "./parse";
 import { init as createKivik } from "../kivik";
 import { Database } from "../kivik/database";
@@ -24,7 +24,7 @@ type ValidateArgv = CommonArgv & {
 	document?: string;
 };
 
-export default (context: Context) => {
+export default (context: InitContext) => {
 	return {
 		command: "validate <database> <document>",
 		describe: "Validates a document against a database's validate function",
@@ -41,10 +41,10 @@ export default (context: Context) => {
 						"The document to validate. Can be specified as either a local file or a URL.",
 				}),
 		handler: async (argv: ValidateArgv) => {
-			context.createLogger(argv);
+			const fullContext = context.withArgv(argv);
 
 			try {
-				const kivik = await createKivik(context, "validate");
+				const kivik = await createKivik(fullContext, "validate");
 				const dbName = argv.database as string;
 				if (!kivik.databases.has(dbName))
 					throw new Error(`Cannot find database directory ${dbName}`);
@@ -57,17 +57,17 @@ export default (context: Context) => {
 				const document = await fetchDocument(argv.document as string);
 				const response = db.validate(document);
 				if (response.valid) {
-					context.log("success", `${argv.document} is valid.`);
+					fullContext.log("success", `${argv.document} is valid.`);
 					process.exit(0);
 				} else {
-					context.log(
+					fullContext.log(
 						"error",
 						`${argv.document} is invalid. Errors: ${response.errors}`
 					);
 					process.exit(1);
 				}
 			} catch (error) {
-				context.log("error", error.message);
+				fullContext.log("error", error.message);
 				process.exit(1);
 			}
 		},
