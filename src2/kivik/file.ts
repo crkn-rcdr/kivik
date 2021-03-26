@@ -6,6 +6,7 @@ import {
 	extname,
 } from "path";
 import { JsonObject as JSONObject, JsonValue as JSONValue } from "type-fest";
+import { ValidateFunction } from "./database";
 
 export const globs = [
 	"*/design/*/autoupdate.js",
@@ -35,7 +36,8 @@ type FileContentType = "boolean" | "function" | "object" | "viewObject";
 type FileContent =
 	| boolean
 	| ((...args: unknown[]) => unknown)
-	| Record<string, unknown>;
+	| Record<string, unknown>
+	| ValidateFunction;
 
 const fileTypes: Record<Root, FileType> = {
 	design: "design",
@@ -119,3 +121,7 @@ export class KivikFile {
 }
 
 export type DesignFile = Required<KivikFile> & { fileType: "design" };
+export type ValidateFile = KivikFile & {
+	fileType: "validate";
+	content: ValidateFunction;
+};

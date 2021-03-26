@@ -1,4 +1,4 @@
-import { DesignFile, KivikFile } from "./file";
+import { DesignFile, KivikFile, ValidateFile } from "./file";
 import { DesignDoc } from "./design-doc";
 import { Context } from "../context";
 import { MaybeDocument } from "nano";
@@ -28,7 +28,7 @@ export class Database {
 	readonly designDocs: Map<string, DesignDoc>;
 	readonly fixtures: Map<string, Fixture>;
 	readonly indexes: Map<string, KivikFile>;
-	private _validate: KivikFile | null;
+	private _validate: ValidateFile | null;
 
 	constructor(name: string, context: Context) {
 		this.name = name;
@@ -47,7 +47,7 @@ export class Database {
 		} else if (file.fileType === "index") {
 			this.updateIndex(file);
 		} else if (file.fileType === "validate") {
-			this.updateValidate(file);
+			this.updateValidate(file as ValidateFile);
 		}
 	}
 
@@ -69,7 +69,7 @@ export class Database {
 		this.indexes.set(file.name, file);
 	}
 
-	private updateValidate(file: KivikFile) {
+	private updateValidate(file: ValidateFile) {
 		this._validate = file;
 	}
 
