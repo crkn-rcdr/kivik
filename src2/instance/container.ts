@@ -58,9 +58,9 @@ export class Container {
 	}
 
 	async start() {
-		this.context.log("info", "Attempting to start a Docker container.");
+		this.context.log("info", `Starting container ${this.name}.`);
 		await this.dc.start();
-		this.context.log("info", "Docker container started.");
+		this.context.log("info", `Container ${this.name} started.`);
 
 		this.dc.attach(
 			{ stream: true, stdout: true, stderr: true },

@@ -21,7 +21,7 @@ export class DesignDoc {
 			this.content.set(file.designType, file.serialize());
 			this.context.log(
 				"info",
-				`Updated ${file.designType} in db: ${this.context.database}, ddoc: ${this.name}`
+				`Updated ${file.designType} in ${this.context.database}/_design/${this.name}`
 			);
 		} else {
 			if (!this.content.has(file.designType))
@@ -32,7 +32,7 @@ export class DesignDoc {
 			);
 			this.context.log(
 				"info",
-				`Updated ${file.designType}/${file.name} in db: ${this.context.database}, ddoc: ${this.name}`
+				`Updated ${file.designType}/${file.name} in ${this.context.database}/_design/${this.name}`
 			);
 		}
 	}

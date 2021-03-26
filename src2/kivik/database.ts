@@ -60,10 +60,7 @@ export class Database {
 
 	private updateFixture(file: KivikFile) {
 		this.fixtures.set(file.name, { file, valid: true });
-		this.context.log(
-			"info",
-			`Updated fixture ${file.name} in db: ${this.name}`
-		);
+		this.context.log("info", `Updated fixture ${file.name} in ${this.name}`);
 	}
 
 	private updateIndex(file: KivikFile) {
@@ -71,15 +68,12 @@ export class Database {
 		if (!index["name"]) index["name"] = file.name;
 		if (!index["ddoc"]) index["ddoc"] = `index_${file.name}`;
 		this.indexes.set(file.name, file);
-		this.context.log("info", `Updated index ${file.name} in db: ${this.name}`);
+		this.context.log("info", `Updated index ${file.name} in ${this.name}`);
 	}
 
 	private updateValidate(file: ValidateFile) {
 		this._validate = file;
-		this.context.log(
-			"info",
-			`Updated the validate function in db: ${this.name}`
-		);
+		this.context.log("info", `Updated the validate function in ${this.name}`);
 	}
 
 	canValidate(): boolean {
