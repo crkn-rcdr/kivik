@@ -57,5 +57,9 @@ export const init = (directory: string): InitContext => {
 };
 
 export const api = (directory: string): Context => {
-	return init(directory).withArgv({ color: false, logLevel: 0, quiet: true });
+	return init(directory).withArgv({
+		color: false,
+		logLevel: "error",
+		quiet: true,
+	});
 };

@@ -1,5 +1,6 @@
 import yargs from "yargs";
 import { InitContext } from "../context";
+import { Level } from "../context/logger";
 import deploy from "./deploy";
 import fixtures from "./fixtures";
 import instance from "./instance";
@@ -7,7 +8,7 @@ import validate from "./validate";
 
 export interface CommonArgv {
 	color: boolean;
-	logLevel: number;
+	logLevel: Level;
 	quiet: boolean;
 }
 
@@ -21,11 +22,11 @@ export const parse = (argv: string[], context: InitContext): void => {
 				describe: "Colorizes log output. --no-color for false",
 			},
 			logLevel: {
-				type: "number",
+				type: "string",
 				alias: "l",
-				default: 1,
-				describe:
-					"Numerical log level.\n  0: errors and important notices\n  1: warnings\n  2: most things\n  3: when running an instance locally, shows CouchDB logs",
+				default: "warn",
+				choices: ["error", "success", "warn", "info", "couch"],
+				describe: "Log level.",
 			},
 			quiet: {
 				type: "boolean",

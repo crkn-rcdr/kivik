@@ -2,26 +2,20 @@ import * as Winston from "winston";
 
 export interface LoggerOptions {
 	/** Log level, numerically */
-	level: number;
+	level: Level;
 	/** Whether log output should be colorized */
 	color: boolean;
 	/** Whether the console should be attached to log output */
 	attachToConsole: boolean;
 }
 
-interface LogLevel {
-	name: string;
-	level: number;
-	color: string;
-}
-
-const levels: LogLevel[] = [
-	{ name: "success", level: 0, color: "bold green" },
-	{ name: "error", level: 0, color: "bold red" },
-	{ name: "warn", level: 1, color: "bold yellow" },
-	{ name: "info", level: 2, color: "bold blue" },
-	{ name: "couch", level: 3, color: "bold grey" },
-];
+const levels: Record<Level, { level: number; color: string }> = {
+	error: { level: 0, color: "bold red" },
+	success: { level: 1, color: "bold green" },
+	warn: { level: 2, color: "bold yellow" },
+	info: { level: 3, color: "bold blue" },
+	couch: { level: 4, color: "bold grey" },
+};
 
 export type Level = "success" | "error" | "warn" | "info" | "couch";
 
@@ -45,13 +39,18 @@ export const format = (color: boolean): Winston.Logform.Format => {
  * Creates Kivik's logger.
  */
 export const create = (options: LoggerOptions): Winston.Logger => {
-	Winston.addColors(
-		Object.fromEntries(levels.map((ll) => [ll.name, ll.color]))
+	const colors = Object.fromEntries(
+		Object.entries(levels).map(([level, obj]) => [level, obj.color])
+	);
+	const wlevels = Object.fromEntries(
+		Object.entries(levels).map(([level, obj]) => [level, obj.level])
 	);
 
+	Winston.addColors(colors);
+
 	const logger = Winston.createLogger({
-		levels: Object.fromEntries(levels.map((ll) => [ll.name, ll.level])),
-		level: levels.find((ll) => ll.level === options.level)?.name,
+		levels: wlevels,
+		level: options.level,
 		handleExceptions: true,
 	});
 
