@@ -1,11 +1,14 @@
 import { watch, FSWatcher } from "chokidar";
 import pEvent from "p-event";
 import { Context } from "../context";
-import { globs as fileGlobs, KivikFile } from "./file";
+import { GlobMode, globs as fileGlobs, KivikFile } from "./file";
 import { Database } from "./database";
 
-export const init = async (context: Context): Promise<Kivik> => {
-	const watcher = watch(fileGlobs, {
+export const init = async (
+	context: Context,
+	globMode: GlobMode = "all"
+): Promise<Kivik> => {
+	const watcher = watch(fileGlobs(globMode), {
 		cwd: context.directory,
 		ignored: [
 			...context.rc.excludeDirectories.map((directory) => `${directory}/**`),

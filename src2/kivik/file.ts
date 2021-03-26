@@ -8,18 +8,32 @@ import {
 import { JsonObject as JSONObject, JsonValue as JSONValue } from "type-fest";
 import { ValidateFunction } from "./database";
 
-export const globs = [
-	"*/design/*/autoupdate.js",
-	"*/design/*/validate_doc_update.js",
-	"*/design/*/filters/*.js",
-	"*/design/*/lists/*.js",
-	"*/design/*/shows/*.js",
-	"*/design/*/updates/*.js",
-	"*/design/*/views/*.js",
-	"*/fixtures/*.json",
-	"*/indexes/*.json",
-	"*/validate.js",
-];
+export type GlobMode = "all" | "fixtures" | "validate";
+
+export const globs = (type: GlobMode = "all"): string[] => {
+	const validateGlobs = ["*/validate.js"];
+	const fixtureGlobs = [...validateGlobs, "*/fixtures/*.json"];
+	const allGlobs = [
+		...fixtureGlobs,
+		"*/design/*/autoupdate.js",
+		"*/design/*/validate_doc_update.js",
+		"*/design/*/filters/*.js",
+		"*/design/*/lists/*.js",
+		"*/design/*/shows/*.js",
+		"*/design/*/updates/*.js",
+		"*/design/*/views/*.js",
+		"*/indexes/*.json",
+	];
+
+	switch (type) {
+		case "validate":
+			return validateGlobs;
+		case "fixtures":
+			return fixtureGlobs;
+		case "all":
+			return allGlobs;
+	}
+};
 
 type Root = "design" | "fixtures" | "indexes" | "validate.js";
 export type FileType = "design" | "fixture" | "index" | "validate";

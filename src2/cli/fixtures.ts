@@ -9,7 +9,7 @@ export default (context: Context) => {
 		handler: async (argv: CommonArgv) => {
 			context.createLogger(argv);
 
-			const kivik = await createKivik(context);
+			const kivik = await createKivik(context, "fixtures");
 			const errors = Object.entries(kivik.validateFixtures());
 			await kivik.close();
 

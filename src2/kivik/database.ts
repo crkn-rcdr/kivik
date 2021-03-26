@@ -73,6 +73,10 @@ export class Database {
 		this._validate = file;
 	}
 
+	canValidate(): boolean {
+		return !!this._validate;
+	}
+
 	validate(doc: MaybeDocument): ValidateResponse {
 		if (this._validate) {
 			const validateFunc = this._validate.content as ValidateFunction;
