@@ -92,7 +92,7 @@ export class Container {
 
 		this.context.log(
 			"success",
-			`Container ${this.name} started. View at http://localhost:${this.port}/_utils`
+			`Kivik instance ready: http://localhost:${this.port}/_utils`
 		);
 
 		return this.nano;

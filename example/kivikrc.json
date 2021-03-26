@@ -1,7 +1,7 @@
 {
   "deployments": {
     "test": {
-      "url": "http://localhost:22222",
+      "url": "http://localhost:5984",
       "auth": {
         "user": "kivik",
         "password": "kivik"

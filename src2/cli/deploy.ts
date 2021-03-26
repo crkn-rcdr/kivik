@@ -1,13 +1,13 @@
 import yargs from "yargs";
 import * as Nano from "@crkn-rcdr/nano";
-import CouchDBNano from "nano";
+import { ServerScope } from "nano";
 import { CommonArgv } from "./parse";
 import { InitContext } from "../context";
 import { get as createKivik } from "../kivik";
 
 type DeployArgv = CommonArgv & {
 	// Even though the builder can't return undefined, the type system still expects the possibility
-	deployment?: CouchDBNano.ServerScope;
+	deployment?: ServerScope;
 };
 
 export default (context: InitContext) => {
@@ -22,7 +22,7 @@ export default (context: InitContext) => {
 				})
 				.coerce(
 					"deployment",
-					(key: string): CouchDBNano.ServerScope => {
+					(key: string): ServerScope => {
 						const deployment = context.rc.deployments?.[key];
 						if (!deployment) {
 							throw new Error(`No deployment in kivikrc for key ${key}`);
@@ -33,7 +33,7 @@ export default (context: InitContext) => {
 		handler: async (argv: DeployArgv) => {
 			const fullContext = context.withArgv(argv);
 			const kivik = await createKivik(fullContext, "deploy");
-			fullContext.log("success", "DEPLOY");
+			await kivik.deploy(argv.deployment as ServerScope);
 			await kivik.close();
 		},
 	};

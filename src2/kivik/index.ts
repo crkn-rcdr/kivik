@@ -4,6 +4,7 @@ import pEvent from "p-event";
 import { Context } from "../context";
 import { GlobMode, globs as fileGlobs, KivikFile } from "./file";
 import { Database } from "./database";
+import { ServerScope } from "nano";
 
 export const get = async (
 	context: Context,
@@ -68,6 +69,13 @@ export class Kivik {
 			}
 		}
 		return errors;
+	}
+
+	async deploy(nano: ServerScope) {
+		await Promise.all(
+			[...this.databases.values()].map((db) => db.deploy(nano))
+		);
+		this.context.log("success", "Deployment successful.");
 	}
 
 	async close() {

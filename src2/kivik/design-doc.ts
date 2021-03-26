@@ -1,6 +1,7 @@
 import { DesignType, DesignFile } from "./file";
 import { JsonValue as JSONValue } from "type-fest";
 import { DatabaseContext } from "../context";
+import { MaybeDocument } from "nano";
 
 export class DesignDoc {
 	readonly name: string;
@@ -13,7 +14,7 @@ export class DesignDoc {
 		this.content = new Map();
 	}
 
-	async updateFile(file: DesignFile) {
+	updateFile(file: DesignFile) {
 		if (
 			file.designType === "autoupdate" ||
 			file.designType === "validate_doc_update"
@@ -21,7 +22,7 @@ export class DesignDoc {
 			this.content.set(file.designType, file.serialize());
 			this.context.log(
 				"info",
-				`Updated ${file.designType} in ${this.context.database}/_design/${this.name}`
+				`(_design/${this.name}) Updated ${file.designType}.`
 			);
 		} else {
 			if (!this.content.has(file.designType))
@@ -32,8 +33,23 @@ export class DesignDoc {
 			);
 			this.context.log(
 				"info",
-				`Updated ${file.designType}/${file.name} in ${this.context.database}/_design/${this.name}`
+				`(_design/${this.name}) Updated ${file.designType}/${file.name}.`
 			);
 		}
+	}
+
+	serialize(): MaybeDocument {
+		const demappedOnce = Object.fromEntries(this.content);
+		const demappedTwice = Object.fromEntries(
+			Object.entries(demappedOnce).map(([key, val]) => [
+				key,
+				val instanceof Map ? Object.fromEntries(val) : val,
+			])
+		);
+
+		return {
+			_id: `_design/${this.name}`,
+			...demappedTwice,
+		};
 	}
 }

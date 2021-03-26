@@ -44,6 +44,9 @@ export const init = (directory: string): InitContext => {
 		log("info", "Logger initialized.");
 
 		const withDatabase = (db: string) => {
+			const log = (level: Level, message: string) =>
+				logger.log(level, `(${db}) ${message}`);
+
 			return { directory, rc, logger, log, database: db };
 		};
 

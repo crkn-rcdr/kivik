@@ -11,6 +11,8 @@ export default (context: InitContext) => {
 
 			const instance = await getInstance(fullContext);
 
+			await instance.deploy();
+
 			const handle = async (signal: NodeJS.Signals) => {
 				fullContext.log("info", `Received signal ${signal}. Closing.`);
 				await instance.stop();

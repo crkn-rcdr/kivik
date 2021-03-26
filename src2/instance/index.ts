@@ -14,12 +14,16 @@ export const get = async (context: Context) => {
 export class Instance {
 	private readonly kivik: Kivik;
 	private readonly container: Container;
-	// private readonly nano: ServerScope;
+	private readonly nano: ServerScope;
 
-	constructor(kivik: Kivik, container: Container, _nano: ServerScope) {
+	constructor(kivik: Kivik, container: Container, nano: ServerScope) {
 		this.kivik = kivik;
 		this.container = container;
-		// this.nano = nano;
+		this.nano = nano;
+	}
+
+	async deploy() {
+		await this.kivik.deploy(this.nano);
 	}
 
 	async stop() {

@@ -1,7 +1,12 @@
 import { DesignFile, KivikFile, ValidateFile } from "./file";
 import { DesignDoc } from "./design-doc";
 import { DatabaseContext } from "../context";
-import { MaybeDocument } from "nano";
+import {
+	DocumentScope,
+	MaybeDocument,
+	ServerScope,
+	DocumentResponseRow,
+} from "nano";
 
 export type Fixture = {
 	file: KivikFile;
@@ -60,7 +65,7 @@ export class Database {
 
 	private updateFixture(file: KivikFile) {
 		this.fixtures.set(file.name, { file, valid: true });
-		this.context.log("info", `Updated fixture ${file.name} in ${this.name}`);
+		this.context.log("info", `Updated fixture ${file.name}.`);
 	}
 
 	private updateIndex(file: KivikFile) {
@@ -68,12 +73,12 @@ export class Database {
 		if (!index["name"]) index["name"] = file.name;
 		if (!index["ddoc"]) index["ddoc"] = `index_${file.name}`;
 		this.indexes.set(file.name, file);
-		this.context.log("info", `Updated index ${file.name} in ${this.name}`);
+		this.context.log("info", `Updated index ${file.name}.`);
 	}
 
 	private updateValidate(file: ValidateFile) {
 		this._validate = file;
-		this.context.log("info", `Updated the validate function in ${this.name}`);
+		this.context.log("info", `Updated the validate function.`);
 	}
 
 	canValidate(): boolean {
@@ -104,5 +109,94 @@ export class Database {
 			this.fixtures.set(name, { file, valid: response.valid });
 		}
 		return errors;
+	}
+
+	async deploy(nano: ServerScope) {
+		// Create database if it doesn't exist
+		let dbExists = true;
+		try {
+			await nano.db.get(this.name);
+		} catch (error) {
+			if (!(error.message === "no_db_file")) {
+				dbExists = false;
+			} else {
+				throw error;
+			}
+		}
+		if (!dbExists) await nano.db.create(this.name);
+
+		const nanoDb = nano.use(this.name);
+
+		// Deploy design docs
+		if (this.designDocs.size > 0) {
+			const ddocs = [...this.designDocs.values()].map((ddoc) =>
+				ddoc.serialize()
+			);
+			await this.deployDocs(nanoDb, ddocs);
+			this.context.log("info", `Deployed design documents.`);
+		}
+
+		// Validate and deploy fixtures
+		if (this.fixtures.size > 0) {
+			const errors = this.validateFixtures();
+			for (const [name, errorString] of Object.entries(errors)) {
+				this.context.log(
+					"warn",
+					`Fixture ${name} is invalid. Errors: ${errorString}`
+				);
+			}
+
+			const fixtures = [...this.fixtures.values()]
+				.filter((fixture) => fixture.valid)
+				.map((fixture) => fixture.file.content as MaybeDocument);
+
+			await this.deployDocs(nanoDb, fixtures);
+			this.context.log("info", `Deployed fixtures.`);
+		}
+
+		// Deploy indexes
+		if (this.indexes.size > 0) {
+			const indexes = [...this.indexes.values()].map((index) => index.content);
+
+			await Promise.all(
+				indexes.map(async (index) => {
+					nano.relax({
+						db: this.name,
+						path: "/_index",
+						method: "post",
+						body: index,
+					});
+				})
+			);
+			this.context.log("info", "Deployed indexes.");
+		}
+	}
+
+	private async deployDocs(
+		nanoDb: DocumentScope<unknown>,
+		docs: MaybeDocument[]
+	) {
+		const keys = docs
+			.map((doc) => doc._id)
+			.filter((id) => typeof id === "string") as string[];
+
+		const response = await nanoDb.fetch({ keys });
+		const goodRows = response.rows.filter(
+			(row) => !row.error
+		) as DocumentResponseRow<unknown>[];
+
+		const revs = Object.fromEntries(
+			goodRows.map((row) => [row.id, row.value.rev])
+		);
+
+		await nanoDb.bulk({
+			docs: docs.map((doc) => {
+				if (doc._id && revs[doc._id]) {
+					return { ...doc, _rev: revs[doc._id] };
+				} else {
+					return doc;
+				}
+			}),
+		});
 	}
 }
