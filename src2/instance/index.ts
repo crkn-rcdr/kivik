@@ -1,7 +1,11 @@
 import { ServerScope } from "nano";
-import { Context } from "../context";
+import { Context, api as apiContext } from "../context";
 import { get as getKivik, Kivik } from "../kivik";
 import { Container, get as getContainer } from "./container";
+
+export const fromDirectory = (directory: string) => {
+	return get(apiContext(directory));
+};
 
 export const get = async (context: Context) => {
 	const kivik = await getKivik(context);

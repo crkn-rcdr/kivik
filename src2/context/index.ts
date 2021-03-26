@@ -55,3 +55,7 @@ export const init = (directory: string): InitContext => {
 
 	return { directory, rc, withArgv };
 };
+
+export const api = (directory: string): Context => {
+	return init(directory).withArgv({ color: false, logLevel: 0, quiet: true });
+};

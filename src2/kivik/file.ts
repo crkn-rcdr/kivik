@@ -6,11 +6,11 @@ import {
 	extname,
 } from "path";
 import { JsonObject as JSONObject, JsonValue as JSONValue } from "type-fest";
+
 import { ValidateFunction } from "./database";
+import { Mode } from "..";
 
-export type GlobMode = "all" | "deploy" | "fixtures" | "validate";
-
-export const globs = (mode: GlobMode = "all"): string[] => {
+export const globs = (mode: Mode = "instance"): string[] => {
 	const validateGlob = ["*/validate.js"];
 	const fixtureGlobs = [...validateGlob, "*/fixtures/*.json"];
 	const deployGlobs = [
@@ -24,8 +24,8 @@ export const globs = (mode: GlobMode = "all"): string[] => {
 		"*/indexes/*.json",
 	];
 
-	const globs: Record<GlobMode, string[]> = {
-		all: [...fixtureGlobs, ...deployGlobs],
+	const globs: Record<Mode, string[]> = {
+		instance: [...fixtureGlobs, ...deployGlobs],
 		deploy: deployGlobs,
 		fixtures: fixtureGlobs,
 		validate: validateGlob,
