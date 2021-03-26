@@ -7,11 +7,13 @@ dependencies:
   fs-extra: 9.1.0
   get-port: 5.1.1
   p-event: 4.2.0
+  p-retry: 4.4.0
   winston: 3.3.3
   yaml: 1.10.2
   yargs: 16.2.0
 devDependencies:
   '@ava/typescript': 1.1.1
+  '@types/dockerode': 3.2.3
   '@types/fs-extra': 9.0.8
   '@types/node': 14.14.35
   '@types/yargs': 16.0.0
@@ -113,6 +115,12 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-XIB2XbzHTN6ieIjfIMV9hlVcfPU26s2vafYWQcZHWXHOxiaRZYEDKEwdl129Zyg50+foYV2jCgtrqSA6qNuNSA==
+  /@types/dockerode/3.2.3:
+    dependencies:
+      '@types/node': 14.14.36
+    dev: true
+    resolution:
+      integrity: sha512-nZRhpSxm3PYianRBcRExcHxDvEzYHUPfGCnRL5Fe4/fSEZbtxrRNJ7okzCans3lXxj2t298EynFHGTnTC2f1Iw==
   /@types/fs-extra/9.0.8:
     dependencies:
       '@types/node': 14.14.35
@@ -123,10 +131,18 @@ packages:
     dev: true
     resolution:
       integrity: sha512-Lt+wj8NVPx0zUmUwumiVXapmaLUcAk3yPuHCFVXras9k5VT9TdhJqKqGVUQCD60OTMCl0qxJ57OiTL0Mic3Iag==
+  /@types/node/14.14.36:
+    dev: true
+    resolution:
+      integrity: sha512-kjivUwDJfIjngzbhooRnOLhGYz6oRFi+L+EpMjxroDYXwDw9lHrJJ43E+dJ6KAd3V3WxWAJ/qZE9XKYHhjPOFQ==
   /@types/normalize-package-data/2.4.0:
     dev: true
     resolution:
       integrity: sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==
+  /@types/retry/0.12.0:
+    dev: false
+    resolution:
+      integrity: sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA==
   /@types/tough-cookie/4.0.0:
     resolution:
       integrity: sha512-I99sngh224D0M7XgW1s120zxCt3VYQ3IQsuw3P3jbq5GG4yc79+ZjyKznyOGIQrflfylLgcfekeZW/vk0yng6A==
@@ -1876,6 +1892,15 @@ packages:
       node: '>=10'
     resolution:
       integrity: sha512-/bjOqmgETBYB5BoEeGVea8dmvHb2m9GLy1E9W43yeyfP6QQCZGFNa+XRceJEuDB6zqr+gKpIAmlLebMpykw/MQ==
+  /p-retry/4.4.0:
+    dependencies:
+      '@types/retry': 0.12.0
+      retry: 0.12.0
+    dev: false
+    engines:
+      node: '>=8'
+    resolution:
+      integrity: sha512-gVB/tBsG+3AHI1SyDHRrX6n9ZL0Bcbifps9W9/Bgu3Oyu4/OrAh8SvDzDsvpP0oxfCt3oWNT+0fQ9LyUGwBTLg==
   /p-timeout/3.2.0:
     dependencies:
       p-finally: 1.0.0
@@ -2194,6 +2219,12 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-l+sSefzHpj5qimhFSE5a8nufZYAM3sBSVMAPtYkmC+4EH2anSGaEMXSD0izRQbu9nfyQ9y5JrVmp7E8oZrUjvA==
+  /retry/0.12.0:
+    dev: false
+    engines:
+      node: '>= 4'
+    resolution:
+      integrity: sha1-G0KmJmoh8HQh0bC1S33BZ7AcATs=
   /reusify/1.0.4:
     dev: true
     engines:
@@ -2818,6 +2849,7 @@ packages:
 specifiers:
   '@ava/typescript': ^1.1.1
   '@crkn-rcdr/nano': ^2.0.0
+  '@types/dockerode': ^3.2.3
   '@types/fs-extra': ^9.0.8
   '@types/node': ^14.14.35
   '@types/yargs': ^16.0.0
@@ -2833,6 +2865,7 @@ specifiers:
   nano: ^9.0.3
   npm-run-all: ^4.1.5
   p-event: ^4.2.0
+  p-retry: ^4.4.0
   type-fest: ^1.0.1
   typescript: ^4.2.3
   winston: ^3.3.3

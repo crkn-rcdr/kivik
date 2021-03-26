@@ -3,7 +3,7 @@ import * as Nano from "@crkn-rcdr/nano";
 import CouchDBNano from "nano";
 import { CommonArgv } from "./parse";
 import { InitContext } from "../context";
-import { init as createKivik } from "../kivik";
+import { get as createKivik } from "../kivik";
 
 type DeployArgv = CommonArgv & {
 	// Even though the builder can't return undefined, the type system still expects the possibility

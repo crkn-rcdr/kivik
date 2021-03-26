@@ -5,7 +5,7 @@ import { Context } from "../context";
 import { GlobMode, globs as fileGlobs, KivikFile } from "./file";
 import { Database } from "./database";
 
-export const init = async (
+export const get = async (
 	context: Context,
 	globMode: GlobMode = "all"
 ): Promise<Kivik> => {

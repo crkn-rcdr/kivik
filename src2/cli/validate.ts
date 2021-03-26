@@ -4,7 +4,7 @@ import { readJSON } from "fs-extra";
 import yargs from "yargs";
 import { InitContext } from "../context";
 import { CommonArgv } from "./parse";
-import { init as createKivik } from "../kivik";
+import { get as createKivik } from "../kivik";
 import { Database } from "../kivik/database";
 import { MaybeDocument } from "nano";
 

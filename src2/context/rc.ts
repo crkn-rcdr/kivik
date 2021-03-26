@@ -35,7 +35,7 @@ export type NormalizedLocalConfig = Required<LocalConfig>;
 export const normalizeLocalConfig = (c: LocalConfig): NormalizedLocalConfig => {
 	return {
 		fixtures: typeof c.fixtures === "boolean" ? c.fixtures : true,
-		image: c.image || "couchdb3.1",
+		image: c.image || "couchdb:3.1",
 		port: c.port || 5984,
 		user: c.user || "kivik",
 		password: c.password || "kivik",
