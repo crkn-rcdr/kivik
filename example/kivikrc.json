@@ -1,11 +1,11 @@
 {
-  "user": "outer",
-  "password": "outer",
-  "configs": {
+  "deployments": {
     "test": {
       "url": "http://localhost:22222",
-      "user": "inner",
-      "password": "inner"
+      "auth": {
+        "user": "kivik",
+        "password": "kivik"
+      }
     }
   }
 }

@@ -1,45 +1,73 @@
 {
   "name": "kivik",
-  "version": "2.0.0-alpha.5",
+  "version": "2.0.0-beta.0",
   "description": "An opinionated library and command-line utility for configuration CouchDB endpoints, databases, and design documents",
   "keywords": [
     "couchdb"
   ],
-  "main": "./src/main.js",
+  "main": "./dist/index.js",
   "repository": "https://github.com/crkn-rcdr/kivik",
   "contributors": [
-    "Sascha Adler <sadler@crkn.ca> (https://github.com/SaschaAdler)",
-    "Divya Krishnan <dkrishnan@crkn.ca> (https://github.com/DivyaKrishnan26)"
+    {
+      "name": "Sascha Adler",
+      "email": "sadler@crkn.ca",
+      "url": "https://github.com/SaschaAdler"
+    },
+    {
+      "name": "Divya Krishnan",
+      "email": "dkrishnan@crkn.ca",
+      "url": "https://github.com/DivyaKrishnan26"
+    }
   ],
-  "license": "MIT",
-  "dependencies": {
-    "@crkn-rcdr/nano": "^2.0.0",
-    "crypto-random-string": "^3.3.0",
-    "dockerode": "^3.2.0",
-    "find-up": "^5.0.0",
-    "fs-extra": "^9.1.0",
-    "get-port": "^5.1.1",
-    "globby": "^11.0.2",
-    "node-fetch": "^2.6.0",
-    "winston": "^3.3.3",
-    "yaml": "^1.10.0",
-    "yargs": "^16.2.0"
-  },
+  "license": "Unlicense",
   "bin": {
     "kivik": "./src/cli.js"
   },
   "engines": {
-    "node": ">=10.0.0"
-  },
-  "devDependencies": {
-    "ajv": "^7.2.1",
-    "chai": "^4.3.3",
-    "chai-as-promised": "^7.1.1",
-    "mocha": "^8.3.1",
-    "sinon": "^9.2.0",
-    "sinon-chai": "^3.5.0"
+    "node": ">=12.0.0"
   },
   "scripts": {
-    "test": "mocha test/*.js test/**/*.js"
+    "ava": "ava",
+    "build": "rm -rf dist && tsc",
+    "test": "run-s build ava"
+  },
+  "dependencies": {
+    "@crkn-rcdr/nano": "^2.0.0",
+    "axios": "^0.21.1",
+    "chokidar": "^3.5.1",
+    "dockerode": "^3.2.0",
+    "find-up": "^5.0.0",
+    "fs-extra": "^9.1.0",
+    "get-port": "^5.1.1",
+    "p-event": "^4.2.0",
+    "winston": "^3.3.3",
+    "yaml": "^1.10.0",
+    "yargs": "^16.2.0"
+  },
+  "devDependencies": {
+    "@ava/typescript": "^1.1.1",
+    "@types/fs-extra": "^9.0.8",
+    "@types/node": "^14.14.35",
+    "@types/yargs": "^16.0.0",
+    "ajv": "^7.2.1",
+    "ava": "^3.15.0",
+    "nano": "^9.0.3",
+    "npm-run-all": "^4.1.5",
+    "type-fest": "^1.0.1",
+    "typescript": "^4.2.3"
+  },
+  "optionalDependencies": {
+    "fsevents": "^2.3.2"
+  },
+  "ava": {
+    "typescript": {
+      "extensions": [
+        "ts",
+        "tsx"
+      ],
+      "rewritePaths": {
+        "src/": "dist/"
+      }
+    }
   }
 }
