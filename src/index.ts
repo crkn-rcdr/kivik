@@ -1,4 +1,4 @@
 export type Mode = "instance" | "deploy" | "fixtures" | "validate";
 
-export { fromDirectory as getInstance } from "./instance";
-export { fromDirectory as getKivik } from "./kivik";
+export { fromDirectory as getInstance, Instance } from "./instance";
+export { fromDirectory as getKivik, Kivik } from "./kivik";

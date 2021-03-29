@@ -84,7 +84,7 @@ export class KivikFile {
 	readonly designType?: DesignType;
 	readonly name: string;
 	readonly extension: FileExtension;
-	content: FileContent = false;
+	readonly content: FileContent;
 
 	constructor(path: string, wd: string) {
 		const [db, first, ...rest] = path.split(pathSeparator) as [

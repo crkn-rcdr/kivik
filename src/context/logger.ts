@@ -1,13 +1,6 @@
 import * as Winston from "winston";
 
-export interface LoggerOptions {
-	/** Log level, numerically */
-	level: Level;
-	/** Whether log output should be colorized */
-	color: boolean;
-	/** Whether the console should be attached to log output */
-	attachToConsole: boolean;
-}
+import { CommonArgv } from "../cli";
 
 const levelConfig: Record<Level, { level: number; color: string }> = {
 	error: { level: 0, color: "bold red" },
@@ -39,7 +32,7 @@ export const format = (color: boolean): Winston.Logform.Format => {
 /**
  * Creates Kivik's logger.
  */
-export const create = (options: LoggerOptions): Winston.Logger => {
+export const create = (argv: CommonArgv): Winston.Logger => {
 	const colors = Object.fromEntries(
 		Object.entries(levelConfig).map(([level, obj]) => [level, obj.color])
 	);
@@ -51,15 +44,12 @@ export const create = (options: LoggerOptions): Winston.Logger => {
 
 	const logger = Winston.createLogger({
 		levels: wlevels,
-		level: options.level,
+		level: argv.logLevel,
 		handleExceptions: true,
+		silent: argv.quiet,
 	});
 
-	if (options.attachToConsole) {
-		logger.add(
-			new Winston.transports.Console({ format: format(options.color) })
-		);
-	}
+	logger.add(new Winston.transports.Console({ format: format(argv.color) }));
 
 	return logger;
 };

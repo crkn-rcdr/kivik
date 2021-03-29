@@ -38,11 +38,7 @@ export const init = (directory: string): InitContext => {
 	);
 
 	const withArgv = (argv: CommonArgv): Context => {
-		const logger = createLogger({
-			color: argv.color,
-			level: argv.logLevel,
-			attachToConsole: !argv.quiet,
-		});
+		const logger = createLogger(argv);
 
 		const log = (level: Level, message: string) => logger.log(level, message);
 
