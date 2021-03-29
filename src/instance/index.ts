@@ -9,7 +9,10 @@ export const fromDirectory = (directory: string) => {
 };
 
 export const get = async (context: Context) => {
-	const kivik = await getKivik(context);
+	const kivik = await getKivik(
+		context,
+		context.rc.local.fixtures ? "instance" : "deploy"
+	);
 	const container = await getContainer(context);
 	const nano = await container.start();
 
