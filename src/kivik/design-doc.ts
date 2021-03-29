@@ -26,17 +26,26 @@ export class DesignDoc {
 				`(_design/${this.name}) Updated ${file.designType}.`
 			);
 		} else {
-			if (!this.content.has(file.designType))
-				this.content.set(file.designType, new Map());
-			(this.content.get(file.designType) as Map<string, JSONValue>).set(
-				file.name,
-				file.serialize()
-			);
+			if (file.designType === "lib") {
+				const viewMap = this.getDesignMap("views");
+				if (!viewMap.has("lib")) viewMap.set("lib", {});
+				(viewMap.get("lib") as Record<string, string>)[
+					file.name
+				] = (file.content as unknown) as string;
+			} else {
+				const designMap = this.getDesignMap(file.designType);
+				designMap.set(file.name, file.serialize());
+			}
 			this.context.log(
 				"info",
 				`(_design/${this.name}) Updated ${file.designType}/${file.name}.`
 			);
 		}
+	}
+
+	private getDesignMap(type: DesignType): Map<string, JSONValue> {
+		if (!this.content.has(type)) this.content.set(type, new Map());
+		return this.content.get(type) as Map<string, JSONValue>;
 	}
 
 	serialize(): MaybeDocument {

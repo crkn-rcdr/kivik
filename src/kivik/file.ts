@@ -1,4 +1,4 @@
-import { readJSONSync as readJSON } from "fs-extra";
+import { readJSONSync as readJSON, readFileSync as readFile } from "fs-extra";
 import {
 	sep as pathSeparator,
 	join as joinPath,
@@ -14,6 +14,7 @@ export const globs = (mode: Mode = "instance"): string[] => {
 	const validateGlob = ["*/validate.js"];
 	const fixtureGlobs = [...validateGlob, "*/fixtures/*.json"];
 	const deployGlobs = [
+		"*/design/*/lib/*.js",
 		"*/design/*/autoupdate.js",
 		"*/design/*/validate_doc_update.js",
 		"*/design/*/filters/*.js",
@@ -37,6 +38,7 @@ export const globs = (mode: Mode = "instance"): string[] => {
 type Root = "design" | "fixtures" | "indexes" | "validate.js";
 export type FileType = "design" | "fixture" | "index" | "validate";
 export type DesignType =
+	| "lib"
 	| "autoupdate"
 	| "validate_doc_update"
 	| "filters"
@@ -45,7 +47,7 @@ export type DesignType =
 	| "updates"
 	| "views";
 type FileExtension = ".js" | ".json";
-type FileContentType = "boolean" | "function" | "object" | "viewObject";
+type FileContentType = "boolean" | "function" | "object" | "string";
 type FileContent =
 	| boolean
 	| ((...args: unknown[]) => unknown)
@@ -67,6 +69,7 @@ const contentTypes: Record<FileType, FileContentType> = {
 };
 
 const designContentTypes: Record<DesignType, FileContentType> = {
+	lib: "string",
 	autoupdate: "boolean",
 	validate_doc_update: "function",
 	filters: "function",
@@ -108,8 +111,14 @@ export class KivikFile {
 			this.fileType === "design"
 				? designContentTypes[this.designType as DesignType]
 				: contentTypes[this.fileType];
+
 		const content =
-			this.extension === ".js" ? require(this.path) : readJSON(this.path);
+			contentType === "string"
+				? readFile(this.path, { encoding: "utf8" })
+				: this.extension === ".js"
+				? require(this.path)
+				: readJSON(this.path);
+
 		if (typeof content !== contentType)
 			throw new TypeError(`Expecting ${contentType} at ${this.path}`);
 		this.content = content;
