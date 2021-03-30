@@ -28,13 +28,17 @@ export const get = async (
 
 	const kivik = new Kivik(context, watcher);
 
-	const iterator = pEvent.iterator<"add", string>(watcher, "add", {
+	context.log("info", "Kivik file scan starting.");
+
+	const iterator = pEvent.iterator(watcher, "add", {
 		resolutionEvents: ["ready"],
 	});
 
 	for await (const path of iterator) {
-		kivik.updateFile(path);
+		await kivik.updateFile(path);
 	}
+
+	context.log("info", "Kivik file scan complete.");
 
 	return kivik;
 };
@@ -43,6 +47,7 @@ export class Kivik {
 	readonly context: Context;
 	readonly watcher: FSWatcher;
 	readonly databases: Map<string, Database>;
+	private nano?: ServerScope;
 
 	constructor(context: Context, watcher: FSWatcher) {
 		this.context = context;
@@ -50,7 +55,25 @@ export class Kivik {
 		this.databases = new Map();
 	}
 
-	updateFile(path: string) {
+	watch() {
+		this.watcher.on("all", async (listener, path) => {
+			try {
+				if (["add", "change"].includes(listener)) {
+					const tag = listener === "add" ? "new" : "changed";
+					this.context.log("success", `Detected ${tag} file: ${path}`);
+					await this.updateFile(path);
+				} else if (listener === "unlink") {
+					this.context.log("success", `Detected deleted file: ${path}`);
+					await this.removeFile(path);
+				}
+			} catch (error) {
+				this.context.log("error", error.message);
+			}
+		});
+		this.context.log("success", "Watching Kivik files for updates.");
+	}
+
+	async updateFile(path: string) {
 		const file = new KivikFile(path, this.context.directory);
 
 		if (!this.databases.has(file.db))
@@ -60,7 +83,16 @@ export class Kivik {
 			);
 
 		const database = this.databases.get(file.db) as Database;
-		database.updateFile(file);
+
+		if (this.nano) {
+			await database.updateFile(file, this.nano);
+		} else {
+			await database.updateFile(file);
+		}
+	}
+
+	async removeFile(path: string) {
+		this.context.log("error", `sorry, sorry, I'm trying to remove ${path}`);
 	}
 
 	validateFixtures(): Record<string, string> {
@@ -81,7 +113,7 @@ export class Kivik {
 		await Promise.all(
 			[...this.databases.values()].map((db) => db.deploy(nano))
 		);
-		this.context.log("success", "Deployment successful.");
+		this.nano = nano;
 	}
 
 	async close() {

@@ -13,12 +13,6 @@ export default (context: InitContext) => {
 			const errors = Object.entries(kivik.validateFixtures());
 			await kivik.close();
 
-			for (const [name, errorString] of errors) {
-				fullContext.log(
-					"error",
-					`Validating fixture ${name} failed. Errors: ${errorString}`
-				);
-			}
 			process.exit(errors.length);
 		},
 	};

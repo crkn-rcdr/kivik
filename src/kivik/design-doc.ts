@@ -27,19 +27,25 @@ export class DesignDoc {
 			);
 		} else {
 			if (file.designType === "lib") {
+				// CommonJS modules are parsed as strings and attached to the lib
+				// object of this ddoc's views.
 				const viewMap = this.getDesignMap("views");
 				if (!viewMap.has("lib")) viewMap.set("lib", {});
 				(viewMap.get("lib") as Record<string, string>)[
 					file.name
-				] = (file.content as unknown) as string;
+				] = file.content as string;
+				this.context.log(
+					"info",
+					`(_design/${this.name}) Updated views/lib/${file.name}.`
+				);
 			} else {
 				const designMap = this.getDesignMap(file.designType);
 				designMap.set(file.name, file.serialize());
+				this.context.log(
+					"info",
+					`(_design/${this.name}) Updated ${file.designType}/${file.name}.`
+				);
 			}
-			this.context.log(
-				"info",
-				`(_design/${this.name}) Updated ${file.designType}/${file.name}.`
-			);
 		}
 	}
 

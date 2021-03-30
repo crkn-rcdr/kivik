@@ -1,4 +1,5 @@
 import { readJSONSync as readJSON, readFileSync as readFile } from "fs-extra";
+import { CreateIndexRequest, MaybeDocument } from "nano";
 import {
 	sep as pathSeparator,
 	join as joinPath,
@@ -36,7 +37,9 @@ export const globs = (mode: Mode = "instance"): string[] => {
 };
 
 type Root = "design" | "fixtures" | "indexes" | "validate.js";
+
 export type FileType = "design" | "fixture" | "index" | "validate";
+
 export type DesignType =
 	| "lib"
 	| "autoupdate"
@@ -46,13 +49,20 @@ export type DesignType =
 	| "shows"
 	| "updates"
 	| "views";
+
 type FileExtension = ".js" | ".json";
+
 type FileContentType = "boolean" | "function" | "object" | "string";
+
 type FileContent =
-	| boolean
-	| ((...args: unknown[]) => unknown)
-	| Record<string, unknown>
-	| ValidateFunction;
+	| null // unset because the file might not exist
+	| boolean // design: autoupdate
+	| ((...args: unknown[]) => unknown) // one of the many possible design functions
+	| Record<string, unknown> // views
+	| string // lib. we don't actually want to require the content of a lib file
+	| MaybeDocument // fixture
+	| CreateIndexRequest // index
+	| ValidateFunction; // validate
 
 const fileTypes: Record<Root, FileType> = {
 	design: "design",
@@ -79,6 +89,16 @@ const designContentTypes: Record<DesignType, FileContentType> = {
 	views: "object",
 };
 
+/**
+ * Invalidates the require cache for this module and requires it.
+ * @param module A resolvable module path.
+ * @returns The newly-required module.
+ */
+const rerequire = (module: string): any => {
+	delete require.cache[require.resolve(module)];
+	return require(module);
+};
+
 export class KivikFile {
 	readonly path: string;
 	readonly db: string;
@@ -89,7 +109,7 @@ export class KivikFile {
 	readonly extension: FileExtension;
 	readonly content: FileContent;
 
-	constructor(path: string, wd: string) {
+	constructor(path: string, wd: string, load = true) {
 		const [db, first, ...rest] = path.split(pathSeparator) as [
 			string,
 			Root,
@@ -107,21 +127,30 @@ export class KivikFile {
 			this.designType = basename(dtype, this.extension) as DesignType;
 		}
 
-		const contentType =
-			this.fileType === "design"
-				? designContentTypes[this.designType as DesignType]
-				: contentTypes[this.fileType];
+		if (load) {
+			const contentType =
+				this.fileType === "design"
+					? designContentTypes[this.designType as DesignType]
+					: contentTypes[this.fileType];
 
-		const content =
-			contentType === "string"
-				? readFile(this.path, { encoding: "utf8" })
-				: this.extension === ".js"
-				? require(this.path)
-				: readJSON(this.path);
+			const content =
+				contentType === "string"
+					? readFile(this.path, { encoding: "utf8" })
+					: this.extension === ".js"
+					? rerequire(this.path)
+					: readJSON(this.path);
 
-		if (typeof content !== contentType)
-			throw new TypeError(`Expecting ${contentType} at ${this.path}`);
-		this.content = content;
+			// Some very basic validation
+			if (typeof content !== contentType)
+				throw new TypeError(`Expecting ${contentType} at ${this.path}`);
+
+			this.content = content;
+
+			// Fixtures from existing databases may have no-longer-valid CouchDB revisions
+			if (isFixtureFile(this)) delete this.content["_rev"];
+		} else {
+			this.content = null;
+		}
 	}
 
 	serialize(): JSONValue {
@@ -145,7 +174,40 @@ export class KivikFile {
 export type DesignFile = Omit<Required<KivikFile>, "fileType"> & {
 	fileType: "design";
 };
+
+export const isDesignFile = (file: KivikFile): file is DesignFile => {
+	return file.fileType === "design";
+};
+
+export type FixtureFile = Omit<KivikFile, "fileType" | "content"> & {
+	fileType: "fixture";
+	content: MaybeDocument;
+};
+
+export const isFixtureFile = (file: KivikFile): file is FixtureFile => {
+	return file.fileType === "fixture" && typeof file.content === "object";
+};
+
+export type IndexFile = Omit<KivikFile, "fileType" | "content"> & {
+	fileType: "index";
+	content: CreateIndexRequest;
+};
+
+export const isIndexFile = (file: KivikFile): file is IndexFile => {
+	const content = file.content as CreateIndexRequest;
+	return (
+		file.fileType === "index" &&
+		typeof content === "object" &&
+		typeof content.index === "object" &&
+		content.index.hasOwnProperty("fields")
+	);
+};
+
 export type ValidateFile = Omit<KivikFile, "fileType" | "content"> & {
 	fileType: "validate";
 	content: ValidateFunction;
+};
+
+export const isValidateFile = (file: KivikFile): file is ValidateFile => {
+	return file.fileType === "validate" && typeof file.content === "function";
 };

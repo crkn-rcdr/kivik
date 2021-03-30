@@ -13,6 +13,9 @@ export const get = async (context: Context) => {
 		context,
 		context.rc.local.fixtures ? "instance" : "deploy"
 	);
+
+	kivik.watch();
+
 	const container = await getContainer(context);
 	const nano = await container.start();
 
