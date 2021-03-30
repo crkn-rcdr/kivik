@@ -20,6 +20,8 @@ import {
 import { DesignDoc } from "./design-doc";
 import { DatabaseContext } from "../context";
 
+export type Handler = DocumentScope<unknown>;
+
 type Fixture = {
 	file: FixtureFile;
 	valid: boolean;
@@ -183,7 +185,7 @@ export class Database {
 		}
 		if (!dbExists) await nano.db.create(name);
 
-		const nanoDb = nano.use(name);
+		const nanoDb = nano.use(name) as Handler;
 
 		// Deploy design docs
 		if (this.designDocs.size > 0) {
@@ -217,9 +219,11 @@ export class Database {
 		}
 
 		this.logDeploySuccess();
+
+		return nanoDb;
 	}
 
-	private async deployDoc(nanoDb: DocumentScope<unknown>, doc: MaybeDocument) {
+	private async deployDoc(nanoDb: Handler, doc: MaybeDocument) {
 		let _rev: string = "";
 		try {
 			if (doc._id) {
@@ -253,10 +257,7 @@ export class Database {
 	 * @param nanoDb Document-scoped nano instance. e.g. `nano.use(this.name)`.
 	 * @param docs Array of documents to deploy.
 	 */
-	private async deployDocs(
-		nanoDb: DocumentScope<unknown>,
-		docs: MaybeDocument[]
-	) {
+	private async deployDocs(nanoDb: Handler, docs: MaybeDocument[]) {
 		const keys = docs
 			.map((doc) => doc._id)
 			.filter((id) => typeof id === "string") as string[];

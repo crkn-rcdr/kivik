@@ -32,7 +32,7 @@ export class Instance {
 	}
 
 	async deploy() {
-		await this.kivik.deploy(this.nano);
+		return await this.kivik.deploy(this.nano);
 	}
 
 	async stop() {

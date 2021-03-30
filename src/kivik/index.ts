@@ -5,7 +5,7 @@ import { ServerScope } from "nano";
 
 import { Context, api as apiContext } from "../context";
 import { globs as fileGlobs, KivikFile } from "./file";
-import { Database } from "./database";
+import { Database, Handler } from "./database";
 import { Mode } from "..";
 
 export const fromDirectory = (directory: string, mode: Mode = "instance") => {
@@ -109,11 +109,19 @@ export class Kivik {
 		return errors;
 	}
 
-	async deploy(nano: ServerScope, suffix?: string) {
-		await Promise.all(
-			[...this.databases.values()].map((db) => db.deploy(nano, suffix))
-		);
+	async deploy(
+		nano: ServerScope,
+		suffix?: string
+	): Promise<Record<string, Handler>> {
 		this.nano = nano;
+		return Object.fromEntries(
+			await Promise.all(
+				[...this.databases.entries()].map(async ([name, db]) => [
+					name,
+					await db.deploy(nano, suffix),
+				])
+			)
+		);
 	}
 
 	async close() {
