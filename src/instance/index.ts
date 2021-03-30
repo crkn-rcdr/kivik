@@ -9,14 +9,12 @@ export const fromDirectory = (directory: string) => {
 };
 
 export const get = async (context: Context) => {
-	const kivik = await getKivik(
-		context,
-		context.rc.local.fixtures ? "instance" : "deploy"
-	);
+	const [container, kivik] = await Promise.all([
+		getContainer(context),
+		getKivik(context, context.rc.local.fixtures ? "instance" : "deploy"),
+	]);
 
 	kivik.watch();
-
-	const container = await getContainer(context);
 	const nano = await container.start();
 
 	return new Instance(kivik, container, nano);
@@ -38,7 +36,6 @@ export class Instance {
 	}
 
 	async stop() {
-		await this.kivik.close();
-		await this.container.stop();
+		await Promise.all([this.kivik.close(), this.container.stop()]);
 	}
 }

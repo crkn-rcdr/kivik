@@ -117,6 +117,7 @@ export class Kivik {
 	}
 
 	async close() {
+		this.context.log("info", "No longer watching Kivik files.");
 		this.watcher.close();
 	}
 }
