@@ -45,6 +45,8 @@ export const createContext = (directory: string): InitContext => {
 	);
 
 	const withArgv = (argv: CommonArgv): Context => {
+		// https://no-color.org
+		if (process.env.hasOwnProperty("NO_COLOR")) argv.color = false;
 		const logger = createLogger(argv);
 
 		const log = (level: Level, message: string) => logger.log(level, message);
