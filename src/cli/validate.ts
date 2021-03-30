@@ -1,19 +1,18 @@
 import { sep as pathSeparator } from "path";
 import axios from "axios";
-import { readJSON } from "fs-extra";
+import { readJson } from "fs-extra";
 import yargs from "yargs";
 import { MaybeDocument } from "nano";
 
 import { InitContext } from "../context";
-import { get as createKivik } from "../kivik";
-import { Database } from "../kivik/database";
+import { createKivikFromContext, Database } from "../kivik";
 import { CommonArgv } from "./parse";
 
 const fetchDocument = async (input: string): Promise<MaybeDocument> => {
 	if (input.startsWith("https://") || input.startsWith("http://")) {
 		return (await axios.get<MaybeDocument>(input)).data;
 	} else {
-		const json = await readJSON(input);
+		const json = await readJson(input);
 		if (typeof json !== "object")
 			throw new TypeError(`${input} should be a JSON object`);
 		return json;
@@ -45,7 +44,7 @@ export default (context: InitContext) => {
 			const fullContext = context.withArgv(argv);
 
 			try {
-				const kivik = await createKivik(fullContext, "validate");
+				const kivik = await createKivikFromContext(fullContext, "validate");
 				const dbName = argv.database as string;
 				if (!kivik.databases.has(dbName))
 					throw new Error(`Cannot find database directory ${dbName}`);

@@ -18,43 +18,145 @@ import {
 	isValidateFile,
 } from "./file";
 import { DesignDoc } from "./design-doc";
-import { DatabaseContext } from "../context";
+import { Context, DatabaseContext } from "../context";
 
-export type Handler = DocumentScope<unknown>;
+/** A `nano` DocumentScope object pointing to the deployed database. */
+export type DatabaseHandler = DocumentScope<unknown>;
 
-type Fixture = {
+/** A map between invalid fixtures and their validation errors. */
+export type ValidationReport = Map<string, string>;
+
+type FixtureRecord = {
 	file: FixtureFile;
 	valid: boolean;
 };
 
-type IncomingValidateResponse =
+/**
+ * Output of a ValidateFunction. This can either be a boolean representing
+ * the document's validity, or an object that also provides validation error
+ * data.
+ */
+export type ValidateResponse =
 	| boolean
 	| {
+			/** Is the document valid? */
 			valid: boolean;
+			/** Validation errors. These will be passed through JSON.stringify
+			 * when the ValidateFunction is called by Kivik.
+			 */
 			errors?: any;
 	  };
 
-export type ValidateFunction = (doc: MaybeDocument) => IncomingValidateResponse;
+/** A function that can be used by Kivik to validate database documents. */
+export type ValidateFunction = (doc: MaybeDocument) => ValidateResponse;
 
-export type ValidateResponse = {
+/** The response returned when validating a document against a database. */
+export type NormalizedValidateResponse = {
+	/** Is the document valid? */
 	valid: boolean;
+	/** String describing validation errors that have taken place. */
 	errors?: string;
 };
 
-export class Database {
+/**
+ * A store for database configuration, fixtures, and validation.
+ */
+export interface Database {
+	/**
+	 * The name of the directory containing this database's Kivik configuration,
+	 * which is used as the identifier of the database in CouchDB.
+	 */
 	readonly name: string;
-	readonly context: DatabaseContext;
+
+	/**
+	 * Design documents for this database.
+	 */
 	readonly designDocs: Map<string, DesignDoc>;
-	readonly fixtures: Map<string, Fixture>;
+
+	/**
+	 * Mango index configuration for this database.
+	 */
 	readonly indexes: Map<string, IndexFile>;
+
+	/**
+	 * Database fixtures, for use in development and testing.
+	 */
+	readonly fixtures: Map<string, FixtureRecord>;
+
+	/**
+	 * Updates the database store with a new or changed file.
+	 * @param file A Kivik file handle.
+	 * @param nano If set, changes made by the updated file will be deployed
+	 * to the CouchDB endpoint managed by this `nano` instance.
+	 */
+	updateFile: (file: KivikFile, nano?: ServerScope) => Promise<void>;
+
+	/**
+	 * Removes a file from the database store.
+	 * @param file A Kivik file handle.
+	 * @param nano If set, the contents of the file will be deleted from the
+	 * CouchDB endpoint managed by this `nano` instance.
+	 */
+	removeFile: (file: KivikFile, nano?: ServerScope) => Promise<void>;
+
+	/**
+	 * Has this database been provided a validate function?
+	 */
+	canValidate: () => boolean;
+
+	/**
+	 * Validate a document against this database's validate function. If no
+	 * validate function has been provided, the document will be considered
+	 * valid by default.
+	 * @param doc A CouchDB document.
+	 * @returns An object whose `valid` property represents whether the document
+	 * is valid, and whose `errors` property contains any errors reported by
+	 * the validate function.
+	 */
+	validate: (doc: MaybeDocument) => NormalizedValidateResponse;
+
+	/**
+	 * Validate every fixture against the database's validate function.
+	 * @returns A record of the validation errors for any invalid fixture.
+	 */
+	validateFixtures: () => ValidationReport;
+
+	/**
+	 * Deploy the database's configuration and fixtures.
+	 * @param nano A `nano` instance pointing to the CouchDB endpoint to deploy
+	 * the database configuration to.
+	 * @param suffix If set, the database's identifier will have the suffix
+	 * appended to it, joined by a hyphen: ``${this.name}-${suffix}``
+	 * @returns A promise resolving to a `nano` DocumentScope instance which
+	 * can perform further operations on database documents.
+	 */
+	deploy: (nano: ServerScope, suffix?: string) => Promise<DatabaseHandler>;
+}
+
+/**
+ * Create a database store.
+ * @param name The name of the database.
+ * @param context The Kivik Context.
+ */
+export const createDatabase = (name: string, context: Context): Database => {
+	return new DatabaseImpl(name, context);
+};
+
+class DatabaseImpl implements Database {
+	readonly name: string;
+	readonly designDocs: Map<string, DesignDoc>;
+	readonly indexes: Map<string, IndexFile>;
+	readonly fixtures: Map<string, FixtureRecord>;
+
+	private readonly context: DatabaseContext;
 	private _validate: ValidateFile | null;
 
-	constructor(name: string, context: DatabaseContext) {
+	constructor(name: string, context: Context) {
 		this.name = name;
-		this.context = context;
+		this.context = context.withDatabase(name);
 		this.designDocs = new Map();
-		this.fixtures = new Map();
 		this.indexes = new Map();
+		this.fixtures = new Map();
 		this._validate = null;
 	}
 
@@ -89,21 +191,6 @@ export class Database {
 		}
 	}
 
-	private async updateFixture(file: FixtureFile, nano?: ServerScope) {
-		const fixture: Fixture = { file, valid: true };
-		this.fixtures.set(file.name, fixture);
-		this.context.log("info", `Updated fixture ${file.name}.`);
-
-		if (nano) {
-			const response = this.validateFixture(fixture.file);
-			if (response.valid) {
-				this.logDeployAttempt(`fixture ${fixture.file.name}`);
-				await this.deployDoc(nano.use(this.name), fixture.file.content);
-				this.logDeploySuccess();
-			}
-		}
-	}
-
 	private async updateIndex(file: IndexFile, nano?: ServerScope) {
 		const index = file.content;
 		if (!index.name) index.name = file.name;
@@ -118,20 +205,34 @@ export class Database {
 		}
 	}
 
+	private async updateFixture(file: FixtureFile, nano?: ServerScope) {
+		const fixture: FixtureRecord = { file, valid: true };
+		this.fixtures.set(file.name, fixture);
+		this.context.log("info", `Updated fixture ${file.name}.`);
+
+		if (nano) {
+			const response = this.validateFixture(fixture.file);
+			if (response.valid) {
+				this.logDeployAttempt(`fixture ${fixture.file.name}`);
+				await this.deployDoc(nano.use(this.name), fixture.file.content);
+				this.logDeploySuccess();
+			}
+		}
+	}
+
 	private updateValidate(file: ValidateFile) {
 		this._validate = file;
 		this.context.log("info", `Updated the validate function.`);
 	}
 
-	async removeFile(_file: KivikFile) {
-		// TODO: implement
-	}
+	/** TODO: implement this */
+	async removeFile(_file: KivikFile) {}
 
 	canValidate(): boolean {
 		return !!this._validate;
 	}
 
-	validate(doc: MaybeDocument): ValidateResponse {
+	validate(doc: MaybeDocument): NormalizedValidateResponse {
 		if (this._validate) {
 			const validateFunc = this._validate.content;
 			const response = validateFunc(doc);
@@ -145,7 +246,7 @@ export class Database {
 		return { valid: true };
 	}
 
-	private validateFixture(file: FixtureFile): ValidateResponse {
+	private validateFixture(file: FixtureFile): NormalizedValidateResponse {
 		const response = this.validate(file.content);
 		this.fixtures.set(file.name, { file, valid: response.valid });
 		if (!response.valid) {
@@ -157,18 +258,16 @@ export class Database {
 		return response;
 	}
 
-	validateFixtures(): Record<string, string> {
-		const errors: Record<string, string> = {};
+	validateFixtures(): ValidationReport {
+		const errors = new Map();
 		for (const { file } of this.fixtures.values()) {
 			const response = this.validateFixture(file);
-			if (!response.valid) {
-				errors[file.name] = response.errors || "";
-			}
+			errors.set(file.name, response.errors || "");
 		}
 		return errors;
 	}
 
-	async deploy(nano: ServerScope, suffix?: string) {
+	async deploy(nano: ServerScope, suffix?: string): Promise<DatabaseHandler> {
 		const name = suffix ? `${this.name}-${suffix}` : this.name;
 		this.logDeployAttempt(suffix ? `database (${name})` : "database");
 
@@ -185,7 +284,7 @@ export class Database {
 		}
 		if (!dbExists) await nano.db.create(name);
 
-		const nanoDb = nano.use(name) as Handler;
+		const nanoDb = nano.use(name) as DatabaseHandler;
 
 		// Deploy design docs
 		if (this.designDocs.size > 0) {
@@ -194,18 +293,6 @@ export class Database {
 			);
 			await this.deployDocs(nanoDb, ddocs);
 			this.context.log("info", `Deployed design documents.`);
-		}
-
-		// Validate and deploy fixtures
-		if (this.fixtures.size > 0) {
-			this.validateFixtures();
-
-			const fixtures = [...this.fixtures.values()]
-				.filter((fixture) => fixture.valid)
-				.map((fixture) => fixture.file.content as MaybeDocument);
-
-			await this.deployDocs(nanoDb, fixtures);
-			this.context.log("info", `Deployed fixtures.`);
 		}
 
 		// Deploy indexes
@@ -218,12 +305,24 @@ export class Database {
 			this.context.log("info", "Deployed indexes.");
 		}
 
+		// Validate and deploy fixtures
+		if (this.fixtures.size > 0) {
+			this.validateFixtures();
+
+			const fixtures = [...this.fixtures.values()]
+				.filter((fixture) => fixture.valid)
+				.map((fixture) => fixture.file.content);
+
+			await this.deployDocs(nanoDb, fixtures);
+			this.context.log("info", `Deployed fixtures.`);
+		}
+
 		this.logDeploySuccess();
 
 		return nanoDb;
 	}
 
-	private async deployDoc(nanoDb: Handler, doc: MaybeDocument) {
+	private async deployDoc(nanoDb: DatabaseHandler, doc: MaybeDocument) {
 		let _rev: string = "";
 		try {
 			if (doc._id) {
@@ -257,7 +356,7 @@ export class Database {
 	 * @param nanoDb Document-scoped nano instance. e.g. `nano.use(this.name)`.
 	 * @param docs Array of documents to deploy.
 	 */
-	private async deployDocs(nanoDb: Handler, docs: MaybeDocument[]) {
+	private async deployDocs(nanoDb: DatabaseHandler, docs: MaybeDocument[]) {
 		const keys = docs
 			.map((doc) => doc._id)
 			.filter((id) => typeof id === "string") as string[];

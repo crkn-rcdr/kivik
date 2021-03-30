@@ -1,41 +1,59 @@
 import { ServerScope } from "nano";
+import {
+	Context,
+	apiContext,
+	InstanceConfig,
+	normalizeInstanceConfig,
+} from "../context";
+import { createKivikFromContext, DatabaseHandlerMap, Kivik } from "../kivik";
+import { createContainer } from "./container";
 
-import { Context, api as apiContext } from "../context";
-import { get as getKivik, Kivik } from "../kivik";
-import { Container, get as getContainer } from "./container";
-
-export const fromDirectory = (directory: string) => {
-	return get(apiContext(directory));
+/**
+ * Creates a Kivik instance.
+ * @param directory The root directory for the files Kivik will manage.
+ * @returns The Kivik instance. File scan and load is complete, and the Docker
+ * container running the instance's CouchDB endpoint is ready to go.
+ */
+export const createInstance = (
+	directory: string,
+	instanceConfig: InstanceConfig = {}
+) => {
+	return createInstanceFromContext(apiContext(directory), instanceConfig);
 };
 
-export const get = async (context: Context) => {
-	const [container, kivik] = await Promise.all([
-		getContainer(context),
-		getKivik(context, context.rc.local.fixtures ? "instance" : "deploy"),
-	]);
+export const createInstanceFromContext = async (
+	context: Context,
+	instanceConfig: InstanceConfig = {}
+): Promise<Instance> => {
+	const normalizedInstanceConfig = normalizeInstanceConfig(
+		Object.assign({}, context.rc.local, instanceConfig)
+	);
+	const kivik = await createKivikFromContext(
+		context,
+		normalizedInstanceConfig.fixtures ? "instance" : "deploy"
+	);
 
-	kivik.watch();
-	const nano = await container.start();
+	const container = await createContainer(context, normalizedInstanceConfig);
 
-	return new Instance(kivik, container, nano);
+	await container.start();
+	kivik.deployOnChanges(container.nano);
+
+	return {
+		kivik,
+		nano: container.nano,
+		deploy: (suffix?: string) => {
+			return kivik.deploy(container.nano, suffix);
+		},
+		stop: async () => {
+			await kivik.close();
+			await container.stop();
+		},
+	};
 };
 
-export class Instance {
-	private readonly kivik: Kivik;
-	private readonly container: Container;
-	private readonly nano: ServerScope;
-
-	constructor(kivik: Kivik, container: Container, nano: ServerScope) {
-		this.kivik = kivik;
-		this.container = container;
-		this.nano = nano;
-	}
-
-	async deploy() {
-		return await this.kivik.deploy(this.nano);
-	}
-
-	async stop() {
-		await Promise.all([this.kivik.close(), this.container.stop()]);
-	}
+export interface Instance {
+	readonly kivik: Kivik;
+	readonly nano: ServerScope;
+	readonly deploy: (suffix?: string) => Promise<DatabaseHandlerMap>;
+	readonly stop: () => Promise<void>;
 }

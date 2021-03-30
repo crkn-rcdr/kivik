@@ -1,13 +1,18 @@
-import { JsonValue as JSONValue } from "type-fest";
+import { JsonValue } from "type-fest";
 import { MaybeDocument } from "nano";
 
 import { DatabaseContext } from "../context";
 import { DesignType, DesignFile } from "./file";
 
+/**
+ * A store for design document configuration.
+ */
 export class DesignDoc {
+	/** The name of the design document. */
 	readonly name: string;
-	readonly context: DatabaseContext;
-	readonly content: Map<DesignType, JSONValue | Map<string, JSONValue>>;
+
+	private readonly context: DatabaseContext;
+	readonly content: Map<DesignType, JsonValue | Map<string, JsonValue>>;
 
 	constructor(name: string, context: DatabaseContext) {
 		this.name = name;
@@ -49,9 +54,9 @@ export class DesignDoc {
 		}
 	}
 
-	private getDesignMap(type: DesignType): Map<string, JSONValue> {
+	private getDesignMap(type: DesignType): Map<string, JsonValue> {
 		if (!this.content.has(type)) this.content.set(type, new Map());
-		return this.content.get(type) as Map<string, JSONValue>;
+		return this.content.get(type) as Map<string, JsonValue>;
 	}
 
 	serialize(): MaybeDocument {

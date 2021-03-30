@@ -1,5 +1,5 @@
 import { InitContext } from "../context";
-import { get as createKivik } from "../kivik";
+import { createKivikFromContext } from "../kivik";
 import { CommonArgv } from "./parse";
 
 export default (context: InitContext) => {
@@ -9,7 +9,7 @@ export default (context: InitContext) => {
 		handler: async (argv: CommonArgv) => {
 			const fullContext = context.withArgv(argv);
 
-			const kivik = await createKivik(fullContext, "fixtures");
+			const kivik = await createKivikFromContext(fullContext, "fixtures");
 			const errors = Object.entries(kivik.validateFixtures());
 			await kivik.close();
 

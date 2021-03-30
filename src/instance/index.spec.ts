@@ -1,8 +1,8 @@
 import anyTest, { TestInterface } from "ava";
 
-import { fromDirectory, Instance } from ".";
+import { createInstance, Instance } from ".";
 import { directory } from "../example";
-import { Handler } from "../kivik/database";
+import { DatabaseHandler } from "../kivik";
 
 interface LocalContext {
 	instance: Instance;
@@ -11,13 +11,13 @@ interface LocalContext {
 const test = anyTest as TestInterface<LocalContext>;
 
 test.before(async (t) => {
-	t.context = { instance: await fromDirectory(directory) };
+	t.context = { instance: await createInstance(directory) };
 });
 
 test("Instances can be hooked into", async (t) => {
 	const instance = t.context.instance;
 	const handlers = await instance.deploy();
-	const testdb = handlers["testdb"] as Handler;
+	const testdb = handlers.get("testdb") as DatabaseHandler;
 	const pickwick = await testdb.get("pickwick-papers");
 	t.is(pickwick["_id"], "pickwick-papers");
 });

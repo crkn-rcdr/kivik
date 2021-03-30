@@ -1,40 +1,60 @@
+/** kivikrc file configuration. */
+export interface Rc {
+	/**
+	 * Object containing deployment configurations. Adding at least one is
+	 * required to be able to deploy Kivik configuration elsewhere.
+	 */
+	deployments?: Record<string, Deployment>;
+	/** Subdirectories of the root directory which do not contain database configuration. Default: `["node_modules"]` */
+	excludeDirectories?: string[];
+	/** JavaScript files to ignore when processing design documents. Default: `["*.spec.*", "*.test.*"]` */
+	excludeDesign?: string[];
+	/** Configuration for Kivik instances. */
+	local?: InstanceConfig;
+}
+
 /**
  * Configuration for deploying design documents to a CouchDB endpoint.
  */
 export interface Deployment {
-	/** CouchDB endpoint URL */
+	/** CouchDB endpoint URL. Required. */
 	url: string;
-	/** Authentication credentials (basic only, for now) */
+	/**
+	 * Authentication credentials. If left unset, Kivik will attempt to deploy
+	 * anonymously.
+	 */
 	auth?: {
 		/** CouchDB username */
 		user: string;
 		/** `user`'s password */
 		password: string;
 	};
-	/** Suffix to append to the end of each database name */
+	/** Suffix to append to the end of each database name. Default: `undefined` */
 	suffix?: string;
 }
 
-/** Configuration for local, ephemeral Kivik containers */
-interface LocalConfig {
+/** Configuration for Kivik instances. */
+export interface InstanceConfig {
 	/** Deploy fixtures when running `kivik dev`. Default: `true` */
 	fixtures?: boolean;
 	/** CouchDB docker image tag. Default: `couchdb:3.1` */
 	image?: string;
 	/** Port that Kivik will attempt to run a `kivik dev` instance on. Default: `5984` */
 	port?: number;
-	/** CouchDB admin user */
+	/** CouchDB admin user. Default: `kivik` */
 	user?: string;
-	/** CouchDB admin user's password */
+	/** CouchDB admin user's password. Default: `kivik` */
 	password?: string;
 }
 
-export type NormalizedLocalConfig = Required<LocalConfig>;
+export type NormalizedInstanceConfig = Required<InstanceConfig>;
 
 /**
- * Normalize a LocalConfig object with defaults.
+ * Normalize a InstanceConfig object with defaults.
  */
-export const normalizeLocalConfig = (c: LocalConfig): NormalizedLocalConfig => {
+export const normalizeInstanceConfig = (
+	c: InstanceConfig
+): NormalizedInstanceConfig => {
 	return {
 		fixtures: typeof c.fixtures === "boolean" ? c.fixtures : true,
 		image: c.image || "couchdb:3.1",
@@ -44,20 +64,9 @@ export const normalizeLocalConfig = (c: LocalConfig): NormalizedLocalConfig => {
 	};
 };
 
-/** kivikrc file configuration. */
-export interface Rc {
-	/** List of deployment configurations. */
-	deployments?: Record<string, Deployment>;
-	/** Subdirectories of the root directory which do not contain database configuration. Default: `["node_modules"]` */
-	excludeDirectories?: string[];
-	/** JavaScript files to ignore when processing design documents. Default: `["*.spec.*", "*.test.*"]` */
-	excludeDesign?: string[];
+export type NormalizedRc = Required<Omit<Rc, "local">> & {
 	/** Configuration for local, ephemeral Kivik containers */
-	local?: LocalConfig;
-}
-
-export type NormalizedRc = Required<Rc> & {
-	local: NormalizedLocalConfig;
+	local: NormalizedInstanceConfig;
 };
 
 /**
@@ -68,6 +77,6 @@ export const normalizeRc = (rc: Rc): NormalizedRc => {
 		deployments: rc.deployments || {},
 		excludeDirectories: rc.excludeDirectories || ["node_modules"],
 		excludeDesign: rc.excludeDesign || ["*.spec.*", "*.test.*"],
-		local: normalizeLocalConfig(rc.local || {}),
+		local: normalizeInstanceConfig(rc.local || {}),
 	};
 };

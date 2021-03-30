@@ -1,4 +1,4 @@
-import { readJSONSync as readJSON, readFileSync as readFile } from "fs-extra";
+import { readJsonSync, readFileSync } from "fs-extra";
 import { CreateIndexRequest, MaybeDocument } from "nano";
 import {
 	sep as pathSeparator,
@@ -6,39 +6,13 @@ import {
 	basename,
 	extname,
 } from "path";
-import { JsonObject as JSONObject, JsonValue as JSONValue } from "type-fest";
+import { JsonObject, JsonValue } from "type-fest";
 
-import { Mode } from "..";
 import { ValidateFunction } from "./database";
-
-export const globs = (mode: Mode = "instance"): string[] => {
-	const validateGlob = ["*/validate.js"];
-	const fixtureGlobs = [...validateGlob, "*/fixtures/*.json"];
-	const deployGlobs = [
-		"*/design/*/lib/*.js",
-		"*/design/*/autoupdate.js",
-		"*/design/*/validate_doc_update.js",
-		"*/design/*/filters/*.js",
-		"*/design/*/lists/*.js",
-		"*/design/*/shows/*.js",
-		"*/design/*/updates/*.js",
-		"*/design/*/views/*.js",
-		"*/indexes/*.json",
-	];
-
-	const globs: Record<Mode, string[]> = {
-		instance: [...fixtureGlobs, ...deployGlobs],
-		deploy: deployGlobs,
-		fixtures: fixtureGlobs,
-		validate: validateGlob,
-	};
-
-	return globs[mode];
-};
 
 type Root = "design" | "fixtures" | "indexes" | "validate.js";
 
-export type FileType = "design" | "fixture" | "index" | "validate";
+type FileType = "design" | "fixture" | "index" | "validate";
 
 export type DesignType =
 	| "lib"
@@ -99,16 +73,31 @@ const rerequire = (module: string): any => {
 	return require(module);
 };
 
+/**
+ * Content of and information about a Kivik file.
+ */
 export class KivikFile {
+	/** The file's absolute path. */
 	readonly path: string;
+	/** The database the file belongs to. */
 	readonly db: string;
+	/** The file's type. */
 	readonly fileType: FileType;
+	/** The file's design document, if it belongs to one. */
 	readonly ddoc?: string;
+	/** The type of design file this is, if it is one. */
 	readonly designType?: DesignType;
+	/** The file's name, used to index it in the database store. */
 	readonly name: string;
-	readonly extension: FileExtension;
+	/** The file's content. */
 	readonly content: FileContent;
 
+	/**
+	 * Creates a Kivik file record.
+	 * @param path Path to the file, relative to `wd`.
+	 * @param wd The working Kivik directory.
+	 * @param load Should the file's contents be loaded?
+	 */
 	constructor(path: string, wd: string, load = true) {
 		const [db, first, ...rest] = path.split(pathSeparator) as [
 			string,
@@ -118,13 +107,14 @@ export class KivikFile {
 		this.path = joinPath(wd, path);
 		this.db = db;
 		this.fileType = fileTypes[first];
-		this.extension = extname(path) as FileExtension;
-		this.name = basename(path, this.extension);
+
+		const extension = extname(path) as FileExtension;
+		this.name = basename(path, extension);
 
 		if (this.fileType === "design") {
 			const [ddoc, dtype] = rest as [string, string];
 			this.ddoc = ddoc;
-			this.designType = basename(dtype, this.extension) as DesignType;
+			this.designType = basename(dtype, extension) as DesignType;
 		}
 
 		if (load) {
@@ -135,10 +125,10 @@ export class KivikFile {
 
 			const content =
 				contentType === "string"
-					? readFile(this.path, { encoding: "utf8" })
-					: this.extension === ".js"
+					? readFileSync(this.path, { encoding: "utf8" })
+					: extension === ".js"
 					? rerequire(this.path)
-					: readJSON(this.path);
+					: readJsonSync(this.path);
 
 			// Some very basic validation
 			if (typeof content !== contentType)
@@ -153,7 +143,10 @@ export class KivikFile {
 		}
 	}
 
-	serialize(): JSONValue {
+	/**
+	 * The file's content, serialized into something JSON can handle.
+	 */
+	serialize(): JsonValue {
 		if (typeof this.content === "function") {
 			return this.content.toString();
 		} else if (this.designType === "views") {
@@ -164,35 +157,53 @@ export class KivikFile {
 					key,
 					typeof value === "function" ? value.toString() : value,
 				])
-			) as JSONObject;
+			) as JsonObject;
 		} else {
-			return this.content as boolean | JSONObject;
+			return this.content as boolean | JsonObject;
 		}
 	}
 }
 
+/**
+ * Part of a design document.
+ */
 export type DesignFile = Omit<Required<KivikFile>, "fileType"> & {
 	fileType: "design";
 };
 
+/**
+ * Is this file part of a design document?
+ */
 export const isDesignFile = (file: KivikFile): file is DesignFile => {
 	return file.fileType === "design";
 };
 
+/**
+ * Test data used in development and testing.
+ */
 export type FixtureFile = Omit<KivikFile, "fileType" | "content"> & {
 	fileType: "fixture";
 	content: MaybeDocument;
 };
 
+/**
+ * Is this file a fixture?
+ */
 export const isFixtureFile = (file: KivikFile): file is FixtureFile => {
 	return file.fileType === "fixture" && typeof file.content === "object";
 };
 
+/**
+ * Configuration setting up a Mango index.
+ */
 export type IndexFile = Omit<KivikFile, "fileType" | "content"> & {
 	fileType: "index";
 	content: CreateIndexRequest;
 };
 
+/**
+ * Is this file Mango index configuration?
+ */
 export const isIndexFile = (file: KivikFile): file is IndexFile => {
 	const content = file.content as CreateIndexRequest;
 	return (
@@ -203,11 +214,18 @@ export const isIndexFile = (file: KivikFile): file is IndexFile => {
 	);
 };
 
+/**
+ * A file exporting a validate function.
+ */
 export type ValidateFile = Omit<KivikFile, "fileType" | "content"> & {
 	fileType: "validate";
 	content: ValidateFunction;
 };
 
+/**
+ * Does this file export a validate function (or, at least, any function at
+ * all)?
+ */
 export const isValidateFile = (file: KivikFile): file is ValidateFile => {
 	return file.fileType === "validate" && typeof file.content === "function";
 };

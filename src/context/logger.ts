@@ -31,8 +31,9 @@ export const format = (color: boolean): Winston.Logform.Format => {
 
 /**
  * Creates Kivik's logger.
+ * @param argv Parsed command-line parameters common to all Kivik modes.
  */
-export const create = (argv: CommonArgv): Winston.Logger => {
+export const createLogger = (argv: CommonArgv): Winston.Logger => {
 	const colors = Object.fromEntries(
 		Object.entries(levelConfig).map(([level, obj]) => [level, obj.color])
 	);

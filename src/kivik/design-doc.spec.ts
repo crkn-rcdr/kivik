@@ -1,8 +1,8 @@
 import test from "ava";
-import { JsonValue as JSONValue } from "type-fest";
+import { JsonValue } from "type-fest";
 import { join } from "path";
 
-import { api as apiContext } from "../context";
+import { apiContext } from "../context";
 import { directory } from "../example";
 import { DesignDoc } from "./design-doc";
 import { KivikFile, DesignFile } from "./file";
@@ -35,7 +35,7 @@ test("Can receive named file", (t) => {
 	) as DesignFile;
 	ddoc.updateFile(filterFile);
 	t.is(ddoc.content.has("filters"), true);
-	const filters = ddoc.content.get("filters") as Map<string, JSONValue>;
+	const filters = ddoc.content.get("filters") as Map<string, JsonValue>;
 	t.is(filters.size, 1);
 	t.is(filters.has("multiple_titles"), true);
 });

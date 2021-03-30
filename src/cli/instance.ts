@@ -1,5 +1,5 @@
 import { InitContext } from "../context";
-import { get as getInstance, Instance } from "../instance";
+import { createInstanceFromContext, Instance } from "../instance";
 import { CommonArgv } from "./parse";
 
 export default (context: InitContext) => {
@@ -11,27 +11,28 @@ export default (context: InitContext) => {
 
 			let instance: Instance | null = null;
 			try {
-				instance = await getInstance(fullContext);
+				instance = await createInstanceFromContext(fullContext);
 			} catch (error) {
 				fullContext.log(
 					"error",
 					`Error creating a Kivik instance: ${error.message}`
 				);
-			}
-
-			try {
-				await (instance as Instance).deploy();
-			} catch (error) {
-				fullContext.log(
-					"error",
-					`Error deploying Kivik files to the instance: ${error.message}`
-				);
+				return;
 			}
 
 			const handle = async (signal: NodeJS.Signals) => {
 				fullContext.log("info", `Received signal ${signal}. Closing.`);
 				await (instance as Instance).stop();
 			};
+
+			try {
+				await instance.deploy();
+			} catch (error) {
+				fullContext.log(
+					"error",
+					`Error deploying Kivik files to the instance: ${error.message}`
+				);
+			}
 
 			process.on("SIGINT", handle);
 			process.on("SIGTERM", handle);

@@ -4,10 +4,13 @@ import { localhost as localNano } from "@crkn-rcdr/nano";
 import { ServerScope } from "nano";
 import pRetry from "p-retry";
 
-import { Context } from "../context";
+import { Context, NormalizedInstanceConfig } from "../context";
 
-export const get = async (context: Context): Promise<Container> => {
-	const { port: desiredPort, image, user, password } = context.rc.local;
+export const createContainer = async (
+	context: Context,
+	instanceConfig: NormalizedInstanceConfig
+): Promise<Container> => {
+	const { port: desiredPort, image, user, password } = instanceConfig;
 
 	const port = await getPort({ port: desiredPort });
 
@@ -43,11 +46,11 @@ interface ContainerArgs {
 	readonly context: Context;
 }
 
-export class Container {
+class Container {
 	private readonly dc: Docker.Container;
 	private readonly port: number;
 	private readonly name: string;
-	private readonly nano: ServerScope;
+	readonly nano: ServerScope;
 	private readonly context: Context;
 
 	constructor(args: ContainerArgs) {

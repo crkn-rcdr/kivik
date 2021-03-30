@@ -1,10 +1,10 @@
 import { Logger } from "winston";
-import { readFileSync as readFile } from "fs-extra";
+import { readFileSync } from "fs-extra";
 import { parse as parseYAML } from "yaml";
 import { sync as findUp } from "find-up";
 
 import { CommonArgv } from "../cli/parse";
-import { create as createLogger, Level } from "./logger";
+import { createLogger, Level } from "./logger";
 import { normalizeRc, NormalizedRc } from "./rc";
 
 export {
@@ -13,7 +13,12 @@ export {
 	Level as LogLevel,
 } from "./logger";
 
-export { Deployment } from "./rc";
+export {
+	Deployment,
+	InstanceConfig,
+	normalizeInstanceConfig,
+	NormalizedInstanceConfig,
+} from "./rc";
 
 export type InitContext = {
 	readonly directory: string;
@@ -31,12 +36,12 @@ export type DatabaseContext = Omit<Context, "withDatabase"> & {
 	readonly database: string;
 };
 
-export const init = (directory: string): InitContext => {
+export const createContext = (directory: string): InitContext => {
 	const confPath = findUp(["kivikrc.json", "kivikrc.yml", "kivikrc.yaml"], {
 		cwd: directory,
 	});
 	const rc = normalizeRc(
-		confPath ? parseYAML(readFile(confPath, { encoding: "utf-8" })) : {}
+		confPath ? parseYAML(readFileSync(confPath, { encoding: "utf-8" })) : {}
 	);
 
 	const withArgv = (argv: CommonArgv): Context => {
@@ -59,8 +64,8 @@ export const init = (directory: string): InitContext => {
 	return { directory, rc, withArgv };
 };
 
-export const api = (directory: string): Context => {
-	return init(directory).withArgv({
+export const apiContext = (directory: string): Context => {
+	return createContext(directory).withArgv({
 		color: false,
 		logLevel: "error",
 		quiet: true,
