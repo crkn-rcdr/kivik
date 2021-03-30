@@ -111,7 +111,7 @@ export class Database {
 
 		if (nano) {
 			this.context.log("warn", `Deploying index ${file.name}.`);
-			await this.deployIndex(nano, index);
+			await this.deployIndex(nano, this.name, index);
 			this.context.log("success", `Deployment successful.`);
 		}
 	}
@@ -166,13 +166,14 @@ export class Database {
 		return errors;
 	}
 
-	async deploy(nano: ServerScope) {
-		this.logDeployAttempt("database");
+	async deploy(nano: ServerScope, suffix?: string) {
+		const name = suffix ? `${this.name}-${suffix}` : this.name;
+		this.logDeployAttempt(suffix ? `database (${name})` : "database");
 
 		// Create database if it doesn't exist
 		let dbExists = true;
 		try {
-			await nano.db.get(this.name);
+			await nano.db.get(name);
 		} catch (error) {
 			if (!(error.message === "no_db_file")) {
 				dbExists = false;
@@ -180,9 +181,9 @@ export class Database {
 				throw error;
 			}
 		}
-		if (!dbExists) await nano.db.create(this.name);
+		if (!dbExists) await nano.db.create(name);
 
-		const nanoDb = nano.use(this.name);
+		const nanoDb = nano.use(name);
 
 		// Deploy design docs
 		if (this.designDocs.size > 0) {
@@ -209,7 +210,7 @@ export class Database {
 		if (this.indexes.size > 0) {
 			await Promise.all(
 				[...this.indexes.values()].map(async (index) =>
-					this.deployIndex(nano, index.content)
+					this.deployIndex(nano, name, index.content)
 				)
 			);
 			this.context.log("info", "Deployed indexes.");
@@ -233,9 +234,13 @@ export class Database {
 		await nanoDb.insert(doc);
 	}
 
-	private async deployIndex(nano: ServerScope, index: CreateIndexRequest) {
+	private async deployIndex(
+		nano: ServerScope,
+		dbName: string,
+		index: CreateIndexRequest
+	) {
 		nano.relax({
-			db: this.name,
+			db: dbName,
 			path: "_index",
 			method: "post",
 			body: index,

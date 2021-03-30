@@ -6,6 +6,14 @@
         "user": "kivik",
         "password": "kivik"
       }
+    },
+    "suffixed": {
+      "url": "http://localhost:5984",
+      "auth": {
+        "user": "kivik",
+        "password": "kivik"
+      },
+      "suffix": "pluto"
     }
   },
   "local": {

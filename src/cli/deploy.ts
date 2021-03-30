@@ -1,14 +1,12 @@
 import yargs from "yargs";
-import * as Nano from "@crkn-rcdr/nano";
-import { ServerScope } from "nano";
+import { get as getNano } from "@crkn-rcdr/nano";
 
-import { InitContext } from "../context";
+import { Deployment, InitContext } from "../context";
 import { get as createKivik } from "../kivik";
 import { CommonArgv } from "./parse";
 
 type DeployArgv = CommonArgv & {
-	// Even though the builder can't return undefined, the type system still expects the possibility
-	deployment?: ServerScope;
+	deployment?: string;
 };
 
 export default (context: InitContext) => {
@@ -21,20 +19,28 @@ export default (context: InitContext) => {
 					type: "string",
 					describe: "Key of a deployment object in your kivikrc file",
 				})
-				.coerce(
-					"deployment",
-					(key: string): ServerScope => {
-						const deployment = context.rc.deployments?.[key];
-						if (!deployment) {
-							throw new Error(`No deployment in kivikrc for key ${key}`);
-						}
-						return Nano.get(deployment.url, deployment.auth);
-					}
-				),
+				.check((argv: DeployArgv): boolean => {
+					const key = argv.deployment as string;
+					const deployment = context.rc.deployments[key];
+
+					if (!deployment)
+						throw new Error(`No deployment in kivikrc for key ${key}`);
+
+					return true;
+				}),
 		handler: async (argv: DeployArgv) => {
 			const fullContext = context.withArgv(argv);
 			const kivik = await createKivik(fullContext, "deploy");
-			await kivik.deploy(argv.deployment as ServerScope);
+
+			const deployment = context.rc.deployments[
+				argv.deployment as string
+			] as Deployment;
+
+			await kivik.deploy(
+				getNano(deployment.url, deployment.auth),
+				deployment.suffix
+			);
+
 			await kivik.close();
 		},
 	};

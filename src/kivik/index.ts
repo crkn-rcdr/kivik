@@ -109,9 +109,9 @@ export class Kivik {
 		return errors;
 	}
 
-	async deploy(nano: ServerScope) {
+	async deploy(nano: ServerScope, suffix?: string) {
 		await Promise.all(
-			[...this.databases.values()].map((db) => db.deploy(nano))
+			[...this.databases.values()].map((db) => db.deploy(nano, suffix))
 		);
 		this.nano = nano;
 	}

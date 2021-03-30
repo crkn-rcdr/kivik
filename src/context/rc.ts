@@ -11,6 +11,8 @@ export interface Deployment {
 		/** `user`'s password */
 		password: string;
 	};
+	/** Suffix to append to the end of each database name */
+	suffix?: string;
 }
 
 /** Configuration for local, ephemeral Kivik containers */

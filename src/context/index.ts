@@ -13,6 +13,8 @@ export {
 	Level as LogLevel,
 } from "./logger";
 
+export { Deployment } from "./rc";
+
 export type InitContext = {
 	readonly directory: string;
 	readonly rc: NormalizedRc;
