@@ -1,4 +1,4 @@
-/** kivikrc file configuration. */
+/** Kivik RC file configuration. */
 export interface Rc {
 	/**
 	 * Object containing deployment configurations. Adding at least one is

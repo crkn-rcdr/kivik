@@ -1,7 +1,6 @@
 import yargs from "yargs";
-import { get as getNano } from "@crkn-rcdr/nano";
 
-import { Deployment, InitContext } from "../context";
+import { InitContext } from "../context";
 import { createKivikFromContext } from "../kivik";
 import { CommonArgv } from "./parse";
 
@@ -32,14 +31,7 @@ export default (context: InitContext) => {
 			const fullContext = context.withArgv(argv);
 			const kivik = await createKivikFromContext(fullContext, "deploy");
 
-			const deployment = context.rc.deployments[
-				argv.deployment as string
-			] as Deployment;
-
-			await kivik.deploy(
-				getNano(deployment.url, deployment.auth),
-				deployment.suffix
-			);
+			await kivik.deployTo(argv.deployment as string);
 
 			await kivik.close();
 		},

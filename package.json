@@ -28,8 +28,9 @@
   },
   "scripts": {
     "ava": "ava -v",
-    "build": "rm -rf dist && tsc",
-    "test": "run-s build ava"
+    "build:publish": "rm -rf dist && tsc -b tsconfig.publish.json",
+    "build:test": "rm -rf dist && tsc -b tsconfig.test.json",
+    "test": "run-s build:test ava"
   },
   "dependencies": {
     "@crkn-rcdr/nano": "^2.0.0",
