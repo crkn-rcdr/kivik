@@ -1,11 +1,22 @@
 {
-  "user": "outer",
-  "password": "outer",
-  "configs": {
+  "deployments": {
     "test": {
-      "url": "http://localhost:22222",
-      "user": "inner",
-      "password": "inner"
+      "url": "http://localhost:5984",
+      "auth": {
+        "user": "kivik",
+        "password": "kivik"
+      }
+    },
+    "suffixed": {
+      "url": "http://localhost:5984",
+      "auth": {
+        "user": "kivik",
+        "password": "kivik"
+      },
+      "suffix": "pluto"
     }
+  },
+  "instance": {
+    "fixtures": true
   }
 }

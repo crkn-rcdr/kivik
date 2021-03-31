@@ -21,36 +21,71 @@ Kivik's opinionated nature lies in its expectation of a directory structure wher
 
 ### RC File
 
-Configuration options can be specified in an RC file, found at `./kivikrc.json`, `./kivikrc.yml`, or `./kivikrc.yaml`. In addition, multiple sets of options can be specified using the `configs` property, e.g.
+Configuration options can be specified in an RC file, found at `./kivikrc.json`, `./kivikrc.yml`, or `./kivikrc.yaml`. The shape of a Kivik RC file is defined in [`src/context/rc.ts`](src/context/rc.ts), and I've pasted the relevant parts below. An example of sorts can be found at [`example/kivikrc.json`](example/kivikrc.json). At this moment, deploying Kivik configuration to an external CouchDB endpoint requires adding at least one object to the `deployments` RC file property.
 
-```yaml
-user: usualUser
-password: usualPassword
-configs:
-  production:
-    url: http://production:5984
-    user: productionuser
-    password: productionPassword
-  test:
-    url: http://test:5984
+The RC file is read whether using Kivik on the command line or programmatically.
+
+```ts
+/** Kivik RC file configuration. */
+export interface Rc {
+  /**
+   * Object containing deployment configurations. Adding at least one is
+   * required to be able to deploy Kivik configuration elsewhere.
+   */
+  deployments?: Record<string, Deployment>;
+  /** Subdirectories of the root directory which do not contain database configuration. Default: `["node_modules"]` */
+  excludeDirectories?: string[];
+  /** JavaScript files to ignore when processing design documents. Default: `["*.spec.*", "*.test.*"]` */
+  excludeDesign?: string[];
+  /** Configuration for Kivik instances. */
+  local?: InstanceConfig;
+}
+
+/**
+ * Configuration for deploying design documents to a CouchDB endpoint.
+ */
+export interface Deployment {
+  /** CouchDB endpoint URL. Required. */
+  url: string;
+  /**
+   * Authentication credentials. If left unset, Kivik will attempt to deploy
+   * anonymously.
+   */
+  auth?: {
+    /** CouchDB username */
+    user: string;
+    /** `user`'s password */
+    password: string;
+  };
+  /** Suffix to append to the end of each database name. Default: `undefined` */
+  suffix?: string;
+}
+
+/** Configuration for Kivik instances. */
+export interface InstanceConfig {
+  /** Deploy fixtures when running `kivik dev`. Default: `true` */
+  fixtures?: boolean;
+  /** CouchDB docker image tag. Default: `couchdb:3.1` */
+  image?: string;
+  /** Port that Kivik will attempt to run a `kivik dev` instance on. Default: `5984` */
+  port?: number;
+  /** CouchDB admin user. Default: `kivik` */
+  user?: string;
+  /** CouchDB admin user's password. Default: `kivik` */
+  password?: string;
+}
 ```
 
-These sets can be retrieved using e.g. `kivik --config production`. Anything inside a config set will override the options set in the main RC file object.
+### Command-line options
 
-For now, the RC file is only read when invoking Kivik on the command line.
-
-### Options
-
-Configuration options that apply to all Kivik [operations](#Operations):
-
-- `config` (`--config`): The key used to select one of the configs in the [RC File](#RC-File).
-- `exclude` (`--exclude`): A list of paths or globs that Kivik will ignore when selecting subdirectories as databases. To specify more than one of these on the command line, use `--exclude` more than once. Default: `["node_modules", "schemas"]`
-- `excludeDesign` (`--exclude-design`): A list of paths or globs that Kivik will ignore when searching for design document functions. This might be useful when writing test files alongside design document function files. To specify more than one of these on the command line, use `--exclude-design` more than once. Default: `["*.test.js"]
-- `include` (`--include`): A list of paths or globs that Kivik will use to select subdirectories as databases. To specify more than one of these on the command line, use `--include` more than once. Default: ["*"]
-- `logLevel` (`--log-level`): TODO: determine logger configuration
-- `verbose` (`-v`, `-vv`, etc.): Determine how loud Kivik is when operating. By default, Kivik will only write to stdout if there's been an error, with a few useful exceptions when invoked in the command-line (information about which port the CouchDB container can be found at, for example). Programmatically this can be expressed as a number from 0 to 4.
-
-Each operation has specific configuration options, as well.
+- `--color`: Colorize output. Use `--no-color` (or set the `NO_COLOR` environment variable) to skip colorization. Default: `true`.
+- `--logLevel`: Log level for the standard log output. Your options are:
+  - `error`: When things don't work as expected
+  - `success`: When things do work as expected
+  - `warn`: Something interesting is about to happen, or something didn't work as expected but it isn't a big deal
+  - `info`: Everything Kivik is doing
+  - `couch`: For `kivik dev`, output the CouchDB logs
+- `--quiet`: Silence output.
 
 ## Operations
 
@@ -61,20 +96,46 @@ $ kivik validate db path/to/file.json
 $ kivik validate db https://example.com/file.json
 ```
 
+```ts
+import { createKivik, Database } from "kivik";
+
+const database = "db";
+const document = {
+  _id: "something",
+};
+
+const kivik = await createKivik("path/to/directory", "validate");
+const kivikdb = kivik.databases.get(database) as Database;
+
+const response = kivikdb.validate(document);
+
+if (response.valid) {
+  console.log("yay!");
+}
+
+await kivik.close();
+```
+
 Validates a file against a database's validation function that you provide.
 
-To provide a validation function, have `$DB/validate.js` export it. The function can return a boolean, or an object of the form
+To provide a validation function, have `$DB/validate.js` export it. The function's return value must be shaped like this:
 
 ```ts
-interface ValidationResponse {
-  valid: boolean;
-  errors?: JsonValue;
-}
+export type ValidateResponse =
+  | boolean
+  | {
+      /** Is the document valid? */
+      valid: boolean;
+      /** Validation errors. These will be passed through JSON.stringify
+       * when the ValidateFunction is called by Kivik.
+       */
+      errors?: any;
+    };
 ```
 
 (`errors` is passed through `JSON.stringify` in log output.)
 
-When a database has a validation function, its fixtures will be validated against it. Invalid fixtures will not be deployed.
+When a database has a validation function, its fixtures will be validated against it. Invalid fixtures will not be deployed. If a database does not have a validation function, all fixtures are considered valid and will be deployed. If you try to validate a document against a database on the command line, you'll get an error.
 
 The example directory contains a validation function that uses [Ajv](https://ajv.js.org) to validate data against a JSON Schema.
 
@@ -84,75 +145,82 @@ The example directory contains a validation function that uses [Ajv](https://ajv
 $ kivik fixtures
 ```
 
-```js
-import { Kivik } from "kivik";
+```ts
+import { createKivik } from "kivik";
 
-const errors = await Kivik.testFixtures("path/to/dir", options);
+const kivik = await createKivik("path/to/dir", "fixtures");
+const errors = kivik.validateFixtures();
 ```
 
 Returns a report of fixtures that do not validate against their database's validate function.
 
 ### Deploy
 
-```shell
-$ kivik deploy --url http://couchserver:5984/ --user user --password password
+Deploys Kivik configuration to a CouchDB endpoint. If, in your RC file, you have the following:
+
+```json
+{
+  "deployments": {
+    "production": {
+      "url": "http://production:5984/",
+      "auth": {
+        "user": "admin",
+        "password": "donttellanyone"
+      }
+    }
+  }
+}
 ```
 
-```js
-import * as Nano from "@crkn-rcdr/nano";
-import { Kivik } from "kivik";
-import options from "./options";
+you can deploy Kivik configuration to the production server like so:
 
-const kivik = await Kivik.fromDirectory("path/to/dir", options);
-const nano = Nano.get("http://couchserver:5984", {
-  user: "user",
-  password: "password",
+```shell
+$ kivik deploy production
+```
+
+```ts
+import { createKivik } from "kivik";
+
+const kivik = await createKivik("path/to/dir", "deploy");
+await kivik.deployTo("production");
+await kivik.close();
+```
+
+### Instance (`dev`)
+
+```shell
+$ kivik dev
+```
+
+Spins up a local Docker container running CouchDB, deploys Kivik configuration to it, and then sends updates to those files to the Docker container. Useful for local development.
+
+```js
+import test from "ava";
+import { createInstance } from "kivik";
+
+test.before(async (t) => {
+  t.context.instance = await createInstance("path/to/dir");
 });
-await kivik.deploy(nano);
+
+test.beforeEach(async (t) => {
+  t.context.testdb = (await t.context.instance.deploy()).get("testdb");
+});
+
+test("Your fixture looks good", async (t) => {
+  try {
+    const fixture = testdb.get("great-expectations");
+    t.is(fixture.title, "Great Expectations");
+  } catch (e) {
+    t.fail();
+  }
+});
+
+test.after(async (t) => {
+  await t.context.instance.close();
+});
 ```
 
-Deploys CouchDB configuration to a given server.
-
-#### Options
-
-- `url` (`--url`): The CouchDB endpoint to which the configuration is deployed. **(required)**
-- `user` (`--user`) and `password` (`--password`): The user and password to authenticate requests with CouchDB. If unset, the deployment will be attempted with anonymous requests, which will frequently fail.
-- `deployFixtures` (`--deploy-fixtures`): Setting this will deploy each database's set of fixtures, along with design documents and indexes. Fixtures are [validated](#Validate) if the database has a JSON Schema; invalid fixtures will not be deployed. Default: `false`
-- `suffix` (`--suffix`): Append a suffix to each database name, which is useful if multiple deployments can happen to the same CouchDB server.
-
-### Inspect
-
-```shell
-$ kivik inspect --user user --password password --port 12345
-alert: Container weird_name started. View at http://localhost:12345/_utils
-^C
-alert: Container weird_name has been stopped and removed.
-```
-
-```js
-import { Instance } from "kivik";
-import options from "./options";
-
-const instance = await Instance.get("path/to/dir", options);
-await instance.start();
-await instance.deploy();
-
-// e.g.
-const db = instance.nano.use("some_db");
-const doc = await db.get("some_id");
-```
-
-Inspect Kivik's deployment output on an ephemeral Docker container. Kivik Instances can also be used for testing; once an instance has been started, `deploy()` and `destroy()` can be run multiple times.
-
-#### Options
-
-- `image` (`--image`): The CouchDB image used to create the container. The image will need to be pulled before the Instance can be started. Default: `couchdb:3.1`
-- `port` (`--port`): The host port on which the container is exposed. If the port is unset or busy, a random available port is selected.
-- `user` (`--user`) and `password` (`--password`): The name and password of the admin user that will be created when CouchDB is started. Defaults: `kivik` and `kivik` (TODO: actually set this)
-
-## Logging
-
-TODO: Add logging info
+Kivik instances can also be used in test suites. Here's an example using [Ava](https://github.com/avajs/ava) but this should work with any testing framework that handles asynchronous code.
 
 ## Tests
 
