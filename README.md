@@ -126,9 +126,7 @@ export type ValidateResponse =
   | {
       /** Is the document valid? */
       valid: boolean;
-      /** Validation errors. These will be passed through JSON.stringify
-       * when the ValidateFunction is called by Kivik.
-       */
+      /** Validation errors. */
       errors?: any;
     };
 ```
@@ -186,13 +184,15 @@ await kivik.deployTo("production");
 await kivik.close();
 ```
 
-### Instance (`dev`)
+### Instance (`dev`, `instance`, `inspect`)
 
 ```shell
 $ kivik dev
 ```
 
 Spins up a local Docker container running CouchDB, deploys Kivik configuration to it, and then sends updates to those files to the Docker container. Useful for local development.
+
+Kivik instances can also be used in test suites. Here's an example using [Ava](https://github.com/avajs/ava) but this should work with any testing framework that handles asynchronous code.
 
 ```js
 import test from "ava";
@@ -219,8 +219,6 @@ test.after(async (t) => {
   await t.context.instance.close();
 });
 ```
-
-Kivik instances can also be used in test suites. Here's an example using [Ava](https://github.com/avajs/ava) but this should work with any testing framework that handles asynchronous code.
 
 ## Tests
 

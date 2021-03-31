@@ -2,8 +2,14 @@
 
 ## 2.0.0-alpha.5
 
+- Big TypeScript rewrite.
+- BREAKING CHANGE: new RC file configuration, and a bunch of command-line options no longer work. See the README for details.
+- RC file is read when invoking Kivik programmatically. (#46)
+- `kivik dev` (a.k.a. `kivik instance`, a.k.a. `kivik inspect`) listens for changes you make to Kivik files and redeploys them.
+- `kivik dev` config is handled in the RC file, in an `instance` object.
+  - You can turn off deploying fixtures in this mode by setting `"fixtures": false` (#52)
 - `kivik fixtures`: Test whether your database fixtures validate.
-- [`@crkn-rcdr/nano`](https://github.com/crkn-rcdr/nano) dependency bump.
+- CommonJS modules in `${db}/design/${ddoc}/lib/*.js` get added to the `lib` view of that design doc and can be referenced in other design doc functions. Kivik will follow symlinks for these (and anything else). (#3)
 
 ## [2.0.0-alpha.4] - 2021-03-09
 
