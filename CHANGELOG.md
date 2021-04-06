@@ -1,6 +1,10 @@
 # Changelog
 
-## 2.0.0-alpha.5
+## [2.0.0-alpha.6] - 2021-04-06
+
+- Dependency upgrade. Nano instances use one socket at a time, for safety.
+
+## [2.0.0-alpha.5] - 2021-03-31
 
 - Big TypeScript rewrite.
 - BREAKING CHANGE: new RC file configuration, and a bunch of command-line options no longer work. See the README for details.
@@ -99,6 +103,8 @@
 - Multiple design document support
 - View (map/reduce) and update function support within design documents
 
+[2.0.0-alpha.6]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.6
+[2.0.0-alpha.5]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.5
 [2.0.0-alpha.4]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.4
 [2.0.0-alpha.3]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.3
 [2.0.0-alpha.2]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.2
