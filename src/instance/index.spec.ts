@@ -14,14 +14,20 @@ test.before(async (t) => {
 	t.context = { instance: await createInstance(directory) };
 });
 
-test("Instances can be hooked into", async (t) => {
-	const instance = t.context.instance;
-	const handlers = await instance.deploy();
-	const testdb = handlers.get("testdb") as DatabaseHandler;
-	const pickwick = await testdb.get("pickwick-papers");
-	t.is(pickwick["_id"], "pickwick-papers");
+test("Can survive multiple deploys", async (t) => {
+	const suffixes = Array.from({ length: 100 }, (_) =>
+		Math.random().toString(36).substring(2)
+	);
+	await Promise.all(
+		suffixes.map(async (suffix) => {
+			const handlers = await t.context.instance.deploy(suffix);
+			const testdb = handlers.get("testdb") as DatabaseHandler;
+			const pickwick = await testdb.get("pickwick-papers");
+			t.is(pickwick["_id"], "pickwick-papers");
+		})
+	);
 });
 
 test.after(async (t) => {
-	t.context.instance.stop();
+	await t.context.instance.stop();
 });
