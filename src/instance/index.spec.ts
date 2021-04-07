@@ -15,7 +15,7 @@ test.before(async (t) => {
 });
 
 test("Can survive multiple deploys", async (t) => {
-	const suffixes = Array.from({ length: 100 }, (_) =>
+	const suffixes = Array.from({ length: 10 }, (_) =>
 		Math.random().toString(36).substring(2)
 	);
 	await Promise.all(
