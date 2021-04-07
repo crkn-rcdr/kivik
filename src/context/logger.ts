@@ -1,31 +1,42 @@
 import * as Winston from "winston";
+import { color as ansiColor, CSPair } from "ansi-styles";
 
 import { CommonArgv } from "../cli";
 
-const levelConfig: Record<Level, { level: number; color: string }> = {
-	error: { level: 0, color: "bold red" },
-	success: { level: 1, color: "bold green" },
-	warn: { level: 2, color: "bold yellow" },
-	info: { level: 3, color: "bold blue" },
-	couch: { level: 4, color: "bold grey" },
+export const logLevels = ["success", "error", "warn", "info", "couch"] as const;
+export type LogLevel = typeof logLevels[number];
+
+type LogLevelConfig = {
+	level: number;
+	color: CSPair;
+	symbol: string;
 };
 
-export const levels = ["success", "error", "warn", "info", "couch"] as const;
-export type Level = typeof levels[number];
+const levelConfig: Record<LogLevel, LogLevelConfig> = {
+	error: { level: 0, color: ansiColor.redBright, symbol: "✗" },
+	success: { level: 1, color: ansiColor.greenBright, symbol: "✓" },
+	warn: { level: 2, color: ansiColor.yellowBright, symbol: "!" },
+	info: { level: 3, color: ansiColor.blueBright, symbol: "i" },
+	couch: { level: 4, color: ansiColor.grey, symbol: "." },
+};
 
 /**
  * Sets up Kivik's default logger format.
- * @param color Whether the user wants colorized output.
+ * @param argv Parsed command-line parameters common to all Kivik modes.
  */
-export const format = (color: boolean): Winston.Logform.Format => {
+const format = (argv: CommonArgv): Winston.Logform.Format => {
 	const wf = Winston.format;
 	const formats = [
 		wf.timestamp(),
-		wf.printf(
-			(info) => `${info["timestamp"]} -- ${info.level} -- ${info.message}`
-		),
+		wf.printf((info) => {
+			const config = levelConfig[info.level as LogLevel];
+			const timestamp = argv.logTimestamp ? `${info["timestamp"]} -- ` : "";
+			const level = argv.color
+				? `${config.color.open}${config.symbol.repeat(3)}${config.color.close}`
+				: `${info.level} --`;
+			return `${timestamp}${level} ${info.message}`;
+		}),
 	];
-	if (color) formats.unshift(wf.colorize());
 	return wf.combine(...formats);
 };
 
@@ -34,23 +45,16 @@ export const format = (color: boolean): Winston.Logform.Format => {
  * @param argv Parsed command-line parameters common to all Kivik modes.
  */
 export const createLogger = (argv: CommonArgv): Winston.Logger => {
-	const colors = Object.fromEntries(
-		Object.entries(levelConfig).map(([level, obj]) => [level, obj.color])
-	);
-	const wlevels = Object.fromEntries(
-		Object.entries(levelConfig).map(([level, obj]) => [level, obj.level])
-	);
-
-	Winston.addColors(colors);
-
 	const logger = Winston.createLogger({
-		levels: wlevels,
+		levels: Object.fromEntries(
+			Object.entries(levelConfig).map(([level, obj]) => [level, obj.level])
+		),
 		level: argv.logLevel,
 		handleExceptions: true,
 		silent: argv.quiet,
 	});
 
-	logger.add(new Winston.transports.Console({ format: format(argv.color) }));
+	logger.add(new Winston.transports.Console({ format: format(argv) }));
 
 	return logger;
 };

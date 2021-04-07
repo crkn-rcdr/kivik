@@ -7,6 +7,7 @@ specifiers:
   '@types/node': ^14.14.37
   '@types/yargs': ^16.0.1
   ajv: ^7.2.4
+  ansi-styles: ^5.2.0
   ava: ^3.15.0
   axios: ^0.21.1
   chokidar: ^3.5.1
@@ -28,6 +29,7 @@ specifiers:
 
 dependencies:
   '@crkn-rcdr/nano': 2.0.1
+  ansi-styles: 5.2.0
   axios: 0.21.1
   chokidar: 3.5.1
   dockerode: 3.2.1
@@ -229,7 +231,6 @@ packages:
   /ansi-styles/5.2.0:
     resolution: {integrity: sha512-Cxwpt2SfTzTtXcfOlzGEee8O+c+MmUgGrNiBcXnuWxuFJHe6a5Hz7qwhwe5OgaSYI0IJvkLqWX1ASG+cJOkEiA==}
     engines: {node: '>=10'}
-    dev: true
 
   /anymatch/3.1.1:
     resolution: {integrity: sha512-mM8522psRCqzV+6LhomX5wgp25YVibjh8Wj23I5RPkPppSVSjyKD2A2mBJmWGa+KN7f2D6LNh9jkBCeyLktzjg==}

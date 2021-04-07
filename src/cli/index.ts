@@ -9,6 +9,7 @@ import validate from "./validate";
 export interface CommonArgv {
 	color: boolean;
 	logLevel: LogLevel;
+	logTimestamp: boolean;
 	quiet: boolean;
 }
 
@@ -26,7 +27,11 @@ export const parse = (argv: string[], context: UnloggedContext): void => {
 				alias: "l",
 				default: "warn",
 				choices: logLevels,
-				describe: "Log level.",
+			},
+			logTimestamp: {
+				type: "boolean",
+				default: false,
+				describe: "Print a timestamp with every logged line",
 			},
 			quiet: {
 				type: "boolean",

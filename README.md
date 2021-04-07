@@ -85,6 +85,7 @@ export interface InstanceConfig {
   - `warn`: Something interesting is about to happen, or something didn't work as expected but it isn't a big deal
   - `info`: Everything Kivik is doing
   - `couch`: For `kivik dev`, output the CouchDB logs
+- `--logTimestamp`: Add a timestamp to log output.
 - `--quiet`: Silence output.
 
 ## Operations

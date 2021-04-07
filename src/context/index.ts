@@ -3,14 +3,10 @@ import { parse as parseYAML } from "yaml";
 import { sync as findUp } from "find-up";
 
 import { CommonArgv } from "../cli";
-import { createLogger, Level } from "./logger";
+import { createLogger, LogLevel } from "./logger";
 import { normalizeRc, NormalizedRc } from "./rc";
 
-export {
-	format as defaultLoggerFormat,
-	levels as logLevels,
-	Level as LogLevel,
-} from "./logger";
+export { logLevels, LogLevel } from "./logger";
 
 export {
 	Deployment,
@@ -26,7 +22,7 @@ export type UnloggedContext = NormalizedRc & {
 };
 
 export type Context = Omit<UnloggedContext, "withArgv"> & {
-	readonly log: (level: Level, message: string) => void;
+	readonly log: (level: LogLevel, message: string) => void;
 	readonly withDatabase: (db: string) => DatabaseContext;
 };
 
@@ -52,11 +48,11 @@ export const createContext = (directory: string): UnloggedContext => {
 
 			return {
 				...this,
-				log: (level: Level, message: string) => logger.log(level, message),
+				log: (level: LogLevel, message: string) => logger.log(level, message),
 				withDatabase: function (db: string): DatabaseContext {
 					return {
 						...this,
-						log: (level: Level, message: string) =>
+						log: (level: LogLevel, message: string) =>
 							logger.log(level, `(${db}) ${message}`),
 					};
 				},
@@ -69,6 +65,7 @@ export const apiContext = (directory: string): Context => {
 	return createContext(directory).withArgv({
 		color: false,
 		logLevel: "error",
+		logTimestamp: false,
 		quiet: true,
 	});
 };
