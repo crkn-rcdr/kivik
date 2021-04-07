@@ -57,7 +57,7 @@ class Container {
 		this.dc = args.dc;
 		this.port = args.port;
 		this.name = args.name;
-		this.nano = localNano(args.port, args.context.rc.local);
+		this.nano = localNano(args.port, args.context.local);
 		this.context = args.context;
 	}
 

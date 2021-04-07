@@ -26,7 +26,7 @@ export const createInstanceFromContext = async (
 	instanceConfig: InstanceConfig = {}
 ): Promise<Instance> => {
 	const normalizedInstanceConfig = normalizeInstanceConfig(
-		Object.assign({}, context.rc.local, instanceConfig)
+		Object.assign({}, context.local, instanceConfig)
 	);
 	const kivik = await createKivikFromContext(
 		context,

@@ -1,19 +1,19 @@
-import { InitContext } from "../context";
+import { UnloggedContext } from "../context";
 import { createInstanceFromContext, Instance } from "../instance";
-import { CommonArgv } from "./parse";
+import { CommonArgv } from ".";
 
-export default (context: InitContext) => {
+export default (unloggedContext: UnloggedContext) => {
 	return {
 		command: ["instance", "dev", "inspect"],
 		describe: "Spins up a local CouchDB instance for development",
 		handler: async (argv: CommonArgv) => {
-			const fullContext = context.withArgv(argv);
+			const context = unloggedContext.withArgv(argv);
 
 			let instance: Instance | null = null;
 			try {
-				instance = await createInstanceFromContext(fullContext);
+				instance = await createInstanceFromContext(context);
 			} catch (error) {
-				fullContext.log(
+				context.log(
 					"error",
 					`Error creating a Kivik instance: ${error.message}`
 				);
@@ -21,14 +21,14 @@ export default (context: InitContext) => {
 			}
 
 			const handle = async (signal: NodeJS.Signals) => {
-				fullContext.log("info", `Received signal ${signal}. Closing.`);
+				context.log("warn", `Received signal ${signal}. Closing.`);
 				await (instance as Instance).stop();
 			};
 
 			try {
 				await instance.deploy();
 			} catch (error) {
-				fullContext.log(
+				context.log(
 					"error",
 					`Error deploying Kivik files to the instance: ${error.message}`
 				);

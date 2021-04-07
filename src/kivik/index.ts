@@ -70,10 +70,8 @@ export const createKivikFromContext = async (
 	const watcher = watch(fileGlobs(mode), {
 		cwd: context.directory,
 		ignored: [
-			...context.rc.excludeDirectories.map((directory) => `${directory}/**`),
-			...context.rc.excludeDesign.map(
-				(fileglob) => `*/design/*/**/${fileglob}`
-			),
+			...context.excludeDirectories.map((directory) => `${directory}/**`),
+			...context.excludeDesign.map((fileglob) => `*/design/*/**/${fileglob}`),
 		],
 	});
 
@@ -216,7 +214,7 @@ class KivikImpl implements Kivik {
 	}
 
 	async deployTo(deployment: string) {
-		const dObj = this.context.rc.deployments[deployment];
+		const dObj = this.context.deployments[deployment];
 		if (!dObj)
 			throw new Error(`Deployment object for key ${deployment} not found.`);
 		return await this.deploy(getNano(dObj.url, dObj.auth), dObj.suffix);

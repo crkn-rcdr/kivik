@@ -1,9 +1,8 @@
-import { Logger } from "winston";
 import { readFileSync } from "fs-extra";
 import { parse as parseYAML } from "yaml";
 import { sync as findUp } from "find-up";
 
-import { CommonArgv } from "../cli/parse";
+import { CommonArgv } from "../cli";
 import { createLogger, Level } from "./logger";
 import { normalizeRc, NormalizedRc } from "./rc";
 
@@ -18,25 +17,22 @@ export {
 	InstanceConfig,
 	normalizeInstanceConfig,
 	NormalizedInstanceConfig,
+	Rc,
 } from "./rc";
 
-export type InitContext = {
+export type UnloggedContext = NormalizedRc & {
 	readonly directory: string;
-	readonly rc: NormalizedRc;
 	readonly withArgv: (argv: CommonArgv) => Context;
 };
 
-export type Context = Omit<InitContext, "withArgv"> & {
-	readonly logger: Logger;
+export type Context = Omit<UnloggedContext, "withArgv"> & {
 	readonly log: (level: Level, message: string) => void;
 	readonly withDatabase: (db: string) => DatabaseContext;
 };
 
-export type DatabaseContext = Omit<Context, "withDatabase"> & {
-	readonly database: string;
-};
+export type DatabaseContext = Omit<Context, "withDatabase">;
 
-export const createContext = (directory: string): InitContext => {
+export const createContext = (directory: string): UnloggedContext => {
 	const confPath = findUp(["kivikrc.json", "kivikrc.yml", "kivikrc.yaml"], {
 		cwd: directory,
 	});
@@ -44,26 +40,29 @@ export const createContext = (directory: string): InitContext => {
 		confPath ? parseYAML(readFileSync(confPath, { encoding: "utf-8" })) : {}
 	);
 
-	const withArgv = (argv: CommonArgv): Context => {
-		// https://no-color.org
-		if (process.env.hasOwnProperty("NO_COLOR")) argv.color = false;
-		const logger = createLogger(argv);
+	return {
+		directory,
+		...rc,
+		withArgv: function (argv: CommonArgv): Context {
+			// https://no-color.org
+			if (process.env.hasOwnProperty("NO_COLOR")) argv.color = false;
 
-		const log = (level: Level, message: string) => logger.log(level, message);
+			const logger = createLogger(argv);
+			logger.log("info", "Logger initialized.");
 
-		log("info", "Logger initialized.");
-
-		const withDatabase = (db: string) => {
-			const log = (level: Level, message: string) =>
-				logger.log(level, `(${db}) ${message}`);
-
-			return { directory, rc, logger, log, database: db };
-		};
-
-		return { directory, rc, logger, log, withDatabase };
+			return {
+				...this,
+				log: (level: Level, message: string) => logger.log(level, message),
+				withDatabase: function (db: string): DatabaseContext {
+					return {
+						...this,
+						log: (level: Level, message: string) =>
+							logger.log(level, `(${db}) ${message}`),
+					};
+				},
+			};
+		},
 	};
-
-	return { directory, rc, withArgv };
 };
 
 export const apiContext = (directory: string): Context => {
