@@ -1,4 +1,6 @@
 {
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/example.ts"],
   "compilerOptions": {
     "outDir": "./dist",
     "target": "es2020",
