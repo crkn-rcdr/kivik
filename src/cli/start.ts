@@ -10,7 +10,7 @@ export default (unloggedContext: UnloggedContext) => {
 			const context = unloggedContext.withArgv(argv);
 
 			try {
-				const instance = await createInstance(context, false);
+				const instance = await createInstance(context, { attach: false });
 				await instance.detach();
 				instance.announce();
 			} catch (error) {

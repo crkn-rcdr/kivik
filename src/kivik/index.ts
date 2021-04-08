@@ -203,7 +203,7 @@ class KivikImpl implements Kivik {
 		deployment: string | NanoDeployment
 	): Promise<DatabaseHandlerMap> {
 		if (typeof deployment === "string")
-			deployment = this.context.getDeployment(deployment);
+			deployment = await this.context.getDeployment(deployment);
 		const handlers: DatabaseHandlerMap = new Map();
 		for (const [name, db] of this.databases) {
 			handlers.set(name, await db.deploy(deployment.nano, deployment.suffix));

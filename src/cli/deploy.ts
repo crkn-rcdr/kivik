@@ -22,7 +22,7 @@ export default (unloggedContext: UnloggedContext) => {
 
 			let deployment;
 			try {
-				deployment = context.getDeployment(argv.deployment || "");
+				deployment = await context.getDeployment(argv.deployment || "");
 			} catch (error) {
 				context.log("error", error.message);
 				process.exit(1);

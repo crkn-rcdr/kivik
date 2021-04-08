@@ -6,7 +6,8 @@ import { sync as findUp } from "find-up";
 import { CommonArgv } from "../cli";
 import { createLogger, LogLevel } from "./logger";
 import { normalizeRc, NormalizedRc, Deployment, NanoDeployment } from "./rc";
-import { get as remoteNano, localhost as localNano } from "@crkn-rcdr/nano";
+import { get as remoteNano } from "@crkn-rcdr/nano";
+import { getInstance } from "../instance";
 
 export { logLevels, LogLevel } from "./logger";
 
@@ -21,12 +22,15 @@ export {
 
 export type UnloggedContext = NormalizedRc & {
 	readonly directory: string;
-	readonly getDeployment: (key: string) => NanoDeployment;
 	readonly withArgv: (argv: CommonArgv) => Context;
 };
 
 export type Context = Omit<UnloggedContext, "withArgv"> & {
 	readonly log: (level: LogLevel, message: string) => void;
+	readonly getDeployment: (
+		key: string,
+		suffix?: string
+	) => Promise<NanoDeployment>;
 	readonly withDatabase: (db: string) => DatabaseContext;
 };
 
@@ -45,25 +49,6 @@ export const createContext = (directory: string): UnloggedContext => {
 	return {
 		directory,
 		...rc,
-		getDeployment: function (key: string) {
-			if (key in this.deployments) {
-				const deployment = this.deployments[key] as Deployment;
-				return {
-					nano: remoteNano(deployment.url, deployment.auth),
-					suffix: deployment.suffix,
-					fixtures: !!deployment.fixtures,
-				};
-			} else if (key === "local") {
-				return {
-					nano: localNano(this.local.port, this.local),
-					fixtures: this.local.fixtures,
-				};
-			} else {
-				throw new Error(
-					`Your kivikrc file does not have a deployment with key '${key}'`
-				);
-			}
-		},
 		withArgv: function (argv: CommonArgv) {
 			// https://no-color.org
 			if (process.env.hasOwnProperty("NO_COLOR")) argv.color = false;
@@ -79,6 +64,27 @@ export const createContext = (directory: string): UnloggedContext => {
 			return {
 				...this,
 				log: (level: LogLevel, message: string) => logger.log(level, message),
+				getDeployment: async function (key: string, suffix?: string) {
+					if (key in this.deployments) {
+						const deployment = this.deployments[key] as Deployment;
+						return {
+							nano: remoteNano(deployment.url, deployment.auth),
+							suffix: suffix || deployment.suffix,
+							fixtures: !!deployment.fixtures,
+						};
+					} else if (key === "local") {
+						const instance = await getInstance(this);
+						return {
+							nano: instance.nano,
+							suffix,
+							fixtures: this.local.fixtures,
+						};
+					} else {
+						throw new Error(
+							`Your kivikrc file does not have a deployment with key '${key}'`
+						);
+					}
+				},
 				withDatabase: function (db: string): DatabaseContext {
 					return {
 						...this,
