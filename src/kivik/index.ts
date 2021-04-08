@@ -241,7 +241,7 @@ class KivikImpl implements Kivik {
 	}
 
 	async close() {
+		await this.watcher.close();
 		this.context.log("info", "No longer watching Kivik files.");
-		this.watcher.close();
 	}
 }
