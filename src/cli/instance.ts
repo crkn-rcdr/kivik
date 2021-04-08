@@ -12,6 +12,7 @@ export default (unloggedContext: UnloggedContext) => {
 			let instance: Instance | null = null;
 			try {
 				instance = await createInstanceFromContext(context);
+				await instance.attach();
 			} catch (error) {
 				context.log(
 					"error",

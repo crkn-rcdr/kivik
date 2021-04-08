@@ -1,3 +1,5 @@
+import { join as pathJoin } from "path";
+import { writeFile, unlink as deleteFile } from "fs-extra";
 import Docker from "dockerode";
 import getPort from "get-port";
 import { localhost as localNano } from "@crkn-rcdr/nano";
@@ -5,6 +7,8 @@ import { ServerScope } from "nano";
 import pRetry from "p-retry";
 
 import { Context, NormalizedInstanceConfig } from "../context";
+
+const tempfile = (directory: string) => pathJoin(directory, ".kivik.tmp");
 
 export const createContainer = async (
 	context: Context,
@@ -14,11 +18,12 @@ export const createContainer = async (
 
 	const port = await getPort({ port: desiredPort });
 
-	if (port !== desiredPort)
+	if (port !== desiredPort) {
 		context.log(
 			"warn",
 			`Port ${desiredPort} unavailable. Docker container will be available at port ${port}.`
 		);
+	}
 
 	const docker = new Docker();
 
@@ -35,8 +40,11 @@ export const createContainer = async (
 	});
 
 	const name = (await dc.inspect()).Name.substring(1);
+	await writeFile(tempfile(context.directory), name, { encoding: "utf8" });
 
-	return new Container({ dc, port, name, context });
+	const container = new Container({ dc, port, name, context });
+	await container.start();
+	return container;
 };
 
 interface ContainerArgs {
@@ -52,6 +60,8 @@ class Container {
 	private readonly name: string;
 	readonly nano: ServerScope;
 	private readonly context: Context;
+	private dockerStream: NodeJS.ReadWriteStream | null;
+	private readonly listener: (chunk: any) => void;
 
 	constructor(args: ContainerArgs) {
 		this.dc = args.dc;
@@ -59,30 +69,20 @@ class Container {
 		this.name = args.name;
 		this.nano = localNano(args.port, args.context.local);
 		this.context = args.context;
+		this.dockerStream = null;
+
+		this.listener = (chunk) => {
+			const lines = (chunk.toString() as string).trim().split("\n");
+			for (const line of lines) {
+				this.context.log("couch", line);
+			}
+		};
 	}
 
 	async start() {
 		this.context.log("info", `Starting container ${this.name}.`);
 		await this.dc.start();
 		this.context.log("info", `Container ${this.name} started.`);
-
-		this.dc.attach(
-			{ stream: true, stdout: true, stderr: true },
-			(_, stream) => {
-				if (stream) {
-					stream.on("data", (chunk) => {
-						this.context.log("couch", chunk.toString().trim());
-					});
-					stream.on("error", (error) => this.context.log("error", error));
-					stream.on("end", () =>
-						this.context.log(
-							"info",
-							`No longer attached to container ${this.name}.`
-						)
-					);
-				}
-			}
-		);
 
 		const createDb = async (db: string) => {
 			return this.nano.relax({ path: db, method: "put", qs: { n: 1 } });
@@ -102,11 +102,32 @@ class Container {
 		return this.nano;
 	}
 
+	async attach() {
+		this.dockerStream = await this.dc.attach({
+			stream: true,
+			stdout: true,
+			stderr: true,
+			logs: true,
+		});
+		this.dockerStream.on("data", this.listener);
+		this.context.log("info", `Attached to container ${this.name}`);
+	}
+
+	detach() {
+		if (this.dockerStream) {
+			this.dockerStream.off("data", this.listener);
+			this.dockerStream = null;
+			this.context.log("info", `No longer attached to container ${this.name}.`);
+		}
+	}
+
 	async stop() {
 		const inspect = await this.dc.inspect();
 		if (inspect.State.Status) {
+			this.detach();
 			await this.dc.stop();
 			await this.dc.remove();
+			await deleteFile(tempfile(this.context.directory));
 			this.context.log("info", `Container ${this.name} stopped and removed.`);
 		} else {
 			throw new Error(

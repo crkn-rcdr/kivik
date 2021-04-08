@@ -1,4 +1,3 @@
-import { ServerScope } from "nano";
 import {
 	Context,
 	apiContext,
@@ -35,14 +34,18 @@ export const createInstanceFromContext = async (
 
 	const container = await createContainer(context, normalizedInstanceConfig);
 
-	await container.start();
 	kivik.deployOnChanges(container.nano);
 
 	return {
 		kivik,
-		nano: container.nano,
+		attach: async () => {
+			await container.attach();
+		},
 		deploy: (suffix?: string) => {
 			return kivik.deploy(container.nano, suffix);
+		},
+		detach: () => {
+			container.detach();
 		},
 		stop: async () => {
 			await kivik.close();
@@ -53,7 +56,8 @@ export const createInstanceFromContext = async (
 
 export interface Instance {
 	readonly kivik: Kivik;
-	readonly nano: ServerScope;
+	readonly attach: () => Promise<void>;
 	readonly deploy: (suffix?: string) => Promise<DatabaseHandlerMap>;
+	readonly detach: () => void;
 	readonly stop: () => Promise<void>;
 }
