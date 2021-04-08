@@ -14,7 +14,13 @@ import {
 	ValidationReport as DatabaseValidationReport,
 } from "./database";
 
-export { Database, DatabaseHandler } from "./database";
+export {
+	Database,
+	DatabaseHandler,
+	ValidationReport as DatabaseValidationReport,
+	ValidateFunction as DatabaseValidateFunction,
+	ValidateResponse as DatabaseValidateResponse,
+} from "./database";
 
 export type ValidationReport = Map<string, DatabaseValidationReport>;
 export type DatabaseHandlerMap = Map<string, DatabaseHandler>;
