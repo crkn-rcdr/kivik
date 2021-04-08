@@ -11,7 +11,6 @@ export default (unloggedContext: UnloggedContext) => {
 
 			try {
 				const instance = await createInstance(context, false);
-				await instance.deploy();
 				await instance.detach();
 				instance.announce();
 			} catch (error) {
