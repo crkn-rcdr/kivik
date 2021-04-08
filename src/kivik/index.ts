@@ -1,7 +1,6 @@
 import { watch, FSWatcher } from "chokidar";
 import { join as joinPath } from "path";
 import pEvent from "p-event";
-import { get as getNano } from "@crkn-rcdr/nano";
 import { ServerScope } from "nano";
 
 import { Mode } from "..";
@@ -222,10 +221,8 @@ class KivikImpl implements Kivik {
 	}
 
 	async deployTo(deployment: string) {
-		const dObj = this.context.deployments[deployment];
-		if (!dObj)
-			throw new Error(`Deployment object for key ${deployment} not found.`);
-		return await this.deploy(getNano(dObj.url, dObj.auth), dObj.suffix);
+		const dObj = this.context.getDeployment(deployment);
+		return await this.deploy(dObj.nano, dObj.suffix);
 	}
 
 	deployOnChanges(nano: ServerScope) {

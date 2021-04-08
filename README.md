@@ -185,6 +185,8 @@ await kivik.deployTo("production");
 await kivik.close();
 ```
 
+If you deploy to `local`, you will deploy to a running Kivik instance (see below), unless you have a deployment with key `local` in your RC file.
+
 ### Instance
 
 ```shell
@@ -235,7 +237,7 @@ test("Your fixture looks good", async (t) => {
 });
 ```
 
-When a Kivik instance is running, Kivik saves its container's name to `$DIR/.kivik.tmp`. If this file is altered or deleted, Kivik won't be able to find the running instance it might be referring to. The file is deleted when a Kivik instance is stopped.
+When a Kivik instance is running, Kivik saves its container's name to `$DIR/.kivik.tmp`. If this file is altered or deleted, Kivik won't be able to find the running instance it might be referring to. The file is deleted when a Kivik instance is stopped. Only one Kivik instance can run at a time.
 
 ## Testing Kivik
 

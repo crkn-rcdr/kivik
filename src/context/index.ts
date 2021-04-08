@@ -5,7 +5,9 @@ import { sync as findUp } from "find-up";
 
 import { CommonArgv } from "../cli";
 import { createLogger, LogLevel } from "./logger";
-import { normalizeRc, NormalizedRc } from "./rc";
+import { normalizeRc, NormalizedRc, Deployment } from "./rc";
+import { get as remoteNano, localhost as localNano } from "@crkn-rcdr/nano";
+import { ServerScope } from "nano";
 
 export { logLevels, LogLevel } from "./logger";
 
@@ -19,6 +21,9 @@ export {
 
 export type UnloggedContext = NormalizedRc & {
 	readonly directory: string;
+	readonly getDeployment: (
+		key: string
+	) => { nano: ServerScope; suffix?: string };
 	readonly withArgv: (argv: CommonArgv) => Context;
 };
 
@@ -42,11 +47,31 @@ export const createContext = (directory: string): UnloggedContext => {
 	return {
 		directory,
 		...rc,
-		withArgv: function (argv: CommonArgv): Context {
+		getDeployment: function (key: string) {
+			if (key in this.deployments) {
+				const deployment = this.deployments[key] as Deployment;
+				return {
+					nano: remoteNano(deployment.url, deployment.auth),
+					suffix: deployment.suffix,
+				};
+			} else if (key === "local") {
+				return { nano: localNano(this.local.port, this.local) };
+			} else {
+				throw new Error(
+					`Your kivikrc file does not have a deployment with key '${key}'`
+				);
+			}
+		},
+		withArgv: function (argv: CommonArgv) {
 			// https://no-color.org
 			if (process.env.hasOwnProperty("NO_COLOR")) argv.color = false;
 
 			const logger = createLogger(argv);
+			if (!confPath)
+				logger.log(
+					"warn",
+					"No kivikrc file detected. Proceeding with defaults."
+				);
 			logger.log("info", "Logger initialized.");
 
 			return {
