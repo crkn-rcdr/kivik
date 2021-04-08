@@ -35,12 +35,15 @@ export interface Deployment {
 	suffix?: string;
 	/** Whether or not to deploy fixtures along with the design documents Default: `false`. */
 	fixtures?: boolean;
+	/** List of databases to deploy. By default, all databases are deployed. */
+	dbs?: string[];
 }
 
 export type NanoDeployment = {
 	nano: ServerScope;
 	suffix?: string;
 	fixtures: boolean;
+	dbs: string[] | null;
 };
 
 /** Configuration for Kivik instances. */

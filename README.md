@@ -61,6 +61,8 @@ export interface Deployment {
   suffix?: string;
   /** Whether or not to deploy fixtures along with the design documents. */
   fixtures?: boolean;
+  /** List of databases to deploy. By default, all databases are deployed. */
+  dbs?: string[];
 }
 
 /** Configuration for Kivik instances. */

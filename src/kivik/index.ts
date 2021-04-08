@@ -206,7 +206,9 @@ class KivikImpl implements Kivik {
 			deployment = await this.context.getDeployment(deployment);
 		const handlers: DatabaseHandlerMap = new Map();
 		for (const [name, db] of this.databases) {
-			handlers.set(name, await db.deploy(deployment.nano, deployment.suffix));
+			if (!deployment.dbs || deployment.dbs.includes(name)) {
+				handlers.set(name, await db.deploy(deployment));
+			}
 		}
 		return handlers;
 	}

@@ -2,7 +2,6 @@ import anyTest, { TestInterface } from "ava";
 
 import { createInstance, Instance } from ".";
 import { directory } from "../example";
-import { DatabaseHandler } from "../kivik";
 
 interface LocalContext {
 	instance: Instance;
@@ -20,8 +19,7 @@ test("Can survive multiple deploys", async (t) => {
 	);
 	await Promise.all(
 		suffixes.map(async (suffix) => {
-			const handlers = await t.context.instance.deploy(suffix);
-			const testdb = handlers.get("testdb") as DatabaseHandler;
+			const testdb = await t.context.instance.deployDb("testdb", suffix);
 			const pickwick = await testdb.get("pickwick-papers");
 			t.is(pickwick["_id"], "pickwick-papers");
 		})

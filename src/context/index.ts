@@ -71,6 +71,7 @@ export const createContext = (directory: string): UnloggedContext => {
 							nano: remoteNano(deployment.url, deployment.auth),
 							suffix: suffix || deployment.suffix,
 							fixtures: !!deployment.fixtures,
+							dbs: deployment.dbs || null,
 						};
 					} else if (key === "local") {
 						const instance = await getInstance(this);
@@ -78,6 +79,7 @@ export const createContext = (directory: string): UnloggedContext => {
 							nano: instance.nano,
 							suffix,
 							fixtures: this.local.fixtures,
+							dbs: null,
 						};
 					} else {
 						throw new Error(

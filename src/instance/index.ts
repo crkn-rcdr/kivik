@@ -1,7 +1,12 @@
 import { ServerScope } from "nano";
 
 import { Context, defaultContext } from "../context";
-import { createKivik, DatabaseHandlerMap, Kivik } from "../kivik";
+import {
+	createKivik,
+	DatabaseHandler,
+	DatabaseHandlerMap,
+	Kivik,
+} from "../kivik";
 import { getContainer, createContainer, Container } from "./container";
 
 export interface InstanceOptions {
@@ -130,7 +135,18 @@ async function instanceHelper(
 				nano: container.nano,
 				suffix,
 				fixtures,
+				dbs: null,
 			});
+		},
+		deployDb: async (db: string, suffix?: string) => {
+			const handlers = await kivik.deploy({
+				nano: container.nano,
+				suffix,
+				fixtures,
+				dbs: [db],
+			});
+			if (!handlers.has(db)) throw new Error(`Database '${db}' not found.`);
+			return handlers.get(db) as DatabaseHandler;
 		},
 		detach: async () => {
 			await kivik.close();
@@ -149,6 +165,7 @@ export interface Instance {
 	readonly announce: () => void;
 	readonly attach: () => Promise<void>;
 	readonly deploy: (suffix?: string) => Promise<DatabaseHandlerMap>;
+	readonly deployDb: (db: string, suffix?: string) => Promise<DatabaseHandler>;
 	readonly detach: () => Promise<void>;
 	readonly stop: () => Promise<void>;
 }
