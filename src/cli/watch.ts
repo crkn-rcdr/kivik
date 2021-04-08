@@ -30,7 +30,7 @@ export default (unloggedContext: UnloggedContext) => {
 				const handle = async (signal: NodeJS.Signals) => {
 					context.log("warn", `Received signal ${signal}. Closing.`);
 					if (argv.keep) {
-						instance.detach();
+						await instance.detach();
 						context.log(
 							"warn",
 							"The instance is still running. Run `kivik stop` to stop it, or `kivik watch` to re-attach to it."
