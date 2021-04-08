@@ -18,7 +18,7 @@ import {
 	isValidateFile,
 } from "./file";
 import { DesignDoc } from "./design-doc";
-import { Context, DatabaseContext } from "../context";
+import { Context, DatabaseContext, NanoDeployment } from "../context";
 
 /** A `nano` DocumentScope object pointing to the deployed database. */
 export type DatabaseHandler = DocumentScope<unknown>;
@@ -123,14 +123,12 @@ export interface Database {
 
 	/**
 	 * Deploy the database's configuration and fixtures.
-	 * @param nano A `nano` instance pointing to the CouchDB endpoint to deploy
-	 * the database configuration to.
-	 * @param suffix If set, the database's identifier will have the suffix
-	 * appended to it, joined by a hyphen: ``${this.name}-${suffix}``
+	 * @param deployment A NanoDeployment object containing information required
+	 * for the task.
 	 * @returns A promise resolving to a `nano` DocumentScope instance which
 	 * can perform further operations on database documents.
 	 */
-	deploy: (nano: ServerScope, suffix?: string) => Promise<DatabaseHandler>;
+	deploy: (deployment: NanoDeployment) => Promise<DatabaseHandler>;
 }
 
 /**
@@ -267,7 +265,8 @@ class DatabaseImpl implements Database {
 		return errors;
 	}
 
-	async deploy(nano: ServerScope, suffix?: string): Promise<DatabaseHandler> {
+	async deploy(deployment: NanoDeployment): Promise<DatabaseHandler> {
+		const { nano, suffix, fixtures } = deployment;
 		const name = suffix ? `${this.name}-${suffix}` : this.name;
 		this.logDeployAttempt(suffix ? `database (${name})` : "database");
 
@@ -306,7 +305,7 @@ class DatabaseImpl implements Database {
 		}
 
 		// Validate and deploy fixtures
-		if (this.fixtures.size > 0) {
+		if (fixtures && this.fixtures.size > 0) {
 			this.validateFixtures();
 
 			const fixtures = [...this.fixtures.values()]

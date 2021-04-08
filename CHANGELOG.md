@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-alpha.8] - 2021-04-08
+
+- `kivik deploy local` deploys to a running Kivik instance, unless a deployment with key `local` exists in the RC file.
+- `kivik start` does not deploy by default.
+- RC file deployments can set a `fixtures` flag to determine if deployments should also deploy fixtures. This is false by default.
+- `kivik deploy` checks this flag (as well as the `local.fixtures` for `kivik deploy local`) when deploying.
+- `instance.deployDb(db: string, suffix?: string)` lets test suites deploy one database at a time.
+
 ## [2.0.0-alpha.7] - 2021-04-08
 
 - New CLI invocations: `kivik start`, `kivik watch`, `kivik stop`. `kivik inspect`, `kivik dev` and `kivik instance` are aliases of `kivik watch`, and nothing particularly new happens if you keep using those like you used to. `kivik start` and `kivik stop` start and stop the Kivik instance in the background.
@@ -110,6 +118,7 @@
 - Multiple design document support
 - View (map/reduce) and update function support within design documents
 
+[2.0.0-alpha.8]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.8
 [2.0.0-alpha.7]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.7
 [2.0.0-alpha.6]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.6
 [2.0.0-alpha.5]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.5

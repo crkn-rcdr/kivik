@@ -1,11 +1,10 @@
 import { watch, FSWatcher } from "chokidar";
 import { join as joinPath } from "path";
 import pEvent from "p-event";
-import { get as getNano } from "@crkn-rcdr/nano";
 import { ServerScope } from "nano";
 
 import { Mode } from "..";
-import { Context, defaultContext } from "../context";
+import { Context, defaultContext, NanoDeployment } from "../context";
 import { KivikFile } from "./file";
 import {
 	createDatabase,
@@ -133,23 +132,13 @@ export interface Kivik {
 	validateFixtures: () => ValidationReport;
 
 	/**
-	 * Deploys stored configuration and fixtures to a CouchDB endpoint.
-	 * @param nano A `nano` instance pointing to the endpoint.
-	 * @param suffix If set, each database at the endpoint will have the suffix
-	 * appended to its name with a hyphen: ``${db.name}-${suffix}``
-	 * @returns A Map of each database name to a `nano` `DocumentScope` handler
-	 * that permits further operations on it.
-	 */
-	deploy: (nano: ServerScope, suffix?: string) => Promise<DatabaseHandlerMap>;
-
-	/**
 	 * Deploys stored configuration and fixtures to a CouchDB endpoint,
 	 * described by a Kivik RC deployment object.
 	 * @param deployment The key of the deployment object in the Kivik RC file.
 	 * @returns A Map of each database name to a `nano` `DocumentScope` handler
 	 * that permits further operations on it.
 	 */
-	deployTo: (deployment: string) => Promise<DatabaseHandlerMap>;
+	deploy: (deployment: string | NanoDeployment) => Promise<DatabaseHandlerMap>;
 
 	/**
 	 * Triggers updates to a CouchDB endpoint when files monitored by the Kivik
@@ -211,21 +200,17 @@ class KivikImpl implements Kivik {
 	}
 
 	async deploy(
-		nano: ServerScope,
-		suffix?: string
+		deployment: string | NanoDeployment
 	): Promise<DatabaseHandlerMap> {
+		if (typeof deployment === "string")
+			deployment = await this.context.getDeployment(deployment);
 		const handlers: DatabaseHandlerMap = new Map();
 		for (const [name, db] of this.databases) {
-			handlers.set(name, await db.deploy(nano, suffix));
+			if (!deployment.dbs || deployment.dbs.includes(name)) {
+				handlers.set(name, await db.deploy(deployment));
+			}
 		}
 		return handlers;
-	}
-
-	async deployTo(deployment: string) {
-		const dObj = this.context.deployments[deployment];
-		if (!dObj)
-			throw new Error(`Deployment object for key ${deployment} not found.`);
-		return await this.deploy(getNano(dObj.url, dObj.auth), dObj.suffix);
 	}
 
 	deployOnChanges(nano: ServerScope) {

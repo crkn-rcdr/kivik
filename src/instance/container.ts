@@ -6,7 +6,7 @@ import { localhost as localNano } from "@crkn-rcdr/nano";
 import { ServerScope } from "nano";
 import pRetry from "p-retry";
 
-import { Context, NormalizedInstanceConfig } from "../context";
+import { Context } from "../context";
 
 const tempfile = (directory: string) => pathJoin(directory, ".kivik.tmp");
 const getNano = (port: number, context: Context) =>
@@ -50,11 +50,8 @@ export const getContainer = async (context: Context) => {
 	}
 };
 
-export const createContainer = async (
-	context: Context,
-	instanceConfig: NormalizedInstanceConfig
-): Promise<Container> => {
-	const { port: desiredPort, image, user, password } = instanceConfig;
+export const createContainer = async (context: Context): Promise<Container> => {
+	const { port: desiredPort, image, user, password } = context.local;
 
 	const port = await getPort({ port: desiredPort });
 

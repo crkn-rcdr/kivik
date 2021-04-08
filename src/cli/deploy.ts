@@ -13,27 +13,36 @@ export default (unloggedContext: UnloggedContext) => {
 		command: "deploy <deployment>",
 		describe: "Deploys design documents to a remote database",
 		builder: (yargs: yargs.Argv<CommonArgv>) =>
-			yargs
-				.positional("deployment", {
-					type: "string",
-					describe: "Key of a deployment object in your kivikrc file",
-				})
-				.check((argv: DeployArgv): boolean => {
-					const key = argv.deployment as string;
-					const deployment = unloggedContext.deployments[key];
-
-					if (!deployment)
-						throw new Error(`No deployment in kivikrc for key ${key}`);
-
-					return true;
-				}),
+			yargs.positional("deployment", {
+				type: "string",
+				describe: "Key of a deployment object in your kivikrc file",
+			}),
 		handler: async (argv: DeployArgv) => {
 			const context = unloggedContext.withArgv(argv);
-			const kivik = await createKivik(context, "deploy");
 
-			await kivik.deployTo(argv.deployment as string);
+			let deployment;
+			try {
+				deployment = await context.getDeployment(argv.deployment || "");
+			} catch (error) {
+				context.log("error", error.message);
+				process.exit(1);
+			}
 
-			await kivik.close();
+			let kivik;
+			try {
+				kivik = await createKivik(
+					context,
+					deployment.fixtures ? "instance" : "deploy"
+				);
+				await kivik.deploy(deployment);
+				await kivik.close();
+				process.exit(0);
+			} catch (error) {
+				context.log("error", `Error deploying: ${error.message}`);
+				process.exitCode = 1;
+			}
+
+			if (kivik) await kivik.close();
 		},
 	};
 };
