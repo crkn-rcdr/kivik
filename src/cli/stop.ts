@@ -12,6 +12,7 @@ export default (unloggedContext: UnloggedContext) => {
 			try {
 				const instance = await getInstance(context);
 				await instance.stop();
+				context.log("success", "Kivik instance stopped.");
 			} catch (error) {
 				context.log(
 					"error",
