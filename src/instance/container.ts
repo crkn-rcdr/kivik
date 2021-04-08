@@ -9,6 +9,8 @@ import pRetry from "p-retry";
 import { Context, NormalizedInstanceConfig } from "../context";
 
 const tempfile = (directory: string) => pathJoin(directory, ".kivik.tmp");
+const getNano = (port: number, context: Context) =>
+	localNano(port, context.local);
 
 export const getContainer = async (context: Context) => {
 	const tmp = tempfile(context.directory);
@@ -32,7 +34,12 @@ export const getContainer = async (context: Context) => {
 			inspect.HostConfig.PortBindings["5984/tcp"][0]["HostPort"],
 			10
 		);
-		return new Container({ dc, port, name: containerName, context });
+		return new Container({
+			dc,
+			nano: getNano(port, context),
+			name: containerName,
+			context,
+		});
 	} catch (error) {
 		if (error.statusCode === 404) {
 			await deleteFile(tmp);
@@ -75,21 +82,34 @@ export const createContainer = async (
 	const name = (await dc.inspect()).Name.substring(1);
 	await writeFile(tempfile(context.directory), name, { encoding: "utf8" });
 
-	const container = new Container({ dc, port, name, context });
-	await container.start();
-	return container;
+	// Initialize Couch
+	context.log("info", `Starting container ${name}.`);
+	await dc.start();
+	context.log("info", `Container ${name} started.`);
+
+	const nano = getNano(port, context);
+	const createDb = async (db: string) => {
+		return nano.relax({ path: db, method: "put", qs: { n: 1 } });
+	};
+
+	await pRetry(async () => {
+		await createDb("_users");
+		await createDb("_replicator");
+		await createDb("_global_changes");
+	});
+
+	return new Container({ dc, nano, name, context });
 };
 
 interface ContainerArgs {
 	readonly dc: Docker.Container;
-	readonly port: number;
+	readonly nano: ServerScope;
 	readonly name: string;
 	readonly context: Context;
 }
 
 export class Container {
 	private readonly dc: Docker.Container;
-	private readonly port: number;
 	private readonly name: string;
 	readonly nano: ServerScope;
 	private readonly context: Context;
@@ -98,9 +118,8 @@ export class Container {
 
 	constructor(args: ContainerArgs) {
 		this.dc = args.dc;
-		this.port = args.port;
 		this.name = args.name;
-		this.nano = localNano(args.port, args.context.local);
+		this.nano = args.nano;
 		this.context = args.context;
 		this.dockerStream = null;
 
@@ -112,26 +131,12 @@ export class Container {
 		};
 	}
 
-	async start() {
-		this.context.log("info", `Starting container ${this.name}.`);
-		await this.dc.start();
-		this.context.log("info", `Container ${this.name} started.`);
-
-		const createDb = async (db: string) => {
-			return this.nano.relax({ path: db, method: "put", qs: { n: 1 } });
-		};
-
-		await pRetry(async () => {
-			await createDb("_users");
-			await createDb("_replicator");
-			await createDb("_global_changes");
-		});
-	}
+	async start() {}
 
 	announce() {
 		this.context.log(
 			"success",
-			`Kivik instance ready: http://localhost:${this.port}/_utils`
+			`Kivik instance ready: ${this.nano.config.url}_utils`
 		);
 	}
 
@@ -161,7 +166,7 @@ export class Container {
 			await this.dc.stop();
 			await this.dc.remove();
 			await deleteFile(tempfile(this.context.directory));
-			this.context.log("warn", `Container ${this.name} stopped and removed.`);
+			this.context.log("info", `Container ${this.name} stopped and removed.`);
 		} else {
 			throw new Error(
 				"Attempting to stop a Kivik container that is not started."

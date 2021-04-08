@@ -1,4 +1,5 @@
 import yargs from "yargs";
+import { emitKeypressEvents } from "readline";
 
 import { UnloggedContext } from "../context";
 import { createInstance } from "../instance";
@@ -27,8 +28,7 @@ export default (unloggedContext: UnloggedContext) => {
 				instance.announce();
 				await instance.attach();
 
-				const handle = async (signal: NodeJS.Signals) => {
-					context.log("warn", `Received signal ${signal}. Closing.`);
+				const stop = async () => {
 					if (argv.keep) {
 						await instance.detach();
 						context.log(
@@ -38,10 +38,32 @@ export default (unloggedContext: UnloggedContext) => {
 					} else {
 						await instance.stop();
 					}
+					process.exit(0);
 				};
 
-				process.on("SIGINT", handle);
-				process.on("SIGTERM", handle);
+				const handleSignal = async (signal: NodeJS.Signals) => {
+					context.log("warn", `Received signal ${signal}. Closing.`);
+					await stop();
+				};
+
+				emitKeypressEvents(process.stdin);
+				process.stdin.setRawMode(true);
+				process.stdin.on("keypress", async (_, key) => {
+					if (key.name === "x") {
+						context.log("warn", "Quitting.");
+						await stop();
+					} else if (key.name === "r") {
+						context.log("warn", "Redeploying.");
+						await instance.deploy();
+					}
+				});
+				context.log(
+					"warn",
+					"Press 'x' to quit. Press 'r' to redeploy Kivik files."
+				);
+
+				process.on("SIGINT", handleSignal);
+				process.on("SIGTERM", handleSignal);
 			} catch (error) {
 				context.log(
 					"error",
