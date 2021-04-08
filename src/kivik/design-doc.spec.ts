@@ -2,7 +2,7 @@ import test from "ava";
 import { JsonValue } from "type-fest";
 import { join } from "path";
 
-import { apiContext } from "../context";
+import { defaultContext } from "../context";
 import { directory } from "../example";
 import { DesignDoc } from "./design-doc";
 import { KivikFile, DesignFile } from "./file";
@@ -12,7 +12,7 @@ const designPath = (...args: string[]) =>
 
 const ddoc = new DesignDoc(
 	"test",
-	apiContext(directory).withDatabase("testdb")
+	defaultContext(directory).withDatabase("testdb")
 );
 
 test("Constructs", (t) => {

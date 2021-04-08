@@ -1,19 +1,19 @@
-import { InitContext } from "../context";
-import { createKivikFromContext } from "../kivik";
-import { CommonArgv } from "./parse";
+import { UnloggedContext } from "../context";
+import { createKivik } from "../kivik";
+import { CommonArgv } from ".";
 
-export default (context: InitContext) => {
+export default (unloggedContext: UnloggedContext) => {
 	return {
 		command: "fixtures",
 		describe: "Test that each database's fixtures validate",
 		handler: async (argv: CommonArgv) => {
-			const fullContext = context.withArgv(argv);
+			const context = unloggedContext.withArgv(argv);
 
-			const kivik = await createKivikFromContext(fullContext, "fixtures");
+			const kivik = await createKivik(context, "fixtures");
 			const errors = Object.entries(kivik.validateFixtures());
 			await kivik.close();
 
-			process.exit(errors.length);
+			process.exitCode = errors.length;
 		},
 	};
 };

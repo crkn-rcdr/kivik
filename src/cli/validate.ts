@@ -4,9 +4,9 @@ import { readJson } from "fs-extra";
 import yargs from "yargs";
 import { MaybeDocument } from "nano";
 
-import { InitContext } from "../context";
-import { createKivikFromContext, Database } from "../kivik";
-import { CommonArgv } from "./parse";
+import { UnloggedContext } from "../context";
+import { createKivik, Database } from "../kivik";
+import { CommonArgv } from ".";
 
 const fetchDocument = async (input: string): Promise<MaybeDocument> => {
 	if (input.startsWith("https://") || input.startsWith("http://")) {
@@ -24,7 +24,7 @@ type ValidateArgv = CommonArgv & {
 	document?: string;
 };
 
-export default (context: InitContext) => {
+export default (unloggedContext: UnloggedContext) => {
 	return {
 		command: "validate <database> <document>",
 		describe: "Validates a document against a database's validate function",
@@ -41,10 +41,10 @@ export default (context: InitContext) => {
 						"The document to validate. Can be specified as either a local file or a URL.",
 				}),
 		handler: async (argv: ValidateArgv) => {
-			const fullContext = context.withArgv(argv);
+			const context = unloggedContext.withArgv(argv);
 
 			try {
-				const kivik = await createKivikFromContext(fullContext, "validate");
+				const kivik = await createKivik(context, "validate");
 				const dbName = argv.database as string;
 				if (!kivik.databases.has(dbName))
 					throw new Error(`Cannot find database directory ${dbName}`);
@@ -57,18 +57,18 @@ export default (context: InitContext) => {
 				const document = await fetchDocument(argv.document as string);
 				const response = db.validate(document);
 				if (response.valid) {
-					fullContext.log("success", `${argv.document} is valid.`);
+					context.log("success", `${argv.document} is valid.`);
 					process.exit(0);
 				} else {
-					fullContext.log(
+					context.log(
 						"error",
 						`${argv.document} is invalid. Errors: ${response.errors}`
 					);
-					process.exit(1);
+					process.exitCode = 1;
 				}
 			} catch (error) {
-				fullContext.log("error", error.message);
-				process.exit(1);
+				context.log("error", error.message);
+				process.exitCode = 1;
 			}
 		},
 	};

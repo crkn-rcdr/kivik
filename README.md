@@ -85,6 +85,7 @@ export interface InstanceConfig {
   - `warn`: Something interesting is about to happen, or something didn't work as expected but it isn't a big deal
   - `info`: Everything Kivik is doing
   - `couch`: For `kivik dev`, output the CouchDB logs
+- `--logTimestamp`: Add a timestamp to log output.
 - `--quiet`: Silence output.
 
 ## Operations
@@ -184,43 +185,59 @@ await kivik.deployTo("production");
 await kivik.close();
 ```
 
-### Instance (`dev`, `instance`, `inspect`)
+### Instance
 
 ```shell
-$ kivik dev
+# Start and stop an instance
+$ kivik start
+$
+# ...
+$ kivik stop
+
+# Start (or attach to) an instance and watch files for changes
+$ kivik watch
+
+# Start (or attach to) an instance, watch files for changes, and keep the instance running
+$ kivik watch --keep
 ```
 
 Spins up a local Docker container running CouchDB, deploys Kivik configuration to it, and then sends updates to those files to the Docker container. Useful for local development.
 
-Kivik instances can also be used in test suites. Here's an example using [Ava](https://github.com/avajs/ava) but this should work with any testing framework that handles asynchronous code.
+Kivik instances can also be used in test suites. The best approach is to start an instance before running tests, and stop it after. For instance, with Kivik and [AVA](https://github.com/avajs/ava) installed in your `devDependencies`, use this to run tests:
+
+```json
+{
+  "scripts": {
+    "test": "kivik start && ava; kivik stop"
+  }
+}
+```
+
+Interface with the running Kivik instance like so:
 
 ```js
 import test from "ava";
-import { createInstance } from "kivik";
+import { getInstance } from "kivik";
 
 test.before(async (t) => {
-  t.context.instance = await createInstance("path/to/dir");
+  t.context.instance = await getInstance("path/to/dir", { fixtures: true });
 });
 
 test.beforeEach(async (t) => {
-  t.context.testdb = (await t.context.instance.deploy()).get("testdb");
+  t.context.testdb = (
+    await t.context.instance.deploy("unique-test-suffix")
+  ).get("testdb");
 });
 
 test("Your fixture looks good", async (t) => {
-  try {
-    const fixture = testdb.get("great-expectations");
-    t.is(fixture.title, "Great Expectations");
-  } catch (e) {
-    t.fail();
-  }
-});
-
-test.after(async (t) => {
-  await t.context.instance.close();
+  const fixture = await testdb.get("great-expectations");
+  t.is(fixture.title, "Great Expectations");
 });
 ```
 
-## Tests
+When a Kivik instance is running, Kivik saves its container's name to `$DIR/.kivik.tmp`. If this file is altered or deleted, Kivik won't be able to find the running instance it might be referring to. The file is deleted when a Kivik instance is stopped.
+
+## Testing Kivik
 
 ```shell
 $ git clone https://github.com/crkn-rcdr/kivik

@@ -1,14 +1,14 @@
 import yargs from "yargs";
 
-import { InitContext } from "../context";
-import { createKivikFromContext } from "../kivik";
-import { CommonArgv } from "./parse";
+import { UnloggedContext } from "../context";
+import { createKivik } from "../kivik";
+import { CommonArgv } from ".";
 
 type DeployArgv = CommonArgv & {
 	deployment?: string;
 };
 
-export default (context: InitContext) => {
+export default (unloggedContext: UnloggedContext) => {
 	return {
 		command: "deploy <deployment>",
 		describe: "Deploys design documents to a remote database",
@@ -20,7 +20,7 @@ export default (context: InitContext) => {
 				})
 				.check((argv: DeployArgv): boolean => {
 					const key = argv.deployment as string;
-					const deployment = context.rc.deployments[key];
+					const deployment = unloggedContext.deployments[key];
 
 					if (!deployment)
 						throw new Error(`No deployment in kivikrc for key ${key}`);
@@ -28,8 +28,8 @@ export default (context: InitContext) => {
 					return true;
 				}),
 		handler: async (argv: DeployArgv) => {
-			const fullContext = context.withArgv(argv);
-			const kivik = await createKivikFromContext(fullContext, "deploy");
+			const context = unloggedContext.withArgv(argv);
+			const kivik = await createKivik(context, "deploy");
 
 			await kivik.deployTo(argv.deployment as string);
 
