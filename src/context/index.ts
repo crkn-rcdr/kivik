@@ -1,4 +1,5 @@
 import { readFileSync } from "fs-extra";
+import { dirname } from "path";
 import { parse as parseYAML } from "yaml";
 import { sync as findUp } from "find-up";
 
@@ -35,6 +36,8 @@ export const createContext = (directory: string): UnloggedContext => {
 	const rc = normalizeRc(
 		confPath ? parseYAML(readFileSync(confPath, { encoding: "utf-8" })) : {}
 	);
+
+	if (confPath) directory = dirname(confPath);
 
 	return {
 		directory,
