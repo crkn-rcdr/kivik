@@ -61,7 +61,7 @@ export const createContext = (directory: string): UnloggedContext => {
 	};
 };
 
-export const apiContext = (directory: string): Context => {
+export const defaultContext = (directory: string): Context => {
 	return createContext(directory).withArgv({
 		color: false,
 		logLevel: "error",

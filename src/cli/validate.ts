@@ -5,7 +5,7 @@ import yargs from "yargs";
 import { MaybeDocument } from "nano";
 
 import { UnloggedContext } from "../context";
-import { createKivikFromContext, Database } from "../kivik";
+import { createKivik, Database } from "../kivik";
 import { CommonArgv } from ".";
 
 const fetchDocument = async (input: string): Promise<MaybeDocument> => {
@@ -44,7 +44,7 @@ export default (unloggedContext: UnloggedContext) => {
 			const context = unloggedContext.withArgv(argv);
 
 			try {
-				const kivik = await createKivikFromContext(context, "validate");
+				const kivik = await createKivik(context, "validate");
 				const dbName = argv.database as string;
 				if (!kivik.databases.has(dbName))
 					throw new Error(`Cannot find database directory ${dbName}`);
@@ -64,11 +64,11 @@ export default (unloggedContext: UnloggedContext) => {
 						"error",
 						`${argv.document} is invalid. Errors: ${response.errors}`
 					);
-					process.exit(1);
+					process.exitCode = 1;
 				}
 			} catch (error) {
 				context.log("error", error.message);
-				process.exit(1);
+				process.exitCode = 1;
 			}
 		},
 	};

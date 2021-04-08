@@ -5,7 +5,7 @@ import { get as getNano } from "@crkn-rcdr/nano";
 import { ServerScope } from "nano";
 
 import { Mode } from "..";
-import { Context, apiContext } from "../context";
+import { Context, defaultContext } from "../context";
 import { KivikFile } from "./file";
 import {
 	createDatabase,
@@ -50,23 +50,25 @@ const fileGlobs = (mode: Mode = "instance"): string[] => {
  * @param mode The mode to operate in. Default: `instance`
  * @returns A Kivik object, with initial file scan and load complete.
  */
-export const createKivik = async (
+export async function createKivik(
 	directory: string,
-	mode: Mode = "instance"
-): Promise<Kivik> => {
-	return createKivikFromContext(apiContext(directory), mode);
-};
-
+	mode?: Mode
+): Promise<Kivik>;
 /**
  * Creates a Kivik store from a Kivik Context object.
  * @param context The Kivik Context object created from the local environment.
  * @param mode The mode to operate in. Default: `instance`
  * @returns A Kivik object, with initial file scan and load complete.
  */
-export const createKivikFromContext = async (
+export async function createKivik(
 	context: Context,
+	mode?: Mode
+): Promise<Kivik>;
+export async function createKivik(
+	input: string | Context,
 	mode: Mode = "instance"
-): Promise<Kivik> => {
+): Promise<Kivik> {
+	const context = typeof input === "string" ? defaultContext(input) : input;
 	const watcher = watch(fileGlobs(mode), {
 		cwd: context.directory,
 		ignored: [
@@ -90,7 +92,7 @@ export const createKivikFromContext = async (
 	context.log("info", "Kivik file scan complete.");
 
 	return kivik;
-};
+}
 
 /**
  * A store of configuration, fixtures, and validation for a set of CouchDB

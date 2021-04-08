@@ -1,5 +1,5 @@
 import { UnloggedContext } from "../context";
-import { createKivikFromContext } from "../kivik";
+import { createKivik } from "../kivik";
 import { CommonArgv } from ".";
 
 export default (unloggedContext: UnloggedContext) => {
@@ -9,11 +9,11 @@ export default (unloggedContext: UnloggedContext) => {
 		handler: async (argv: CommonArgv) => {
 			const context = unloggedContext.withArgv(argv);
 
-			const kivik = await createKivikFromContext(context, "fixtures");
+			const kivik = await createKivik(context, "fixtures");
 			const errors = Object.entries(kivik.validateFixtures());
 			await kivik.close();
 
-			process.exit(errors.length);
+			process.exitCode = errors.length;
 		},
 	};
 };

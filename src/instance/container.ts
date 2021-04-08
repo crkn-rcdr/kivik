@@ -1,5 +1,5 @@
 import { join as pathJoin } from "path";
-import { writeFile, unlink as deleteFile } from "fs-extra";
+import { readFile, writeFile, unlink as deleteFile } from "fs-extra";
 import Docker from "dockerode";
 import getPort from "get-port";
 import { localhost as localNano } from "@crkn-rcdr/nano";
@@ -9,6 +9,39 @@ import pRetry from "p-retry";
 import { Context, NormalizedInstanceConfig } from "../context";
 
 const tempfile = (directory: string) => pathJoin(directory, ".kivik.tmp");
+
+export const getContainer = async (context: Context) => {
+	const tmp = tempfile(context.directory);
+	let containerName: string;
+	try {
+		containerName = await readFile(tmp, { encoding: "utf8" });
+	} catch (error) {
+		if (error.code === "ENOENT") {
+			return null;
+		} else {
+			throw error;
+		}
+	}
+
+	const docker = new Docker();
+
+	try {
+		const dc = docker.getContainer(containerName);
+		const inspect = await dc.inspect();
+		const port = parseInt(
+			inspect.HostConfig.PortBindings["5984/tcp"][0]["HostPort"],
+			10
+		);
+		return new Container({ dc, port, name: containerName, context });
+	} catch (error) {
+		if (error.statusCode === 404) {
+			await deleteFile(tmp);
+			return null;
+		} else {
+			throw error;
+		}
+	}
+};
 
 export const createContainer = async (
 	context: Context,
@@ -54,7 +87,7 @@ interface ContainerArgs {
 	readonly context: Context;
 }
 
-class Container {
+export class Container {
 	private readonly dc: Docker.Container;
 	private readonly port: number;
 	private readonly name: string;
@@ -93,13 +126,13 @@ class Container {
 			await createDb("_replicator");
 			await createDb("_global_changes");
 		});
+	}
 
+	announce() {
 		this.context.log(
 			"success",
 			`Kivik instance ready: http://localhost:${this.port}/_utils`
 		);
-
-		return this.nano;
 	}
 
 	async attach() {
@@ -128,7 +161,7 @@ class Container {
 			await this.dc.stop();
 			await this.dc.remove();
 			await deleteFile(tempfile(this.context.directory));
-			this.context.log("info", `Container ${this.name} stopped and removed.`);
+			this.context.log("warn", `Container ${this.name} stopped and removed.`);
 		} else {
 			throw new Error(
 				"Attempting to stop a Kivik container that is not started."
