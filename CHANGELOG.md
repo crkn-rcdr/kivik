@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0-alpha.7] - 2021-04-08
+
+- New CLI invocations: `kivik start`, `kivik watch`, `kivik stop`. `kivik inspect`, `kivik dev` and `kivik instance` are aliases of `kivik watch`, and nothing particularly new happens if you keep using those like you used to. `kivik start` and `kivik stop` start and stop the Kivik instance in the background.
+- Log output has changed a bit. The new CLI option `--log-timestamp` toggles whether or not a timestamp is displayed.
+- Use `Kivik.getInstance(directory: string, config?: InstanceConfig)` to interface with a running instance programmatically.
+- `Kivik.createInstance(directory: string, attach?: boolean, config?: InstanceConfig)` accepts the `attach` boolean which causes it to attach to a running instance instead of creating a new one. If `attach === false`, `createInstance` will throw an exception if an instance is already running.
+
 ## [2.0.0-alpha.6] - 2021-04-06
 
 - Dependency upgrade. Nano instances use one socket at a time, for safety.
