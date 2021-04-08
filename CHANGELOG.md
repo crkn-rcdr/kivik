@@ -6,7 +6,7 @@
 - `kivik start` does not deploy by default.
 - RC file deployments can set a `fixtures` flag to determine if deployments should also deploy fixtures. This is false by default.
 - `kivik deploy` checks this flag (as well as the `local.fixtures` for `kivik deploy local`) when deploying.
-- Minor instance API changes (I should probably document it better).
+- `instance.deployDb(db: string, suffix?: string)` lets test suites deploy one database at a time.
 
 ## [2.0.0-alpha.7] - 2021-04-08
 
