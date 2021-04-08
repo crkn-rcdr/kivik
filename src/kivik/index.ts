@@ -4,7 +4,7 @@ import pEvent from "p-event";
 import { ServerScope } from "nano";
 
 import { Mode } from "..";
-import { Context, defaultContext } from "../context";
+import { Context, defaultContext, NanoDeployment } from "../context";
 import { KivikFile } from "./file";
 import {
 	createDatabase,
@@ -132,23 +132,13 @@ export interface Kivik {
 	validateFixtures: () => ValidationReport;
 
 	/**
-	 * Deploys stored configuration and fixtures to a CouchDB endpoint.
-	 * @param nano A `nano` instance pointing to the endpoint.
-	 * @param suffix If set, each database at the endpoint will have the suffix
-	 * appended to its name with a hyphen: ``${db.name}-${suffix}``
-	 * @returns A Map of each database name to a `nano` `DocumentScope` handler
-	 * that permits further operations on it.
-	 */
-	deploy: (nano: ServerScope, suffix?: string) => Promise<DatabaseHandlerMap>;
-
-	/**
 	 * Deploys stored configuration and fixtures to a CouchDB endpoint,
 	 * described by a Kivik RC deployment object.
 	 * @param deployment The key of the deployment object in the Kivik RC file.
 	 * @returns A Map of each database name to a `nano` `DocumentScope` handler
 	 * that permits further operations on it.
 	 */
-	deployTo: (deployment: string) => Promise<DatabaseHandlerMap>;
+	deploy: (deployment: string | NanoDeployment) => Promise<DatabaseHandlerMap>;
 
 	/**
 	 * Triggers updates to a CouchDB endpoint when files monitored by the Kivik
@@ -210,19 +200,15 @@ class KivikImpl implements Kivik {
 	}
 
 	async deploy(
-		nano: ServerScope,
-		suffix?: string
+		deployment: string | NanoDeployment
 	): Promise<DatabaseHandlerMap> {
+		if (typeof deployment === "string")
+			deployment = this.context.getDeployment(deployment);
 		const handlers: DatabaseHandlerMap = new Map();
 		for (const [name, db] of this.databases) {
-			handlers.set(name, await db.deploy(nano, suffix));
+			handlers.set(name, await db.deploy(deployment.nano, deployment.suffix));
 		}
 		return handlers;
-	}
-
-	async deployTo(deployment: string) {
-		const dObj = this.context.getDeployment(deployment);
-		return await this.deploy(dObj.nano, dObj.suffix);
 	}
 
 	deployOnChanges(nano: ServerScope) {

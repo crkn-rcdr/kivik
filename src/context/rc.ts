@@ -1,3 +1,5 @@
+import { ServerScope } from "nano";
+
 /** Kivik RC file configuration. */
 export interface Rc {
 	/**
@@ -31,7 +33,15 @@ export interface Deployment {
 	};
 	/** Suffix to append to the end of each database name. Default: `undefined` */
 	suffix?: string;
+	/** Whether or not to deploy fixtures along with the design documents Default: `false`. */
+	fixtures?: boolean;
 }
+
+export type NanoDeployment = {
+	nano: ServerScope;
+	suffix?: string;
+	fixtures: boolean;
+};
 
 /** Configuration for Kivik instances. */
 export interface InstanceConfig {

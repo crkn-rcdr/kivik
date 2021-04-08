@@ -59,6 +59,8 @@ export interface Deployment {
   };
   /** Suffix to append to the end of each database name. Default: `undefined` */
   suffix?: string;
+  /** Whether or not to deploy fixtures along with the design documents. */
+  fixtures?: boolean;
 }
 
 /** Configuration for Kivik instances. */
@@ -181,7 +183,7 @@ $ kivik deploy production
 import { createKivik } from "kivik";
 
 const kivik = await createKivik("path/to/dir", "deploy");
-await kivik.deployTo("production");
+await kivik.deploy("production");
 await kivik.close();
 ```
 

@@ -5,14 +5,14 @@ import { sync as findUp } from "find-up";
 
 import { CommonArgv } from "../cli";
 import { createLogger, LogLevel } from "./logger";
-import { normalizeRc, NormalizedRc, Deployment } from "./rc";
+import { normalizeRc, NormalizedRc, Deployment, NanoDeployment } from "./rc";
 import { get as remoteNano, localhost as localNano } from "@crkn-rcdr/nano";
-import { ServerScope } from "nano";
 
 export { logLevels, LogLevel } from "./logger";
 
 export {
 	Deployment,
+	NanoDeployment,
 	InstanceConfig,
 	normalizeInstanceConfig,
 	NormalizedInstanceConfig,
@@ -21,9 +21,7 @@ export {
 
 export type UnloggedContext = NormalizedRc & {
 	readonly directory: string;
-	readonly getDeployment: (
-		key: string
-	) => { nano: ServerScope; suffix?: string };
+	readonly getDeployment: (key: string) => NanoDeployment;
 	readonly withArgv: (argv: CommonArgv) => Context;
 };
 
@@ -53,9 +51,13 @@ export const createContext = (directory: string): UnloggedContext => {
 				return {
 					nano: remoteNano(deployment.url, deployment.auth),
 					suffix: deployment.suffix,
+					fixtures: !!deployment.fixtures,
 				};
 			} else if (key === "local") {
-				return { nano: localNano(this.local.port, this.local) };
+				return {
+					nano: localNano(this.local.port, this.local),
+					fixtures: this.local.fixtures,
+				};
 			} else {
 				throw new Error(
 					`Your kivikrc file does not have a deployment with key '${key}'`

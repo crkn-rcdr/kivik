@@ -127,7 +127,11 @@ async function instanceHelper(
 			kivik.deployOnChanges(container.nano);
 		},
 		deploy: async (suffix?: string) => {
-			return await kivik.deploy(container.nano, suffix);
+			return await kivik.deploy({
+				nano: container.nano,
+				suffix,
+				fixtures: nConfig.fixtures,
+			});
 		},
 		detach: async () => {
 			await kivik.close();

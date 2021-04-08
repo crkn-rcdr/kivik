@@ -30,8 +30,11 @@ export default (unloggedContext: UnloggedContext) => {
 
 			let kivik;
 			try {
-				kivik = await createKivik(context, "deploy");
-				await kivik.deploy(deployment.nano, deployment.suffix);
+				kivik = await createKivik(
+					context,
+					deployment.fixtures ? "instance" : "deploy"
+				);
+				await kivik.deploy(deployment);
 				await kivik.close();
 				process.exit(0);
 			} catch (error) {
