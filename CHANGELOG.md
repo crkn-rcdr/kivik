@@ -110,6 +110,7 @@
 - Multiple design document support
 - View (map/reduce) and update function support within design documents
 
+[2.0.0-alpha.7]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.7
 [2.0.0-alpha.6]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.6
 [2.0.0-alpha.5]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.5
 [2.0.0-alpha.4]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.4
