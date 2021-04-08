@@ -1,6 +1,6 @@
 {
   "name": "kivik",
-  "version": "2.0.0-alpha.7",
+  "version": "2.0.0-alpha.8",
   "description": "An opinionated library and command-line utility for configuration CouchDB endpoints, databases, and design documents",
   "keywords": [
     "couchdb"
@@ -19,9 +19,12 @@
     }
   ],
   "license": "Unlicense",
-  "main": "./dist/index.js",
+  "files": [
+    "dist/**"
+  ],
+  "main": "dist/index.js",
   "bin": {
-    "kivik": "./dist/bin.js"
+    "kivik": "dist/bin.js"
   },
   "engines": {
     "node": ">=12.0.0"
