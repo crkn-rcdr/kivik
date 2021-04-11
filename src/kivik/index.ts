@@ -1,7 +1,7 @@
 import { watch, FSWatcher } from "chokidar";
 import { join as joinPath } from "path";
 import pEvent from "p-event";
-import { ServerScope } from "nano";
+import { ServerScope as CouchClient } from "nano";
 
 import { Mode } from "..";
 import { Context, defaultContext, NanoDeployment } from "../context";
@@ -21,8 +21,10 @@ export {
 	ValidateResponse as DatabaseValidateResponse,
 } from "./database";
 
+export { ServerScope as CouchClient } from "nano";
+
 export type ValidationReport = Map<string, DatabaseValidationReport>;
-export type DatabaseHandlerMap = Map<string, DatabaseHandler>;
+export type DatabaseHandlerMap = Map<string, DatabaseHandler<unknown>>;
 
 const fileGlobs = (mode: Mode = "instance"): string[] => {
 	const validateGlob = ["*/validate.js"];
@@ -114,7 +116,7 @@ export interface Kivik {
 	 * @param nano If set, the CouchDB endpoint that `nano` points to will be
 	 * updated with the new file's contents.
 	 */
-	updateFile: (path: string, nano?: ServerScope) => Promise<void>;
+	updateFile: (path: string, nano?: CouchClient) => Promise<void>;
 
 	/**
 	 * Removes a file from the Kivik store.
@@ -123,7 +125,7 @@ export interface Kivik {
 	 * @param nano If set, the CouchDB endpoint that `nano` points to will be
 	 * updated to no longer contain the file's contents.
 	 */
-	removeFile: (path: string, nano?: ServerScope) => Promise<void>;
+	removeFile: (path: string, nano?: CouchClient) => Promise<void>;
 
 	/**
 	 * Validates each fixture against its database's validate function.
@@ -145,7 +147,7 @@ export interface Kivik {
 	 * store are added, change, or are removed.
 	 * @param nano A `nano` instance pointing to the endpoint.
 	 */
-	deployOnChanges: (nano: ServerScope) => void;
+	deployOnChanges: (nano: CouchClient) => void;
 
 	/**
 	 * Closes the watcher monitoring files for this store.
@@ -165,7 +167,7 @@ class KivikImpl implements Kivik {
 		this.databases = new Map();
 	}
 
-	async updateFile(path: string, nano?: ServerScope) {
+	async updateFile(path: string, nano?: CouchClient) {
 		const file = new KivikFile(path, this.context.directory);
 
 		if (!this.databases.has(file.db))
@@ -177,7 +179,7 @@ class KivikImpl implements Kivik {
 	}
 
 	/** TODO: implement this */
-	async removeFile(path: string, _nano?: ServerScope) {
+	async removeFile(path: string, _nano?: CouchClient) {
 		this.context.log(
 			"error",
 			`Not yet implemented: deleting ${path} in the Kivik instance`
@@ -213,7 +215,7 @@ class KivikImpl implements Kivik {
 		return handlers;
 	}
 
-	deployOnChanges(nano: ServerScope) {
+	deployOnChanges(nano: CouchClient) {
 		this.watcher.on("all", async (listener, path) => {
 			try {
 				if (["add", "change"].includes(listener)) {
