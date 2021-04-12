@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.0-alpha.9] - 2021-04-12
+
+- Improved TypeScript generics (#65)
+
 ## [2.0.0-alpha.8] - 2021-04-08
 
 - `kivik deploy local` deploys to a running Kivik instance, unless a deployment with key `local` exists in the RC file.
@@ -118,6 +122,7 @@
 - Multiple design document support
 - View (map/reduce) and update function support within design documents
 
+[2.0.0-alpha.9]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.9
 [2.0.0-alpha.8]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.8
 [2.0.0-alpha.7]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.7
 [2.0.0-alpha.6]: https://github.com/crkn-rcdr/kivik/releases/tag/v2.0.0-alpha.6
