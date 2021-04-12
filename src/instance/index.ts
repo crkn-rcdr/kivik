@@ -138,7 +138,7 @@ async function instanceHelper(
 				dbs: null,
 			});
 		},
-		deployDb: async (db: string, suffix?: string) => {
+		deployDb: async <D>(db: string, suffix?: string) => {
 			const handlers = await kivik.deploy({
 				nano: container.nano,
 				suffix,
@@ -146,7 +146,7 @@ async function instanceHelper(
 				dbs: [db],
 			});
 			if (!handlers.has(db)) throw new Error(`Database '${db}' not found.`);
-			return handlers.get(db) as DatabaseHandler;
+			return handlers.get(db) as DatabaseHandler<D>;
 		},
 		detach: async () => {
 			await kivik.close();
@@ -165,7 +165,10 @@ export interface Instance {
 	readonly announce: () => void;
 	readonly attach: () => Promise<void>;
 	readonly deploy: (suffix?: string) => Promise<DatabaseHandlerMap>;
-	readonly deployDb: (db: string, suffix?: string) => Promise<DatabaseHandler>;
+	readonly deployDb: <D>(
+		db: string,
+		suffix?: string
+	) => Promise<DatabaseHandler<D>>;
 	readonly detach: () => Promise<void>;
 	readonly stop: () => Promise<void>;
 }

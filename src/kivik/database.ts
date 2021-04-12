@@ -21,7 +21,7 @@ import { DesignDoc } from "./design-doc";
 import { Context, DatabaseContext, NanoDeployment } from "../context";
 
 /** A `nano` DocumentScope object pointing to the deployed database. */
-export type DatabaseHandler = DocumentScope<unknown>;
+export type DatabaseHandler<D> = DocumentScope<D>;
 
 /** A map between invalid fixtures and their validation errors. */
 export type ValidationReport = Map<string, string>;
@@ -128,7 +128,7 @@ export interface Database {
 	 * @returns A promise resolving to a `nano` DocumentScope instance which
 	 * can perform further operations on database documents.
 	 */
-	deploy: (deployment: NanoDeployment) => Promise<DatabaseHandler>;
+	deploy: <D>(deployment: NanoDeployment) => Promise<DatabaseHandler<D>>;
 }
 
 /**
@@ -265,7 +265,7 @@ class DatabaseImpl implements Database {
 		return errors;
 	}
 
-	async deploy(deployment: NanoDeployment): Promise<DatabaseHandler> {
+	async deploy<D>(deployment: NanoDeployment): Promise<DatabaseHandler<D>> {
 		const { nano, suffix, fixtures } = deployment;
 		const name = suffix ? `${this.name}-${suffix}` : this.name;
 		this.logDeployAttempt(suffix ? `database (${name})` : "database");
@@ -283,7 +283,7 @@ class DatabaseImpl implements Database {
 		}
 		if (!dbExists) await nano.db.create(name);
 
-		const nanoDb = nano.use(name) as DatabaseHandler;
+		const nanoDb = nano.use<D>(name) as DatabaseHandler<D>;
 
 		// Deploy design docs
 		if (this.designDocs.size > 0) {
@@ -321,7 +321,10 @@ class DatabaseImpl implements Database {
 		return nanoDb;
 	}
 
-	private async deployDoc(nanoDb: DatabaseHandler, doc: MaybeDocument) {
+	private async deployDoc<D>(
+		nanoDb: DatabaseHandler<D>,
+		doc: D & MaybeDocument
+	) {
 		let _rev: string = "";
 		try {
 			if (doc._id) {
@@ -355,7 +358,10 @@ class DatabaseImpl implements Database {
 	 * @param nanoDb Document-scoped nano instance. e.g. `nano.use(this.name)`.
 	 * @param docs Array of documents to deploy.
 	 */
-	private async deployDocs(nanoDb: DatabaseHandler, docs: MaybeDocument[]) {
+	private async deployDocs<D>(
+		nanoDb: DatabaseHandler<D>,
+		docs: MaybeDocument[]
+	) {
 		const keys = docs
 			.map((doc) => doc._id)
 			.filter((id) => typeof id === "string") as string[];
