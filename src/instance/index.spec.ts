@@ -1,6 +1,6 @@
 import anyTest, { TestInterface } from "ava";
 
-import { createInstance, Instance } from ".";
+import { createInstance, getInstance, Instance } from ".";
 import { directory } from "../example";
 
 interface LocalContext {
@@ -13,7 +13,7 @@ test.before(async (t) => {
 	t.context = { instance: await createInstance(directory) };
 });
 
-test("Can survive multiple deploys", async (t) => {
+test.serial("Can survive multiple deploys", async (t) => {
 	const suffixes = Array.from({ length: 10 }, (_) =>
 		Math.random().toString(36).substring(2)
 	);
@@ -24,6 +24,13 @@ test("Can survive multiple deploys", async (t) => {
 			t.is(pickwick["_id"], "pickwick-papers");
 		})
 	);
+});
+
+test.serial("Can get a created instance", async (t) => {
+	const instance = await getInstance(directory);
+	const testdb = await instance.deployDb("testdb");
+	const pickwick = await testdb.get("pickwick-papers");
+	t.is(pickwick["_id"], "pickwick-papers");
 });
 
 test.after(async (t) => {
