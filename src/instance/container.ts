@@ -9,14 +9,14 @@ import pRetry from "p-retry";
 import { Context } from "../context";
 
 const tempfile = (directory: string) => pathJoin(directory, ".kivik.tmp");
-const getNano = (port: number, context: Context) =>
-	localNano(port, context.local);
 
 export const getContainer = async (context: Context) => {
 	const tmp = tempfile(context.directory);
-	let containerName: string;
+	let containerName: string, port: string, user: string, password: string;
 	try {
-		containerName = await readFile(tmp, { encoding: "utf8" });
+		[containerName, port, user, password] = (
+			await readFile(tmp, { encoding: "utf8" })
+		).split("\n") as [string, string, string, string];
 	} catch (error) {
 		if (error.code === "ENOENT") {
 			return null;
@@ -29,14 +29,9 @@ export const getContainer = async (context: Context) => {
 
 	try {
 		const dc = docker.getContainer(containerName);
-		const inspect = await dc.inspect();
-		const port = parseInt(
-			inspect.HostConfig.PortBindings["5984/tcp"][0]["HostPort"],
-			10
-		);
 		return new Container({
 			dc,
-			nano: getNano(port, context),
+			nano: localNano(parseInt(port, 10), { user, password }),
 			name: containerName,
 			context,
 		});
@@ -77,14 +72,17 @@ export const createContainer = async (context: Context): Promise<Container> => {
 	});
 
 	const name = (await dc.inspect()).Name.substring(1);
-	await writeFile(tempfile(context.directory), name, { encoding: "utf8" });
+	const fileContents = [name, port, user, password].join("\n");
+	await writeFile(tempfile(context.directory), fileContents, {
+		encoding: "utf8",
+	});
 
 	// Initialize Couch
 	context.log("info", `Starting container ${name}.`);
 	await dc.start();
 	context.log("info", `Container ${name} started.`);
 
-	const nano = getNano(port, context);
+	const nano = localNano(port, { user, password });
 	const createDb = async (db: string) => {
 		return nano.relax({ path: db, method: "put", qs: { n: 1 } });
 	};
