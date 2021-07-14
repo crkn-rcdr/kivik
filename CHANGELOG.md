@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.0-alpha.11] - 2021-07-14
+## [2.0.0-alpha.12] - 2021-07-14
 
 - `kivik deploy` initializes CouchDB system databases if they don't exist.
 

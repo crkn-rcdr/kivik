@@ -1,6 +1,6 @@
 {
   "name": "kivik",
-  "version": "2.0.0-alpha.11",
+  "version": "2.0.0-alpha.12",
   "description": "An opinionated library and command-line utility for configuration CouchDB endpoints, databases, and design documents",
   "keywords": [
     "couchdb"
