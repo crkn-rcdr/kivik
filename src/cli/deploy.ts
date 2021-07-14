@@ -1,4 +1,5 @@
 import yargs from "yargs";
+import pRetry from "p-retry";
 import { emitKeypressEvents } from "readline";
 
 import { NanoDeployment, UnloggedContext } from "../context";
@@ -48,6 +49,25 @@ export default (unloggedContext: UnloggedContext) => {
 				context.log("error", `Error creating Kivik object: ${error.message}`);
 				process.exit(1);
 			}
+
+			const createDb = async (db: string) => {
+				return deployment.nano.relax({
+					path: db,
+					method: "put",
+					qs: { n: 1 },
+				});
+			};
+
+			await pRetry(async () => {
+				try {
+					await createDb("_users");
+					await createDb("_replicator");
+					await createDb("_global_changes");
+				} catch (e) {
+					// 412: db already exists
+					if (e.statusCode !== 412) throw e;
+				}
+			});
 
 			try {
 				await kivik.deploy(deployment);
