@@ -33,7 +33,7 @@ export default (unloggedContext: UnloggedContext) => {
 						await instance.detach();
 						context.log(
 							"warn",
-							"The instance is still running. Run `kivik stop` to stop it, or `kivik watch` to re-attach to it."
+							"The instance is still running. Run `kivik stop` to stop it, or `kivik dev` to re-attach to it."
 						);
 					} else {
 						await instance.stop();
@@ -46,21 +46,24 @@ export default (unloggedContext: UnloggedContext) => {
 					await stop();
 				};
 
-				emitKeypressEvents(process.stdin);
-				process.stdin.setRawMode(true);
-				process.stdin.on("keypress", async (_, key) => {
-					if (key.name === "x") {
-						context.log("warn", "Quitting.");
-						await stop();
-					} else if (key.name === "r") {
-						context.log("warn", "Redeploying.");
-						await instance.deploy();
-					}
-				});
-				context.log(
-					"warn",
-					"Press 'x' to quit. Press 'r' to redeploy Kivik files."
-				);
+				if (process.stdin.isTTY) {
+					emitKeypressEvents(process.stdin);
+					process.stdin.setRawMode(true);
+					process.stdin.on("keypress", async (_, key) => {
+						if (key.name === "x") {
+							context.log("warn", "Quitting.");
+							await stop();
+						} else if (key.name === "r") {
+							context.log("warn", "Redeploying.");
+							await instance.deploy();
+						}
+					});
+
+					context.log(
+						"warn",
+						"Press 'x' to quit. Press 'r' to redeploy Kivik files."
+					);
+				}
 
 				process.on("SIGINT", handleSignal);
 				process.on("SIGTERM", handleSignal);
