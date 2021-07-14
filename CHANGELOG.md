@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.0-alpha.10] - 2021-07-14
+
+- `kivik deploy --watch` (#75)
+
 ## [2.0.0-alpha.9] - 2021-04-12
 
 - Improved TypeScript generics (#65)
