@@ -21,7 +21,9 @@ Kivik's opinionated nature lies in its expectation of a directory structure wher
 
 ### RC File
 
-Configuration options can be specified in an RC file, found at `./kivikrc.json`, `./kivikrc.yml`, or `./kivikrc.yaml`. The shape of a Kivik RC file is defined in [`src/context/rc.ts`](src/context/rc.ts), and I've pasted the relevant parts below. An example of sorts can be found at [`example/kivikrc.json`](example/kivikrc.json). At this moment, deploying Kivik configuration to an external CouchDB endpoint requires adding at least one object to the `deployments` RC file property.
+Configuration options can be specified in an RC file, found at `./kivikrc.json`, `./kivikrc.yml`, or `./kivikrc.yaml`. The shape of a Kivik RC file is defined in [`src/context/rc.ts`](src/context/rc.ts), and I've pasted the relevant parts below. An example of sorts can be found at [`kivikrc.json`](kivikrc.json). At this moment, deploying Kivik configuration to an external CouchDB endpoint requires adding at least one object to the `deployments` RC file property.
+
+**NEW** Use the `subdirectory` option to specify which subdirectory of the directory containing the Kivik RC file contains the database configuration. This is really handy when testing monorepos.
 
 The RC file is read whether using Kivik on the command line or programmatically.
 
@@ -37,8 +39,6 @@ export interface Rc {
   excludeDirectories?: string[];
   /** JavaScript files to ignore when processing design documents. Default: `["*.spec.*", "*.test.*"]` */
   excludeDesign?: string[];
-  /** Configuration for Kivik instances. */
-  local?: InstanceConfig;
   /** Subdirectory of the directory containing the RC file where the database configuration can be found. */
   subdirectory?: string;
 }
@@ -65,20 +65,6 @@ export interface Deployment {
   fixtures?: boolean;
   /** List of databases to deploy. By default, all databases are deployed. */
   dbs?: string[];
-}
-
-/** Configuration for Kivik instances. */
-export interface InstanceConfig {
-  /** Deploy fixtures when running `kivik dev`. Default: `true` */
-  fixtures?: boolean;
-  /** CouchDB docker image tag. Default: `couchdb:3.1` */
-  image?: string;
-  /** Port that Kivik will attempt to run a `kivik dev` instance on. Default: `5984` */
-  port?: number;
-  /** CouchDB admin user. Default: `kivik` */
-  user?: string;
-  /** CouchDB admin user's password. Default: `kivik` */
-  password?: string;
 }
 ```
 
@@ -191,59 +177,26 @@ await kivik.deploy("production");
 await kivik.close();
 ```
 
-If you deploy to `local`, you will deploy to a running Kivik instance (see below), unless you have a deployment with key `local` in your RC file.
+## Using Kivik for development and testing
 
-### Instance
+### Watch mode
 
-```shell
-# Start and stop an instance
-$ kivik start
-$
-# ...
-$ kivik stop
+Run `kivik deploy` with the `--watch` flag to deploy subsequent changes you make to your Kivik files.
 
-# Start (or attach to) an instance and watch files for changes
-$ kivik watch
+### Testing your design
 
-# Start (or attach to) an instance, watch files for changes, and keep the instance running
-$ kivik watch --keep
+```ts
+import { localhost as localNano } from "@crkn-rcdr/nano";
+import { createKivik } from "kivik";
+
+const client = localNano(5984, { user: "admin", password: "admin" });
+const kivik = await createKivik("kivikrc/directory");
+const testDeploy = kivik.testDeployer(client);
+
+// handler is a couchdb-nano `DocumentScope` object
+// supplying a suffix allows you to deploy multiple tests at once without conflict
+const handler = await testDeploy("db-name", "unique-testing-suffix");
 ```
-
-Spins up a local Docker container running CouchDB, deploys Kivik configuration to it, and then sends updates to those files to the Docker container. Useful for local development.
-
-Kivik instances can also be used in test suites. The best approach is to start an instance before running tests, and stop it after. For instance, with Kivik and [AVA](https://github.com/avajs/ava) installed in your `devDependencies`, use this to run tests:
-
-```json
-{
-  "scripts": {
-    "test": "kivik start && ava; kivik stop"
-  }
-}
-```
-
-Interface with the running Kivik instance like so:
-
-```js
-import test from "ava";
-import { getInstance } from "kivik";
-
-test.before(async (t) => {
-  t.context.instance = await getInstance("path/to/dir", { fixtures: true });
-});
-
-test.beforeEach(async (t) => {
-  t.context.testdb = (
-    await t.context.instance.deploy("unique-test-suffix")
-  ).get("testdb");
-});
-
-test("Your fixture looks good", async (t) => {
-  const fixture = await testdb.get("great-expectations");
-  t.is(fixture.title, "Great Expectations");
-});
-```
-
-When a Kivik instance is running, Kivik saves its container's name to `$DIR/.kivik.tmp`. If this file is altered or deleted, Kivik won't be able to find the running instance it might be referring to. The file is deleted when a Kivik instance is stopped. Only one Kivik instance can run at a time.
 
 ## Testing Kivik
 

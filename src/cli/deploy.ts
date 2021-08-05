@@ -42,7 +42,7 @@ export default (unloggedContext: UnloggedContext) => {
 			try {
 				kivik = await createKivik(
 					context,
-					deployment.fixtures ? "instance" : "deploy"
+					deployment.fixtures ? "test" : "deploy"
 				);
 			} catch (error) {
 				context.log("error", `Error creating Kivik object: ${error.message}`);

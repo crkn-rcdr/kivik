@@ -7,7 +7,6 @@ import { CommonArgv } from "../cli";
 import { createLogger, LogLevel } from "./logger";
 import { normalizeRc, NormalizedRc, Deployment, NanoDeployment } from "./rc";
 import { get as remoteNano } from "@crkn-rcdr/nano";
-import { getInstance } from "../instance";
 
 export { logLevels, LogLevel } from "./logger";
 
@@ -72,14 +71,6 @@ export const createContext = (directory: string): UnloggedContext => {
 							suffix: suffix || deployment.suffix,
 							fixtures: !!deployment.fixtures,
 							dbs: deployment.dbs || null,
-						};
-					} else if (key === "local") {
-						const instance = await getInstance(this);
-						return {
-							nano: instance.nano,
-							suffix,
-							fixtures: this.local.fixtures,
-							dbs: null,
 						};
 					} else {
 						throw new Error(

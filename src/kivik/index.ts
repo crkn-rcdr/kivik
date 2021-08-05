@@ -27,7 +27,7 @@ export { ServerScope as CouchClient } from "nano";
 export type ValidationReport = Map<string, DatabaseValidationReport>;
 export type DatabaseHandlerMap = Map<string, DatabaseHandler<unknown>>;
 
-const fileGlobs = (mode: Mode = "instance"): string[] => {
+const fileGlobs = (mode: Mode = "test"): string[] => {
 	const validateGlob = ["*/validate.js"];
 	const fixtureGlobs = [...validateGlob, "*/fixtures/*.json"];
 	const deployGlobs = [
@@ -43,7 +43,7 @@ const fileGlobs = (mode: Mode = "instance"): string[] => {
 	];
 
 	const globs: Record<Mode, string[]> = {
-		instance: [...fixtureGlobs, ...deployGlobs],
+		test: [...fixtureGlobs, ...deployGlobs],
 		deploy: deployGlobs,
 		fixtures: fixtureGlobs,
 		validate: validateGlob,
@@ -74,7 +74,7 @@ export async function createKivik(
 ): Promise<Kivik>;
 export async function createKivik(
 	input: string | Context,
-	mode: Mode = "instance"
+	mode: Mode = "test"
 ): Promise<Kivik> {
 	const context = typeof input === "string" ? defaultContext(input) : input;
 	const watcher = watch(fileGlobs(mode), {

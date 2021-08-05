@@ -46,7 +46,7 @@ export const createContainer = async (kivik: Kivik) => {
 };
 
 test.before(async (t) => {
-	const kivik = await createKivik(".", "instance");
+	const kivik = await createKivik(".");
 	const { container, nano } = await createContainer(kivik);
 	t.context = {
 		kivik,
