@@ -1,5 +1,5 @@
 import { readFileSync } from "fs-extra";
-import { dirname } from "path";
+import { dirname, join as pathJoin } from "path";
 import { parse as parseYAML } from "yaml";
 import { sync as findUp } from "find-up";
 
@@ -7,7 +7,6 @@ import { CommonArgv } from "../cli";
 import { createLogger, LogLevel } from "./logger";
 import { normalizeRc, NormalizedRc, Deployment, NanoDeployment } from "./rc";
 import { get as remoteNano } from "@crkn-rcdr/nano";
-import { getInstance } from "../instance";
 
 export { logLevels, LogLevel } from "./logger";
 
@@ -44,7 +43,7 @@ export const createContext = (directory: string): UnloggedContext => {
 		confPath ? parseYAML(readFileSync(confPath, { encoding: "utf-8" })) : {}
 	);
 
-	if (confPath) directory = dirname(confPath);
+	if (confPath) directory = pathJoin(dirname(confPath), rc.subdirectory);
 
 	return {
 		directory,
@@ -72,14 +71,6 @@ export const createContext = (directory: string): UnloggedContext => {
 							suffix: suffix || deployment.suffix,
 							fixtures: !!deployment.fixtures,
 							dbs: deployment.dbs || null,
-						};
-					} else if (key === "local") {
-						const instance = await getInstance(this);
-						return {
-							nano: instance.nano,
-							suffix,
-							fixtures: this.local.fixtures,
-							dbs: null,
 						};
 					} else {
 						throw new Error(

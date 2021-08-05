@@ -3,10 +3,7 @@ import yargs from "yargs";
 import { UnloggedContext, LogLevel, logLevels } from "../context";
 import deploy from "./deploy";
 import fixtures from "./fixtures";
-import start from "./start";
-import stop from "./stop";
 import validate from "./validate";
-import watch from "./watch";
 
 export interface CommonArgv {
 	color: boolean;
@@ -43,10 +40,7 @@ export const parse = (argv: string[], context: UnloggedContext): void => {
 		} as const)
 		.command(deploy(context))
 		.command(fixtures(context))
-		.command(start(context))
-		.command(stop(context))
 		.command(validate(context))
-		.command(watch(context))
 		.wrap(null)
 		.demandCommand(1, "Please specify a command.")
 		.fail((msg, err, _yargs) => {

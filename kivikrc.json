@@ -16,7 +16,5 @@
       "suffix": "pluto"
     }
   },
-  "instance": {
-    "fixtures": true
-  }
+  "subdirectory": "example"
 }

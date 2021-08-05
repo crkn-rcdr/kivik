@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.0.0-alpha.13] - 2021-08-05
+
+- BREAKING CHANGE: instances are gone. `kivik deploy --watch` and new functions in the Kivik class should cover everything you might ever have used instances for. Look at [src/kivik/index.spec.ts](src/kivik/index.spec.ts) for an example of how to spin up a CouchDB Docker container for testing.
+- You can specify the `subdirectory` of the directory that contains the Kivik config in kivikrc. Useful for monorepos.
+
 ## [2.0.0-alpha.12] - 2021-07-14
 
 - `kivik deploy` initializes CouchDB system databases if they don't exist.
