@@ -18,5 +18,6 @@
   },
   "instance": {
     "fixtures": true
-  }
+  },
+  "subdirectory": "example"
 }

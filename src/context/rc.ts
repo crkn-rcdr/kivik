@@ -13,6 +13,8 @@ export interface Rc {
 	excludeDesign?: string[];
 	/** Configuration for Kivik instances. */
 	local?: InstanceConfig;
+	/** Subdirectory of the directory containing the RC file where the database configuration can be found. */
+	subdirectory?: string;
 }
 
 /**
@@ -91,5 +93,6 @@ export const normalizeRc = (rc: Rc): NormalizedRc => {
 		excludeDirectories: rc.excludeDirectories || ["node_modules"],
 		excludeDesign: rc.excludeDesign || ["*.spec.*", "*.test.*"],
 		local: normalizeInstanceConfig(rc.local || {}),
+		subdirectory: rc.subdirectory || ".",
 	};
 };

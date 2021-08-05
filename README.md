@@ -39,6 +39,8 @@ export interface Rc {
   excludeDesign?: string[];
   /** Configuration for Kivik instances. */
   local?: InstanceConfig;
+  /** Subdirectory of the directory containing the RC file where the database configuration can be found. */
+  subdirectory?: string;
 }
 
 /**

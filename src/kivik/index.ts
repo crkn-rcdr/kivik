@@ -1,6 +1,7 @@
 import { watch, FSWatcher } from "chokidar";
 import { join as joinPath } from "path";
 import pEvent from "p-event";
+import pRetry from "p-retry";
 import { ServerScope as CouchClient } from "nano";
 
 import { Mode } from "..";
@@ -143,6 +144,17 @@ export interface Kivik {
 	deploy: (deployment: string | NanoDeployment) => Promise<DatabaseHandlerMap>;
 
 	/**
+	 * Deploys stored configuration and fixtures for a single database to a CouchDB
+	 * endpoint.
+	 */
+	deployDb: <D>(args: {
+		nano: CouchClient;
+		suffix?: string;
+		fixtures?: boolean;
+		db: string;
+	}) => Promise<DatabaseHandler<D>>;
+
+	/**
 	 * Triggers updates to a CouchDB endpoint when files monitored by the Kivik
 	 * store are added, change, or are removed.
 	 * @param nano A `nano` instance pointing to the endpoint.
@@ -206,6 +218,27 @@ class KivikImpl implements Kivik {
 	): Promise<DatabaseHandlerMap> {
 		if (typeof deployment === "string")
 			deployment = await this.context.getDeployment(deployment);
+
+		// create system databases if necessary
+		const createDb = async (db: string) => {
+			return (deployment as NanoDeployment).nano.relax({
+				path: db,
+				method: "put",
+				qs: { n: 1 },
+			});
+		};
+
+		await pRetry(async () => {
+			try {
+				await createDb("_users");
+				await createDb("_replicator");
+				await createDb("_global_changes");
+			} catch (e) {
+				// 412: db already exists
+				if (e.statusCode !== 412) throw e;
+			}
+		});
+
 		const handlers: DatabaseHandlerMap = new Map();
 		for (const [name, db] of this.databases) {
 			if (!deployment.dbs || deployment.dbs.includes(name)) {
@@ -213,6 +246,23 @@ class KivikImpl implements Kivik {
 			}
 		}
 		return handlers;
+	}
+
+	async deployDb<D>(args: {
+		nano: CouchClient;
+		suffix?: string;
+		fixtures?: boolean;
+		db: string;
+	}) {
+		const handlers = await this.deploy({
+			nano: args.nano,
+			suffix: args.suffix,
+			fixtures: args.fixtures ?? false,
+			dbs: [args.db],
+		});
+		if (!handlers.has(args.db))
+			throw new Error(`Database '${args.db}' not found.`);
+		return handlers.get(args.db) as DatabaseHandler<D>;
 	}
 
 	deployOnChanges(nano: CouchClient) {
