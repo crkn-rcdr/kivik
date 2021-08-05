@@ -155,6 +155,14 @@ export interface Kivik {
 	}) => Promise<DatabaseHandler<D>>;
 
 	/**
+	 * Returns a function that can deploy a test database to the CouchDB endpoint that
+	 * `nano` points to.
+	 */
+	testDeployer: (
+		nano: CouchClient
+	) => <D>(db: string, suffix?: string) => Promise<DatabaseHandler<D>>;
+
+	/**
 	 * Triggers updates to a CouchDB endpoint when files monitored by the Kivik
 	 * store are added, change, or are removed.
 	 * @param nano A `nano` instance pointing to the endpoint.
@@ -263,6 +271,17 @@ class KivikImpl implements Kivik {
 		if (!handlers.has(args.db))
 			throw new Error(`Database '${args.db}' not found.`);
 		return handlers.get(args.db) as DatabaseHandler<D>;
+	}
+
+	testDeployer(nano: CouchClient) {
+		return async <D>(db: string, suffix?: string) => {
+			return await this.deployDb<D>({
+				nano,
+				suffix,
+				fixtures: true,
+				db,
+			});
+		};
 	}
 
 	deployOnChanges(nano: CouchClient) {

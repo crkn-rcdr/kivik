@@ -51,14 +51,7 @@ test.before(async (t) => {
 	t.context = {
 		kivik,
 		container,
-		testDeploy: async (db, suffix) => {
-			return await kivik.deployDb({
-				nano,
-				suffix,
-				fixtures: true,
-				db,
-			});
-		},
+		testDeploy: kivik.testDeployer(nano),
 	};
 });
 
