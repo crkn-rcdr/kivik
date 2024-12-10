@@ -13,7 +13,7 @@ dependencies:
     version: 5.2.0
   axios:
     specifier: ^0.21.1
-    version: 0.21.1
+    version: 0.21.2
   chokidar:
     specifier: ^3.5.2
     version: 3.5.2
@@ -421,8 +421,7 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
-
-  /axios-cookiejar-support@1.0.1(@types/tough-cookie@4.0.1)(axios@0.21.1)(tough-cookie@4.0.0):
+  /axios-cookiejar-support@1.0.1(@types/tough-cookie@4.0.1)(axios@0.21.2)(tough-cookie@4.0.0):
     resolution: {integrity: sha512-IZJxnAJ99XxiLqNeMOqrPbfR7fRyIfaoSLdPUf4AMQEGkH8URs0ghJK/xtqBsD+KsSr3pKl4DEQjCn834pHMig==}
     engines: {node: '>= 10.0.0'}
     peerDependencies:
@@ -431,13 +430,13 @@ packages:
       tough-cookie: '>=2.3.3'
     dependencies:
       '@types/tough-cookie': 4.0.1
-      axios: 0.21.1
+      axios: 0.21.2
       is-redirect: 1.0.0
       pify: 5.0.0
       tough-cookie: 4.0.0
-
-  /axios@0.21.1:
-    resolution: {integrity: sha512-dKQiRHxGD9PPRIUNIWvZhPTPpl1rf/OxTYKsqKUDjBwYylTvV7SjSHJb9ratfyzM6wCdLCOYLzs73qpg5c4iGA==}
+ 
+ /axios@0.21.2:
+    resolution: {integrity: sha512-87otirqUw3e8CzHTMO+/9kh/FSgXt/eVDvipijwDtEuwbkySWZ9SBm6VEubmJ/kLKEoLQV/POhxXFb66bfekfg==}
     dependencies:
       follow-redirects: 1.14.1
     transitivePeerDependencies:
@@ -1708,9 +1707,9 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       '@types/tough-cookie': 4.0.1
-      axios: 0.21.1
-      axios-cookiejar-support: 1.0.1(@types/tough-cookie@4.0.1)(axios@0.21.1)(tough-cookie@4.0.0)
-      qs: 6.11.2
+      axios: 0.21.2
+      axios-cookiejar-support: 1.0.1(@types/tough-cookie@4.0.1)(axios@0.21.2)(tough-cookie@4.0.0)
+      qs: 6.10.1
       tough-cookie: 4.0.0
     transitivePeerDependencies:
       - debug
