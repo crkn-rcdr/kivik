@@ -348,8 +348,8 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /async@3.2.0:
-    resolution: {integrity: sha512-TR2mEZFVOj2pLStYxLht7TyfuRzaydfpxr3k9RpHIzMgw7A64dzsdqCxH1WJyQdoe8T10nDXd9wnEigmiuHIZw==}
+  /async@3.2.4:
+    resolution: {integrity: sha512-iAB+JbDEGXhyIUavoDl9WP/Jj106Kz9DEn1DPgYw5ruDn0e3Wgi3sKFm55sASdGBNOQB8F59d9qQ7deqrHA8wQ==}
     dev: false
 
   /asynckit@0.4.0:
@@ -426,7 +426,7 @@ packages:
       - supports-color
     dev: true
 
-  /axios-cookiejar-support@1.0.1(@types/tough-cookie@4.0.1)(axios@0.21.2)(tough-cookie@4.0.0):
+  /axios-cookiejar-support@1.0.1(@types/tough-cookie@4.0.1)(axios@0.21.1)(tough-cookie@4.0.0):
     resolution: {integrity: sha512-IZJxnAJ99XxiLqNeMOqrPbfR7fRyIfaoSLdPUf4AMQEGkH8URs0ghJK/xtqBsD+KsSr3pKl4DEQjCn834pHMig==}
     engines: {node: '>= 10.0.0'}
     peerDependencies:
@@ -2726,7 +2726,7 @@ packages:
     engines: {node: '>= 6.4.0'}
     dependencies:
       '@dabh/diagnostics': 2.0.2
-      async: 3.2.0
+      async: 3.2.4
       is-stream: 2.0.1
       logform: 2.2.0
       one-time: 1.0.0
