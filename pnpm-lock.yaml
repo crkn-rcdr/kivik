@@ -421,7 +421,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
-
   /axios-cookiejar-support@1.0.1(@types/tough-cookie@4.0.1)(axios@0.21.2)(tough-cookie@4.0.0):
     resolution: {integrity: sha512-IZJxnAJ99XxiLqNeMOqrPbfR7fRyIfaoSLdPUf4AMQEGkH8URs0ghJK/xtqBsD+KsSr3pKl4DEQjCn834pHMig==}
     engines: {node: '>= 10.0.0'}
@@ -435,8 +434,8 @@ packages:
       is-redirect: 1.0.0
       pify: 5.0.0
       tough-cookie: 4.0.0
-
-  /axios@0.21.2:
+ 
+ /axios@0.21.2:
     resolution: {integrity: sha512-87otirqUw3e8CzHTMO+/9kh/FSgXt/eVDvipijwDtEuwbkySWZ9SBm6VEubmJ/kLKEoLQV/POhxXFb66bfekfg==}
     dependencies:
       follow-redirects: 1.14.1
@@ -2037,8 +2036,8 @@ packages:
       escape-goat: 2.1.1
     dev: true
 
-  /qs@6.10.1:
-    resolution: {integrity: sha512-M528Hph6wsSVOBiYUnGf+K/7w0hNshs/duGsNXPUCLH5XAqjEtiPGwNONLV0tBH8NoGb0mvD5JubnUTrujKDTg==}
+  /qs@6.11.2:
+    resolution: {integrity: sha512-tDNIz22aBzCDxLtVH++VnTfzxlfeK5CbqohpSqpJgj1Wg/cQbStNAz3NuqCs5vV+pjBsK4x4pN9HlVh7rcYRiA==}
     engines: {node: '>=0.6'}
     dependencies:
       side-channel: 1.0.4
